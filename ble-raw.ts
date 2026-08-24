@@ -1,10 +1,12 @@
 import { setTimeout as delay } from 'node:timers/promises';
-import noble from '@stoprocent/noble';
+import noble, { type AdapterState, type Peripheral } from '@stoprocent/noble';
 
-const devices = new Set();
-const packets = new Set();
+const devices = new Set<string>();
+const packets = new Set<string>();
 
-function formatServiceData(serviceData = []) {
+function formatServiceData(
+  serviceData: Peripheral['advertisement']['serviceData'] = [],
+) {
   return serviceData.map((item) => ({
     uuid: item.uuid,
     data: item.data?.toString('hex'),
@@ -58,8 +60,8 @@ async function waitForBluetooth() {
     return;
   }
 
-  await new Promise((resolve, reject) => {
-    const handler = (state) => {
+  await new Promise<void>((resolve, reject) => {
+    const handler = (state: AdapterState) => {
       if (state === 'poweredOn') {
         noble.off('stateChange', handler);
         resolve();

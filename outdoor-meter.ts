@@ -7,30 +7,40 @@ import noble, {
 import { z } from 'zod';
 import { normalizeUuid } from './src/crawler/normalizeUuid.util.ts';
 
-type IndoorMeterReading = {
+type WeatherReading = {
   temperature: number;
   humidity: number;
   battery: number;
   signalPowerDBM: number;
 };
 
-type Measurements = Omit<IndoorMeterReading, 'signalPowerDBM'>;
+type Measurements = Pick<WeatherReading, 'temperature' | 'humidity'>;
 
-type DecodeServiceDataInput = {
+type DecodeManufacturerDataInput = {
+  data: Buffer | undefined;
+};
+
+type DecodeBatteryLevelInput = {
   serviceData: PeripheralAdvertisement['serviceData'];
 };
 
-type GetIndoorMeterReadingInput = {
+type BuildWeatherReadingInput = {
+  reading: Partial<WeatherReading>;
+};
+
+type UpdateWeatherReadingInput = {
   deviceId: string;
   peripheral: Peripheral;
+  reading: Partial<WeatherReading>;
 };
 
-type ScanForIndoorMeterReadingInput = {
+type ScanForWeatherReadingInput = {
   deviceId: string;
   durationMs: number;
+  reading: Partial<WeatherReading>;
 };
 
-type ReadIndoorMeterInput = {
+type ReadWeatherInput = {
   deviceId: string;
   timeoutMs: number;
 };
@@ -45,57 +55,94 @@ type IsAbortErrorInput = {
 };
 
 const environmentSchema = z.object({
+  DEVICE_ID: z
+    .string()
+    .trim()
+    .min(1)
+    .transform((deviceId) => deviceId.toLowerCase()),
   BLE_TIMEOUT_MS: z.coerce.number().int().positive().default(120000),
 });
 
 type Environment = z.infer<typeof environmentSchema>;
 
 const environment: Environment = environmentSchema.parse(process.env);
-const DEVICE_ID = 'f2c1f72ae2258e5affbe6f8e7bc147b3';
+const DEVICE_ID = environment.DEVICE_ID;
 const TIMEOUT_MS = environment.BLE_TIMEOUT_MS;
 const SCAN_RESTART_MS = 15000;
 
-const decodeServiceData = ({
-  serviceData,
-}: DecodeServiceDataInput): Measurements | null => {
-  const data = serviceData.find(
-    ({ uuid, data }) =>
-      normalizeUuid(uuid) === 'fd3d' &&
-      data.length >= 6 &&
-      (data[0] & 0x7f) === 0x54,
-  )?.data;
+const decodeManufacturerData = ({
+  data,
+}: DecodeManufacturerDataInput): Measurements | null => {
+  if (
+    !data ||
+    data.length < 13 ||
+    data[0] !== 0x69 ||
+    data[1] !== 0x09 ||
+    data[2] !== 0xd1
+  ) {
+    return null;
+  }
 
-  if (!data) return null;
-
-  const temperatureDecimal = (data[3] & 0x0f) / 10;
-  const temperatureInteger = data[4] & 0x7f;
-  const temperatureSign = data[4] & 0x80 ? 1 : -1;
+  const temperatureDecimal = (data[10] & 0x0f) / 10;
+  const temperatureInteger = data[11] & 0x7f;
+  const temperatureSign = data[11] & 0x80 ? 1 : -1;
 
   return {
     temperature: Number(
       ((temperatureInteger + temperatureDecimal) * temperatureSign).toFixed(1),
     ),
-    humidity: data[5] & 0x7f,
-    battery: data[2] & 0x7f,
+    humidity: data[12] & 0x7f,
   };
 };
 
-const getIndoorMeterReading = ({
+const decodeBatteryLevel = ({
+  serviceData,
+}: DecodeBatteryLevelInput): number | null => {
+  const batteryData = serviceData.find(
+    ({ uuid, data }) =>
+      normalizeUuid(uuid) === 'fd3d' && data.length >= 3 && data[0] === 0x77,
+  )?.data;
+
+  return batteryData ? batteryData[2] & 0x7f : null;
+};
+
+const buildWeatherReading = ({
+  reading,
+}: BuildWeatherReadingInput): WeatherReading | null => {
+  const { temperature, humidity, battery, signalPowerDBM } = reading;
+
+  if (
+    temperature === undefined ||
+    humidity === undefined ||
+    battery === undefined ||
+    signalPowerDBM === undefined
+  ) {
+    return null;
+  }
+
+  return { temperature, humidity, battery, signalPowerDBM };
+};
+
+const updateWeatherReading = ({
   deviceId,
   peripheral,
-}: GetIndoorMeterReadingInput): IndoorMeterReading | null => {
+  reading,
+}: UpdateWeatherReadingInput): WeatherReading | null => {
   if (peripheral.id.toLowerCase() !== deviceId) return null;
 
-  const measurements = decodeServiceData({
-    serviceData: peripheral.advertisement.serviceData,
+  const { advertisement } = peripheral;
+  const measurements = decodeManufacturerData({
+    data: advertisement.manufacturerData,
+  });
+  const battery = decodeBatteryLevel({
+    serviceData: advertisement.serviceData,
   });
 
-  if (!measurements) return null;
+  reading.signalPowerDBM = peripheral.rssi;
+  if (measurements) Object.assign(reading, measurements);
+  if (battery !== null) reading.battery = battery;
 
-  return {
-    signalPowerDBM: peripheral.rssi,
-    ...measurements,
-  };
+  return buildWeatherReading({ reading });
 };
 
 const isAbortError = ({ error }: IsAbortErrorInput): boolean => {
@@ -120,10 +167,11 @@ const stopScanning = async (): Promise<void> => {
   } catch {}
 };
 
-const scanForIndoorMeterReading = async ({
+const scanForWeatherReading = async ({
   deviceId,
   durationMs,
-}: ScanForIndoorMeterReadingInput): Promise<IndoorMeterReading | null> => {
+  reading,
+}: ScanForWeatherReadingInput): Promise<WeatherReading | null> => {
   const abortController = new AbortController();
   const peripheralEvents = on(noble, 'discover', {
     signal: abortController.signal,
@@ -139,8 +187,12 @@ const scanForIndoorMeterReading = async ({
     scanningStarted = true;
 
     for await (const [peripheral] of peripheralEvents) {
-      const reading = getIndoorMeterReading({ deviceId, peripheral });
-      if (reading) return reading;
+      const completeReading = updateWeatherReading({
+        deviceId,
+        peripheral,
+        reading,
+      });
+      if (completeReading) return completeReading;
     }
   } catch (error: unknown) {
     if (!isAbortError({ error })) throw error;
@@ -153,21 +205,23 @@ const scanForIndoorMeterReading = async ({
   return null;
 };
 
-const readIndoorMeter = async ({
+const readWeather = async ({
   deviceId,
   timeoutMs,
-}: ReadIndoorMeterInput): Promise<IndoorMeterReading> => {
+}: ReadWeatherInput): Promise<WeatherReading> => {
   await noble.waitForPoweredOnAsync();
 
   const deadline = Date.now() + timeoutMs;
+  const reading: Partial<WeatherReading> = {};
 
   while (Date.now() < deadline) {
     const durationMs = Math.min(SCAN_RESTART_MS, deadline - Date.now());
-    const reading = await scanForIndoorMeterReading({
+    const completeReading = await scanForWeatherReading({
       deviceId,
       durationMs,
+      reading,
     });
-    if (reading) return reading;
+    if (completeReading) return completeReading;
   }
 
   throw new Error(
@@ -177,7 +231,7 @@ const readIndoorMeter = async ({
 };
 
 const run = async (): Promise<void> => {
-  const reading = await readIndoorMeter({
+  const reading = await readWeather({
     deviceId: DEVICE_ID,
     timeoutMs: TIMEOUT_MS,
   });

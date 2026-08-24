@@ -7,15 +7,19 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "read": "node --env-file=.env read-weather.ts",
+    "read": "node --env-file=.env outdoor-meter.ts",
     "read:indoor": "node --env-file=.env indoor-meter.ts",
     "lint": "biome check --write .",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@stoprocent/noble": "2.8.0"
+    "@stoprocent/noble": "2.8.0",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.10"
+    "@biomejs/biome": "2.4.10",
+    "@types/node": "^26.2.0",
+    "typescript": "7.0.2"
   }
 }
