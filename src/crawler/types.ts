@@ -33,6 +33,7 @@ export const meterSchema = z.object({
 
 export type Meter = z.infer<typeof meterSchema>;
 
-export interface MeterInterface {
-  read: () => WeatherReading;
-}
+export type MeterInterface = {
+  getMeter: () => Meter;
+  read: () => Promise<WeatherReading>;
+};

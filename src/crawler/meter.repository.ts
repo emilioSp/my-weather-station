@@ -29,9 +29,7 @@ const abortScanAfterTimeout = async ({
   }
 };
 
-export const findPeripheral = async (
-  deviceId: string,
-): Promise<Peripheral | null> => {
+const findPeripheral = async (deviceId: string): Promise<Peripheral | null> => {
   await noble.waitForPoweredOnAsync();
 
   const abortController = new AbortController();
@@ -65,7 +63,7 @@ export const findPeripheral = async (
   return null;
 };
 
-export const readOutdoorMeterAdvertisement = async (
+export const getMeterAdvertisement = async (
   deviceId: string,
 ): Promise<MeterAdvertisement | null> => {
   const peripheral = await findPeripheral(deviceId);

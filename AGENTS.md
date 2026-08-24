@@ -19,38 +19,70 @@ Reads BLE advertisements from SwitchBot indoor and outdoor meters
 - When in doubt, ask.
 
 ## Architecture
-### entrypoint
-- `src/crawler/index.ts`: starts the connection to devices.
-- `src/crawler/index.ts` is also the presentation layer. Use `console.log`.
 
-### internal components
-- utils: in the src/crawler folder. It contain function used in other modules. E.g. normalizeUuid
-- services: in the src/crawler folder. They contain the business logic. Pure functions. E.g. measures
-- repositories: in the src/crawler folder. They are modules that interact directly with BLE devices. E.g. indoorMeter
+### Entrypoint
 
-The data flow is
-index.ts -> services -> repositories
+`src/crawler/index.ts` is the startup and presentation layer. It:
 
-### components identification
-use suffix to identify different type of modules.
-For instance:
-- `src/crawler/index.ts`
-- `src/crawler/normalizeUuid.util.ts`
-- `src/crawler/outdoorMeter.service.ts`
-- `src/crawler/indoorMeter.repository.ts`
-- `src/crawler/meter.repository.ts`
+- reads the validated device configuration from `environment.ts`;
+- asks `createMeter()` for the correct meter strategy;
+- calls the strategy's `read()` method;
+- prints the collected readings with `console.log`.
+
+The entrypoint must not contain meter-specific conditionals or BLE protocol logic.
+
+### Strategy pattern
+
+Each meter type is represented by a strategy class:
+
+- `OutdoorMeter.ts` implements the outdoor SwitchBot protocol;
+- `IndoorMeter.ts` implements the indoor SwitchBot protocol;
+- both implement `MeterInterface` from `types.ts`;
+- `MeterInterface` exposes `getMeter()` and `read()`.
+
+`meter.factory.ts` contains `createMeter(meter)`. The factory selects and returns the correct strategy based on `meter.type`. This keeps type selection out of the entrypoint and makes each class responsible for its own decoding and reading behavior.
+
+Only strategy interface methods are public. Meter-specific decoding and state management stay in private class methods.
+
+### Repository
+
+`meter.repository.ts` is the BLE boundary. It manages Noble scanning, finds peripherals, and converts BLE data into a generic `MeterAdvertisement`. It does not contain outdoor or indoor decoding rules.
+
+### Utilities and configuration
+
+- `normalizeUuid.util.ts` contains shared UUID normalization.
+- `environment.ts` validates global environment variables with Zod.
+- `types.ts` contains public schemas and types shared across modules.
+
+### Data flow
+
+```text
+index.ts
+  -> meter.factory.ts
+  -> MeterInterface strategy
+     -> OutdoorMeter.ts or IndoorMeter.ts
+     -> meter.repository.ts
+        -> @stoprocent/noble
+```
+
+### Component identification
+
+- Strategy classes use PascalCase file names: `OutdoorMeter.ts`, `IndoorMeter.ts`.
+- Factories use the `.factory.ts` suffix.
+- Repositories use the `.repository.ts` suffix.
+- Utilities use the `.util.ts` suffix.
 
 ### types
 - private types? --> Put them directly in the module they are used
 - public types? --> Put them in src/crawler/types.ts
-- env file variables are checked at the startup (in the entrypoint), using zod.
+- Environment variables are validated with Zod in `src/crawler/environment.ts`, which is loaded at startup.
 
 ## TypeScript & Coding Conventions
 
 - **ESM only** - CommonJS is forbidden. Use `import`/`export`, never `require`/`module.exports`.
 - **`type` over `interface`** for TypeScript types.
 - **Zod type inference** for types shared across layers; dedicated types for layer-internal use.
-- **Arrow functions** preferred over classes. Classes only when maintaining internal state.
+- **Arrow functions** preferred for functions. Classes are used for meter strategies and objects that maintain internal state.
 - **Named exports** preferred. Default exports only for app entrypoint, singletons, and db connection.
 - **Pure functions** preferred. Functions should do one thing only.
 - **Small functions** - when they grow beyond ~40 lines, consider breaking them down.

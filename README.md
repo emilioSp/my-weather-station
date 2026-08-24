@@ -31,13 +31,15 @@ BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
 ```
 
-`DEVICES` is a JSON array of meter IDs and types. Multiple outdoor meters are read sequentially. `BLE_TIMEOUT_MS` is the timeout for each scan attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of scan attempts and defaults to 8. The separate indoor meter script still uses its hardcoded ID.
+`DEVICES` is a JSON array of meter IDs and strategy types. Configured meters are read sequentially. `BLE_TIMEOUT_MS` is the timeout for each scan attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of scan attempts and defaults to 8.
+
+The crawler currently implements the `outdoor` strategy. The `indoor` strategy exists but throws `Not yet implemented`.
 
 The npm commands use Node.js native `.env` support. No environment package is required.
 
 ## Run
 
-Read the outdoor meter through `src/crawler/index.ts`:
+Read the configured meters through `src/crawler/index.ts`:
 
 ```sh
 npm run read
@@ -51,13 +53,27 @@ npm run read:indoor
 
 ## Architecture
 
+The crawler uses the Strategy pattern:
+
 ```text
 index.ts
-└── outdoorMeter.service.ts
-    └── meter.repository.ts
+  ├── environment.ts
+  └── meter.factory.ts
+      └── MeterInterface strategy
+          ├── OutdoorMeter.ts
+          │   └── meter.repository.ts
+          │       └── @stoprocent/noble
+          └── IndoorMeter.ts (not yet implemented)
 ```
 
-The entrypoint calls services. Services contain the business flow and call repositories. Repositories interact directly with BLE.
+`index.ts` is the startup and presentation layer. For each configured device, it asks `createMeter()` for the correct strategy, calls `read()`, and prints the resulting JSON array.
+
+`OutdoorMeter` and `IndoorMeter` implement `MeterInterface`, which exposes:
+
+* `getMeter()` for the device ID and type
+* `read()` for the weather reading
+
+Each strategy owns its meter-specific behavior. Decoding and reading state remain in private class methods. `meter.repository.ts` is generic and only manages BLE discovery and advertisements.
 
 ## Output
 
@@ -67,6 +83,7 @@ The output is an array so that more devices can be added later:
 [
   {
     "deviceId": "ae67de586d5f7a96cce7f6179f1c740f",
+    "type": "outdoor",
     "temperature": 32.2,
     "humidity": 39,
     "battery": 96,

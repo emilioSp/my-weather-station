@@ -1,16 +1,13 @@
 import { environment } from './environment.ts';
-import { readOutdoorMeter } from './outdoorMeter.service.ts';
+import { createMeter } from './meter.factory.ts';
 import type { Meter, WeatherReading } from './types.ts';
 
-type MeterReading = WeatherReading & Pick<Meter, 'deviceId'>;
+type MeterReading = WeatherReading & Meter;
 
-const readMeter = async ({ deviceId, type }: Meter): Promise<MeterReading> => {
-  if (type !== 'outdoor') {
-    throw new Error(`Meter type "${type}" is not supported yet`);
-  }
-
-  const reading = await readOutdoorMeter(deviceId);
-  return { deviceId, ...reading };
+const readMeter = async (meterConfig: Meter): Promise<MeterReading> => {
+  const meter = createMeter(meterConfig);
+  const reading = await meter.read();
+  return { ...meter.getMeter(), ...reading };
 };
 
 const run = async (): Promise<void> => {
