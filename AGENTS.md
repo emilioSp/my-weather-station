@@ -79,15 +79,15 @@ index.ts
 
 ## TypeScript & Coding Conventions
 
-- **ESM only** - CommonJS is forbidden. Use `import`/`export`, never `require`/`module.exports`.
-- **`type` over `interface`** for TypeScript types.
-- **Zod type inference** for types shared across layers; dedicated types for layer-internal use.
-- **Arrow functions** preferred for functions. Classes are used for meter strategies and objects that maintain internal state.
-- **Named exports** preferred. Default exports only for app entrypoint, singletons, and db connection.
-- **Pure functions** preferred. Functions should do one thing only.
-- **Small functions** - when they grow beyond ~40 lines, consider breaking them down.
-- **`async/await` always** - never use callbacks. If forced, wrap with `node:util` `promisify`.
-- **Named parameters** - use object destructuring instead of positional parameters. Define a named `type` for the input object and for the return value when returning multiple values or a complex object. Instead, for simple functions that return a single primitive value, do not use a named types.
+- ESM only - CommonJS is forbidden. Use `import`/`export`, never `require`/`module.exports`.
+- `type` over `interface` for TypeScript types.
+- Zod type inference for types shared across layers; dedicated types for layer-internal use.
+- Arrow functions preferred for functions. Classes are used for meter strategies and objects that maintain internal state.
+- Named exports preferred. Default exports only for app entrypoint, singletons, and db connection.
+- Pure functions preferred. Functions should do one thing only.
+- Small functions - when they grow beyond ~50 lines, consider breaking them down.
+- `async/await` always - never use callbacks. If forced, wrap with `node:util` `promisify`.
+- Named parameters - use object destructuring instead of positional parameters. Define a named `type` for the input object and for the return value when returning multiple values or a complex object. Instead, for simple functions that return a single primitive value, do not use a named types.
 e.g.
 ```typescript
 type CalculateGapInput = {
@@ -122,8 +122,7 @@ const speedUp = (currentSpeed: number): number => {
 - Do not write clever test helpers. Be stupid and explicit.
 - Make test setup explicit.
    - Load the required fixture inside the test when possible.
-   - Do not put a default fixture in `beforeEach` when only some tests need it.
-   - A reader must see the test input without searching for hidden setup.
+   - Do not put a default fixture in `beforeEach` when only some tests need it: a code reader must see the test input without searching for hidden setup.
 - Use clear test names.
    - Use Given template
    - Example: when X reports Y, then the Z happens.
