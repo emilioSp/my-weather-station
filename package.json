@@ -7,7 +7,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "read": "node --env-file=.env outdoor-meter.ts",
+    "read": "node --env-file=.env src/crawler/index.ts",
     "read:indoor": "node --env-file=.env indoor-meter.ts",
     "lint": "biome check --write .",
     "build": "tsc",

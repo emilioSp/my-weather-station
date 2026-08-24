@@ -20,21 +20,25 @@ Reads BLE advertisements from SwitchBot indoor and outdoor meters
 
 ## Architecture
 ### entrypoint
-- index.ts: starts the connection to devices.
-- index.ts is also the presentation layer. Use console.log
+- `src/crawler/index.ts`: starts the connection to devices.
+- `src/crawler/index.ts` is also the presentation layer. Use `console.log`.
 
 ### internal components
 - utils: in the src/crawler folder. It contain function used in other modules. E.g. normalizeUuid
 - services: in the src/crawler folder. They contain the business logic. Pure functions. E.g. measures
 - repositories: in the src/crawler folder. They are modules that interact directly with BLE devices. E.g. indoorMeter
 
+The data flow is
+index.ts -> services -> repositories
+
 ### components identification
 use suffix to identify different type of modules.
 For instance:
-- normalizeUuid.util.ts
-- measures.service.ts
-- indoorMeter.repository.ts
-- outdoorMeter.repository.ts
+- `src/crawler/index.ts`
+- `src/crawler/normalizeUuid.util.ts`
+- `src/crawler/outdoorMeter.service.ts`
+- `src/crawler/indoorMeter.repository.ts`
+- `src/crawler/meter.repository.ts`
 
 ### types
 - private types? --> Put them directly in the module they are used
@@ -72,6 +76,7 @@ const speedUp = (currentSpeed: number): number => {
   return currentSpeed + 10;
 };
 ```
+- Named parameters must be defined close to the function they serve.
 - Use explicit methods instead of property accessor syntax.
    - Use `getTemperature()`.
    - Do not use `get getTemperature()` or `set setTemperature()`.
@@ -114,4 +119,4 @@ The `README.md` must include:
 2. Prerequisites.
 3. Local development setup.
 4. Local testing instructions.
-5. Deployment instructions (if applicable).
+5. Deployment instructions (if applicable). If deploy does not exist, then skip this section

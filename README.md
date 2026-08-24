@@ -2,31 +2,20 @@
 
 Reads BLE advertisements from SwitchBot indoor and outdoor meters using [`@stoprocent/noble`](https://www.npmjs.com/package/@stoprocent/noble).
 
-The script reads:
+The application reads:
 
 * Temperature in °C
 * Humidity in percent
 * Battery level in percent
 * BLE signal power in dBm
 
-## Requirements
+## Prerequisites
 
 * Node.js 26 or newer for native TypeScript support
 * A Bluetooth adapter
 * Bluetooth permission for the terminal or Node.js
 
-## Configuration
-
-Create a `.env` file:
-
-```dotenv
-DEVICE_ID=ae67de586d5f7a96cce7f6179f1c740f
-BLE_TIMEOUT_MS=120000
-```
-
-`DEVICE_ID` is required by the outdoor meter script. The indoor meter ID is currently hardcoded in `indoor-meter.ts`. `BLE_TIMEOUT_MS` is optional and defaults to 120 seconds.
-
-## Run
+## Local development setup
 
 Install the dependencies:
 
@@ -34,7 +23,21 @@ Install the dependencies:
 npm install
 ```
 
-Read the outdoor meter:
+Create a `.env` file:
+
+```dotenv
+DEVICES='[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"}]'
+BLE_TIMEOUT_MS=15000
+SCAN_RETRIES=8
+```
+
+`DEVICES` is a JSON array of meter IDs and types. Multiple outdoor meters are read sequentially. `BLE_TIMEOUT_MS` is the timeout for each scan attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of scan attempts and defaults to 8. The separate indoor meter script still uses its hardcoded ID.
+
+The npm commands use Node.js native `.env` support. No environment package is required.
+
+## Run
+
+Read the outdoor meter through `src/crawler/index.ts`:
 
 ```sh
 npm run read
@@ -46,7 +49,15 @@ Read the indoor meter:
 npm run read:indoor
 ```
 
-The npm commands use Node.js native `.env` file support. No environment package is required.
+## Architecture
+
+```text
+index.ts
+└── outdoorMeter.service.ts
+    └── meter.repository.ts
+```
+
+The entrypoint calls services. Services contain the business flow and call repositories. Repositories interact directly with BLE.
 
 ## Output
 
@@ -56,10 +67,10 @@ The output is an array so that more devices can be added later:
 [
   {
     "deviceId": "ae67de586d5f7a96cce7f6179f1c740f",
-    "signalPowerDBM": -89,
     "temperature": 32.2,
     "humidity": 39,
-    "battery": 96
+    "battery": 96,
+    "signalPowerDBM": -89
   }
 ]
 ```
