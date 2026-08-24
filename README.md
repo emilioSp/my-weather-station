@@ -26,14 +26,14 @@ npm install
 Create a `.env` file:
 
 ```dotenv
-DEVICES='[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"}]'
+DEVICES='[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor"}]'
 BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
 ```
 
 `DEVICES` is a JSON array of meter IDs and strategy types. Configured meters are read sequentially. `BLE_TIMEOUT_MS` is the timeout for each scan attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of scan attempts and defaults to 8.
 
-The crawler currently implements the `outdoor` strategy. The `indoor` strategy exists but throws `Not yet implemented`.
+The crawler implements both `outdoor` and `indoor` SwitchBot meter strategies.
 
 The npm commands use Node.js native `.env` support. No environment package is required.
 
@@ -45,12 +45,6 @@ Read the configured meters through `src/crawler/index.ts`:
 npm run read
 ```
 
-Read the indoor meter:
-
-```sh
-npm run read:indoor
-```
-
 ## Architecture
 
 The crawler uses the Strategy pattern:
@@ -60,10 +54,9 @@ index.ts
   ├── environment.ts
   └── meter.factory.ts
       └── MeterInterface strategy
-          ├── OutdoorMeter.ts
-          │   └── meter.repository.ts
-          │       └── @stoprocent/noble
-          └── IndoorMeter.ts (not yet implemented)
+          ├── OutdoorMeter.ts ─┐
+          └── IndoorMeter.ts  ─┴── meter.repository.ts
+                                  └── @stoprocent/noble
 ```
 
 `index.ts` is the startup and presentation layer. For each configured device, it asks `createMeter()` for the correct strategy, calls `read()`, and prints the resulting JSON array.
@@ -88,6 +81,14 @@ The output is an array so that more devices can be added later:
     "humidity": 39,
     "battery": 96,
     "signalPowerDBM": -89
+  },
+  {
+    "deviceId": "f2c1f72ae2258e5affbe6f8e7bc147b3",
+    "type": "indoor",
+    "temperature": 28,
+    "humidity": 71,
+    "battery": 100,
+    "signalPowerDBM": -67
   }
 ]
 ```

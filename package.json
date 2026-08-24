@@ -8,7 +8,6 @@
   "main": "index.js",
   "scripts": {
     "read": "node --env-file=.env src/crawler/index.ts",
-    "read:indoor": "node --env-file=.env indoor-meter.ts",
     "lint": "biome check --write .",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
