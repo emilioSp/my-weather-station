@@ -8,6 +8,7 @@
   "main": "index.js",
   "scripts": {
     "read": "node --env-file=.env read-weather.ts",
+    "read:indoor": "node --env-file=.env indoor-meter.ts",
     "lint": "biome check --write .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -1,6 +1,6 @@
 # My Weather Station
 
-Reads BLE advertisements from a SwitchBot Outdoor Meter using [`@stoprocent/noble`](https://www.npmjs.com/package/@stoprocent/noble).
+Reads BLE advertisements from SwitchBot indoor and outdoor meters using [`@stoprocent/noble`](https://www.npmjs.com/package/@stoprocent/noble).
 
 The script reads:
 
@@ -24,16 +24,29 @@ DEVICE_ID=ae67de586d5f7a96cce7f6179f1c740f
 BLE_TIMEOUT_MS=120000
 ```
 
-`DEVICE_ID` is required. `BLE_TIMEOUT_MS` is optional and defaults to 120 seconds.
+`DEVICE_ID` is required by the outdoor meter script. The indoor meter ID is currently hardcoded in `indoor-meter.ts`. `BLE_TIMEOUT_MS` is optional and defaults to 120 seconds.
 
 ## Run
 
+Install the dependencies:
+
 ```sh
 npm install
+```
+
+Read the outdoor meter:
+
+```sh
 npm run read
 ```
 
-The npm command uses Node.js native `.env` file support. No environment package is required.
+Read the indoor meter:
+
+```sh
+npm run read:indoor
+```
+
+The npm commands use Node.js native `.env` file support. No environment package is required.
 
 ## Output
 
