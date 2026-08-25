@@ -10,15 +10,27 @@
     "read": "node --env-file=.env src/crawler/index.ts",
     "lint": "biome check --write .",
     "build": "tsc",
+    "new:migration": "knex migrate:make -x ts",
+    "migrate": "node --env-file=.env ./node_modules/knex/bin/cli.js migrate:latest",
+    "rollback": "node --env-file=.env ./node_modules/knex/bin/cli.js migrate:rollback",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@stoprocent/noble": "2.8.0",
+    "knex": "3.3.0",
+    "pg": "8.23.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
-    "@types/node": "^26.2.0",
+    "@types/node": "26.2.0",
+    "@types/pg": "8.23.1",
     "typescript": "7.0.2"
+  },
+  "allowScripts": {
+    "@stoprocent/noble@2.8.0": true,
+    "@stoprocent/bluetooth-hci-socket@2.3.0": true,
+    "@serialport/bindings-cpp": false,
+    "usb": false
   }
 }

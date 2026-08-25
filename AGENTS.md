@@ -141,6 +141,9 @@ const speedUp = (currentSpeed: number): number => {
    - `npm run build`
    - `npm run lint`
 
+## Database
+- Always use migrations with knex. `npm run new:migrations`
+- Always write migrations in raw SQL. Don't use other knex functions
 
 ## Documentation
 
