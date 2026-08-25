@@ -1,30 +1,10 @@
 import { environment } from './environment.ts';
+import { type DecodedAdvertisement, Meter } from './Meter.ts';
 import { getMeterAdvertisement } from './meter.repository.ts';
 import { normalizeUuid } from './normalizeUuid.util.ts';
-import {
-  type Meter,
-  type MeterAdvertisement,
-  type MeterInterface,
-  type WeatherReading,
-  weatherReadingSchema,
-} from './types.ts';
+import type { MeterAdvertisement, WeatherReading } from './types.ts';
 
-type UpdateReadingInput = {
-  advertisement: MeterAdvertisement;
-  reading: Partial<WeatherReading>;
-};
-
-export class IndoorMeter implements MeterInterface {
-  private readonly meter: Meter;
-
-  constructor(meter: Meter) {
-    this.meter = meter;
-  }
-
-  public getMeter(): Meter {
-    return { ...this.meter };
-  }
-
+export class IndoorMeter extends Meter {
   public async read(): Promise<WeatherReading> {
     const reading: Partial<WeatherReading> = {};
 
@@ -54,12 +34,9 @@ export class IndoorMeter implements MeterInterface {
     );
   }
 
-  private decodeMeasurements({
+  protected decodeAdvertisement({
     serviceData,
-  }: MeterAdvertisement): Pick<
-    WeatherReading,
-    'temperature' | 'humidity' | 'battery'
-  > | null {
+  }: MeterAdvertisement): DecodedAdvertisement {
     const data = serviceData.find(
       ({ uuid, data }) =>
         normalizeUuid(uuid) === 'fd3d' &&
@@ -67,7 +44,7 @@ export class IndoorMeter implements MeterInterface {
         (data[0] & 0x7f) === 0x54,
     )?.data;
 
-    if (!data) return null;
+    if (!data) return {};
 
     const temperatureDecimal = (data[3] & 0x0f) / 10;
     const temperatureInteger = data[4] & 0x7f;
@@ -82,24 +59,5 @@ export class IndoorMeter implements MeterInterface {
       humidity: data[5] & 0x7f,
       battery: data[2] & 0x7f,
     };
-  }
-
-  private updateReading({
-    advertisement,
-    reading,
-  }: UpdateReadingInput): WeatherReading | null {
-    if (
-      reading.temperature === undefined ||
-      reading.humidity === undefined ||
-      reading.battery === undefined
-    ) {
-      const measurements = this.decodeMeasurements(advertisement);
-      if (measurements) Object.assign(reading, measurements);
-    }
-
-    reading.signalPowerDBM = advertisement.signalPowerDBM;
-
-    const result = weatherReadingSchema.safeParse(reading);
-    return result.success ? result.data : null;
   }
 }
