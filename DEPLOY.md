@@ -188,5 +188,13 @@ docker run --rm \
   --name ble \
   espatola/my-weather-station:latest \
   node ble-raw.ts
+
+Check the CPU temperature:
+
+```sh
+vcgencmd measure_temp
+```
+
+A temperature below `80°C` is safe.
 ```
 
