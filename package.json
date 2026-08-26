@@ -7,7 +7,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "read": "node --env-file=.env src/crawler/index.ts",
+    "store-measure": "node --env-file=.env src/collector/index.ts",
     "lint": "biome check --write .",
     "build": "tsc",
     "new:migration": "knex migrate:make -x ts",

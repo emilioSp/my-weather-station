@@ -1,8 +1,8 @@
 import { on } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 import noble, { type Peripheral } from '@stoprocent/noble';
-import { environment } from './environment.ts';
-import { type MeterAdvertisement, meterAdvertisementSchema } from './types.ts';
+import { environment } from '../environment.ts';
+import { type Advertisement, advertisementSchema } from '../types.ts';
 
 type IsAbortErrorInput = {
   error: unknown;
@@ -63,13 +63,13 @@ const findPeripheral = async (deviceId: string): Promise<Peripheral | null> => {
   return null;
 };
 
-export const getMeterAdvertisement = async (
+export const getAdvertisement = async (
   deviceId: string,
-): Promise<MeterAdvertisement | null> => {
+): Promise<Advertisement | null> => {
   const peripheral = await findPeripheral(deviceId);
   if (!peripheral) return null;
 
-  return meterAdvertisementSchema.parse({
+  return advertisementSchema.parse({
     manufacturerData: peripheral.advertisement.manufacturerData,
     serviceData: peripheral.advertisement.serviceData,
     signalPowerDBM: peripheral.rssi,

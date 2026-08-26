@@ -22,35 +22,52 @@ Reads BLE advertisements from SwitchBot indoor and outdoor meters
 
 ### Entrypoint
 
-`src/crawler/index.ts` is the startup and presentation layer. It:
+`src/collector/index.ts` is the startup and presentation layer. It:
 
 - reads the validated device configuration from `environment.ts`;
 - asks `createMeter()` for the correct meter strategy;
 - calls the strategy's `read()` method;
-- prints the collected readings with `console.log`.
+- prints the stored measures returned by the strategies with `console.log`.
 
 The entrypoint must not contain meter-specific conditionals or BLE protocol logic.
 
-### Strategy pattern
+### Meters
+
+`meters/` contains the business logic that converts advertisements into measures.
 
 Each meter type is represented by a strategy class:
 
-- `OutdoorMeter.ts` implements the outdoor SwitchBot protocol;
-- `IndoorMeter.ts` implements the indoor SwitchBot protocol;
-- both implement `MeterInterface` from `types.ts`;
+- `meters/OutdoorMeter.ts` implements the outdoor SwitchBot protocol;
+- `meters/IndoorMeter.ts` implements the indoor SwitchBot protocol;
+- both extend `meters/Meter.ts` and implement `MeterInterface` from `types.ts`;
 - `MeterInterface` exposes `getMeter()` and `read()`.
 
-`meter.factory.ts` contains `createMeter(meter)`. The factory selects and returns the correct strategy based on `meter.type`. This keeps type selection out of the entrypoint and makes each class responsible for its own decoding and reading behavior.
+`meters/meter.factory.ts` contains `createMeter(meter)`. The factory selects and returns the correct strategy based on `meter.type`. The shared `Meter` class reads advertisements, decodes a complete reading, creates derived values, stores the measure, and returns it.
 
-Only strategy interface methods are public. Meter-specific decoding and state management stay in private class methods.
+Only strategy interface methods are public. Meter-specific decoding and state management stay in non-public class methods.
 
-### Repository
+### API
 
-`meter.repository.ts` is the BLE boundary. It manages Noble scanning, finds peripherals, and converts BLE data into a generic `MeterAdvertisement`. It does not contain outdoor or indoor decoding rules.
+`api/` contains interactions with external resources.
+
+`api/sensor.api.ts` is the BLE boundary. It manages Noble scanning, finds peripherals, and converts BLE data into a generic `Advertisement`. It does not contain meter decoding rules.
+
+### Database
+
+`db/` manages the database used by this software.
+
+`db/db.ts` owns the Knex connection. It maps camelCase query identifiers to snake_case database identifiers and maps response keys back to camelCase.
+
+`db/measure.repository.ts` stores completed measures and returns the complete inserted row.
+
+### Errors
+
+`errors/` contains domain errors. `errors/NoCompleteReadingError.ts` represents a meter that did not produce a complete reading within the configured scan attempts.
 
 ### Utilities and configuration
 
-- `normalizeUuid.util.ts` contains shared UUID normalization.
+- `src/utils/normalizeUuid.util.ts` contains shared UUID normalization.
+- `meters/utils/calculateDewPoint.util.ts`, `meters/utils/calculateHeatIndex.util.ts`, and `meters/utils/formatMeasure.util.ts` contain shared measurement calculations and formatting.
 - `environment.ts` validates global environment variables with Zod.
 - `types.ts` contains public schemas and types shared across modules.
 
@@ -58,24 +75,30 @@ Only strategy interface methods are public. Meter-specific decoding and state ma
 
 ```text
 index.ts
-  -> meter.factory.ts
+  -> meters/meter.factory.ts
   -> MeterInterface strategy
-     -> OutdoorMeter.ts or IndoorMeter.ts
-     -> meter.repository.ts
-        -> @stoprocent/noble
+     -> meters/OutdoorMeter.ts or meters/IndoorMeter.ts
+        -> api/sensor.api.ts
+           -> @stoprocent/noble
+        -> db/measure.repository.ts
+           -> db/db.ts
+              -> PostgreSQL
+        -> errors/NoCompleteReadingError.ts
 ```
 
 ### Component identification
 
+- API modules use the `.api.ts` suffix.
 - Strategy classes use PascalCase file names: `OutdoorMeter.ts`, `IndoorMeter.ts`.
 - Factories use the `.factory.ts` suffix.
 - Repositories use the `.repository.ts` suffix.
+- Errors use PascalCase file names ending in `Error.ts`.
 - Utilities use the `.util.ts` suffix.
 
 ### types
 - private types? --> Put them directly in the module they are used
-- public types? --> Put them in src/crawler/types.ts
-- Environment variables are validated with Zod in `src/crawler/environment.ts`, which is loaded at startup.
+- public types? --> Put them in src/collector/types.ts
+- Environment variables are validated with Zod in `src/collector/environment.ts`, which is loaded at startup.
 
 ## TypeScript & Coding Conventions
 
@@ -85,6 +108,7 @@ index.ts
 - Arrow functions preferred for functions. Classes are used for meter strategies and objects that maintain internal state.
 - Named exports preferred. Default exports only for app entrypoint, singletons, and db connection.
 - Pure functions preferred. Functions should do one thing only.
+- For datetime always use Temporal. It's native since we are on Node 26+.
 - Small functions - when they grow beyond ~50 lines, consider breaking them down.
 - `async/await` always - never use callbacks. If forced, wrap with `node:util` `promisify`.
 - Named parameters - use object destructuring instead of positional parameters. Define a named `type` for the input object and for the return value when returning multiple values or a complex object. Instead, for simple functions that return a single primitive value, do not use a named types.

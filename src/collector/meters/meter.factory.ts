@@ -1,6 +1,6 @@
+import type { Meter, MeterInterface } from '../types.ts';
 import { IndoorMeter } from './IndoorMeter.ts';
 import { OutdoorMeter } from './OutdoorMeter.ts';
-import type { Meter, MeterInterface } from './types.ts';
 
 export const createMeter = (meter: Meter): MeterInterface => {
   if (meter.type === 'outdoor') return new OutdoorMeter(meter);
