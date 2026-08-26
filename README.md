@@ -26,7 +26,7 @@ Install the dependencies:
 npm install
 ```
 
-Create a `.env` file:
+Create a `.env.local` file:
 
 ```dotenv
 DEVICES='[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor"}]'
@@ -43,7 +43,7 @@ POSTGRES_PASSWORD=postgres
 
 The collector implements both `outdoor` and `indoor` SwitchBot meter strategies.
 
-The npm commands use Node.js native `.env` support. No environment package is required.
+The npm commands use Node.js native `.env.local` support. No environment package is required.
 
 Start PostgreSQL and run the migration:
 
