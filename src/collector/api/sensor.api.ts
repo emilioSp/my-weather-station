@@ -2,7 +2,11 @@ import { on } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 import noble, { type Peripheral } from '@stoprocent/noble';
 import { environment } from '../environment.ts';
-import { type Advertisement, advertisementSchema } from '../types.ts';
+import {
+  type Advertisement,
+  advertisementSchema,
+  type Meter,
+} from '../types.ts';
 
 type IsAbortErrorInput = {
   error: unknown;
@@ -29,7 +33,7 @@ const abortScanAfterTimeout = async ({
   }
 };
 
-const findPeripheral = async (deviceId: string): Promise<Peripheral | null> => {
+const findPeripheral = async (meter: Meter): Promise<Peripheral | null> => {
   await noble.waitForPoweredOnAsync();
 
   const abortController = new AbortController();
@@ -48,7 +52,10 @@ const findPeripheral = async (deviceId: string): Promise<Peripheral | null> => {
 
   try {
     for await (const [peripheral] of peripheralEvents) {
-      if (peripheral.id.toLowerCase() === deviceId) {
+      if (
+        peripheral.id.toLowerCase() === meter.deviceId ||
+        peripheral.address.toLowerCase() === meter.address
+      ) {
         abortController.abort();
         return peripheral;
       }
@@ -64,12 +71,14 @@ const findPeripheral = async (deviceId: string): Promise<Peripheral | null> => {
 };
 
 export const getAdvertisement = async (
-  deviceId: string,
+  meter: Meter,
 ): Promise<Advertisement | null> => {
-  const peripheral = await findPeripheral(deviceId);
+  const peripheral = await findPeripheral(meter);
   if (!peripheral) return null;
 
   return advertisementSchema.parse({
+    deviceId: peripheral.id,
+    address: peripheral.address,
     manufacturerData: peripheral.advertisement.manufacturerData,
     serviceData: peripheral.advertisement.serviceData,
     signalPowerDBM: peripheral.rssi,

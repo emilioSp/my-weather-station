@@ -43,10 +43,10 @@ export abstract class Meter implements MeterInterface {
       scanAttempt += 1
     ) {
       console.log(
-        `Device type: ${this.meter.type}, DeviceId: ${this.meter.deviceId}, scan attempt ${scanAttempt + 1}`,
+        `Device type: ${this.meter.type}, device ID: ${this.meter.deviceId}, address: ${this.meter.address}, scan attempt ${scanAttempt + 1}`,
       );
 
-      const advertisement = await getAdvertisement(this.meter.deviceId);
+      const advertisement = await getAdvertisement(this.meter);
 
       if (advertisement) {
         const completeReading = this.updateReading({
@@ -55,7 +55,9 @@ export abstract class Meter implements MeterInterface {
         });
         if (completeReading) {
           const measure = await storeMeasure({
-            ...this.getMeter(),
+            type: this.meter.type,
+            deviceId: advertisement.deviceId,
+            address: advertisement.address,
             ...completeReading,
           });
 
@@ -65,7 +67,7 @@ export abstract class Meter implements MeterInterface {
     }
 
     throw new NoCompleteReadingError(
-      `No complete reading from ${this.meter.deviceId} after ${environment.SCAN_RETRIES} scan attempts. ` +
+      `No complete reading from ${this.meter.deviceId ?? this.meter.address} after ${environment.SCAN_RETRIES} scan attempts. ` +
         'Move the Bluetooth adapter closer to the thermometer.',
     );
   }

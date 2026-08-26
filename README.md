@@ -29,7 +29,7 @@ npm install
 Create a `.env.local` file:
 
 ```dotenv
-DEVICES='[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor"}]'
+DEVICES=[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor"}]
 BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
 POSTGRES_HOST=localhost
@@ -39,7 +39,7 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 ```
 
-`DEVICES` is a JSON array of meter IDs and strategy types. Configured meters are read sequentially. `BLE_TIMEOUT_MS` is the timeout for each scan attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of scan attempts and defaults to 8.
+`DEVICES` is a JSON array of meter identifiers and strategy types. On macOS, use the Noble peripheral ID in `deviceId`. On Raspberry Pi Linux, use the Bluetooth address from `ble-raw.ts` in `address`, including colons. Configured meters are read sequentially. `BLE_TIMEOUT_MS` is the timeout for each scan attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of scan attempts and defaults to 8.
 
 The collector implements both `outdoor` and `indoor` SwitchBot meter strategies.
 
@@ -59,6 +59,10 @@ Read and store the configured meters through `src/collector/index.ts`:
 ```sh
 npm run store-measure
 ```
+
+## Deployment
+
+See deploy[DEPLOY.MD]
 
 ## Architecture
 
@@ -101,6 +105,7 @@ The output is an array so that more devices can be added later:
   {
     "id": "4f7edb49-14fa-426f-bd3a-bfcf5872ce65",
     "deviceId": "ae67de586d5f7a96cce7f6179f1c740f",
+    "address": null,
     "deviceType": "outdoor",
     "temperature": 32.2,
     "dewPoint": 16.5,
@@ -113,6 +118,7 @@ The output is an array so that more devices can be added later:
   {
     "id": "c7ed878a-b9c8-4e7a-aafd-ade9f57ebd38",
     "deviceId": "f2c1f72ae2258e5affbe6f8e7bc147b3",
+    "address": null,
     "deviceType": "indoor",
     "temperature": 28,
     "dewPoint": 22.2,
