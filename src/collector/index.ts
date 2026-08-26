@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers/promises';
 import { closeDatabaseConnection } from './db/db.ts';
 import { environment } from './environment.ts';
 import NoCompleteReadingError from './errors/NoCompleteReadingError.ts';
@@ -32,8 +33,17 @@ const run = async (): Promise<void> => {
   console.log(JSON.stringify(measures, null, 2));
 };
 
+const FIVE_MINUTES = 300_000;
+
 try {
-  await run();
+  while (true) {
+    await run();
+    console.log(`sleep ${FIVE_MINUTES}ms`);
+    console.log(
+      `---------------------------------------------------------------------------------------`,
+    );
+    await setTimeout(FIVE_MINUTES);
+  }
 } catch (error: unknown) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);

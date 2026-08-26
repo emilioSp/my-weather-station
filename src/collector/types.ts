@@ -10,11 +10,13 @@ const deviceIdentifiersSchema = z
     deviceId: z
       .string()
       .transform((deviceId) => deviceId.toLowerCase())
-      .nullable(),
+      .nullable()
+      .default(null),
     address: z
       .string()
       .transform((address) => address.toLowerCase())
-      .nullable(),
+      .nullable()
+      .default(null),
   })
   .refine(({ deviceId, address }) => deviceId !== null || address !== null, {
     message: 'A device ID or address is required',
