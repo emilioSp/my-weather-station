@@ -4,9 +4,9 @@ This guide deploys the collector to a Raspberry Pi 3 with 64-bit Raspberry Pi OS
 
 ## Requirements
 
-* A Mac with Docker Desktop and Docker Buildx.
-* A private Docker Hub repository named `espatola/my-weather-station`.
-* A Raspberry Pi 3 with a powered-on Bluetooth adapter.
+- A Mac with Docker Desktop and Docker Buildx.
+- A private Docker Hub repository named `espatola/my-weather-station`.
+- A Raspberry Pi 3 with a powered-on Bluetooth adapter.
 
 ## Create the Docker Hub repository
 
@@ -15,6 +15,7 @@ This guide deploys the collector to a Raspberry Pi 3 with 64-bit Raspberry Pi OS
 3. Set repository visibility to **Private**.
 
 ## MAC
+
 ### Build and push the image
 
 Sign in to Docker Hub:
@@ -42,6 +43,7 @@ docker buildx imagetools inspect espatola/my-weather-station:latest
 The output must include `linux/arm64`.
 
 ## Raspberry Pi
+
 ### Start the Raspberry Pi
 
 1. Insert the SD card into the Raspberry Pi.
@@ -183,6 +185,8 @@ Check BLE advertisements:
 docker run --rm \
   --network host \
   --cap-add NET_RAW \
+  --name ble \
   espatola/my-weather-station:latest \
   node ble-raw.ts
 ```
+
