@@ -4,35 +4,28 @@
   "description": "",
   "license": "ISC",
   "author": "",
+  "private": true,
   "type": "module",
-  "main": "index.js",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "store-measure": "node --env-file=.env src/collector/index.ts",
     "lint": "biome check --write .",
-    "build": "tsc",
-    "docker-build-and-push": "docker buildx build --platform linux/arm64 --tag espatola/my-weather-station:latest --push .",
-    "new:migration": "knex migrate:make -x ts",
-    "migrate": "node --env-file=.env ./node_modules/knex/bin/cli.js migrate:latest",
-    "rollback": "node --env-file=.env ./node_modules/knex/bin/cli.js migrate:rollback",
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "@stoprocent/noble": "2.8.0",
-    "@supabase/supabase-js": "2.112.4",
-    "knex": "3.3.0",
-    "pg": "8.23.0",
-    "zod": "4.4.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
-    "@types/node": "26.2.0",
-    "@types/pg": "8.23.1",
     "typescript": "7.0.2"
   },
   "allowScripts": {
     "@stoprocent/noble@2.8.0": true,
     "@stoprocent/bluetooth-hci-socket@2.3.0": true,
     "@serialport/bindings-cpp": false,
-    "usb": false
+    "usb": false,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true
   }
 }

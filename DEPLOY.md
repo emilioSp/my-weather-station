@@ -27,12 +27,11 @@ docker login
 Build the ARM64 image and push it:
 
 ```sh
-docker buildx build \
-  --platform linux/arm64 \
-  --tag espatola/my-weather-station:latest \
-  --push \
-  .
+npm run docker-build-and-push -w @wx/collector
 ```
+
+The build context is the repository root, not `apps/collector`, because the lockfile and
+`packages/shared` live there. The script passes `../..` for that reason.
 
 Check the published image:
 
@@ -137,7 +136,7 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=replace-this-password
 ```
 
-Replace the Bluetooth addresses and database password. Use the `address` value from `ble-raw.ts`. Keep the colons in each address. On macOS, use `deviceId` instead of `address`. Protect the file:
+Replace the Bluetooth addresses and database password. Use the `address` value from `apps/collector/ble-raw.ts`. Keep the colons in each address. On macOS, use `deviceId` instead of `address`. Protect the file:
 
 ```sh
 chmod 600 .env
@@ -187,7 +186,8 @@ docker run --rm \
   --cap-add NET_RAW \
   --name ble \
   espatola/my-weather-station:latest \
-  node ble-raw.ts
+  node apps/collector/ble-raw.ts
+```
 
 Check the CPU temperature:
 
@@ -196,5 +196,4 @@ vcgencmd measure_temp
 ```
 
 A temperature below `80°C` is safe.
-```
 

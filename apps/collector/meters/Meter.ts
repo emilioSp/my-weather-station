@@ -1,15 +1,17 @@
-import { getAdvertisement } from '../api/sensor.api.ts';
-import { storeMeasure } from '../db/measure.repository.ts';
-import { environment } from '../environment.ts';
-import NoCompleteReadingError from '../errors/NoCompleteReadingError.ts';
 import {
-  type Advertisement,
   type Measure,
-  type Meter as MeterConfiguration,
-  type MeterInterface,
   type WeatherReading,
   weatherReadingSchema,
-} from '../types.ts';
+} from '@wx/shared';
+import { getAdvertisement } from '#api/sensor.api.ts';
+import { storeMeasure } from '#db/measure.repository.ts';
+import { environment } from '#environment.ts';
+import NoCompleteReadingError from '#errors/NoCompleteReadingError.ts';
+import type {
+  Advertisement,
+  Meter as MeterConfiguration,
+  MeterInterface,
+} from '#types.ts';
 import { calculateDewPoint } from './utils/calculateDewPoint.util.ts';
 import { calculateHeatIndex } from './utils/calculateHeatIndex.util.ts';
 import { formatMeasure } from './utils/formatMeasure.util.ts';

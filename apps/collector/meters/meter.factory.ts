@@ -1,4 +1,4 @@
-import type { Meter, MeterInterface } from '../types.ts';
+import type { Meter, MeterInterface } from '#types.ts';
 import { IndoorMeter } from './IndoorMeter.ts';
 import { OutdoorMeter } from './OutdoorMeter.ts';
 

@@ -1,5 +1,5 @@
-import { normalizeUuid } from '../../utils/normalizeUuid.util.ts';
-import type { Advertisement } from '../types.ts';
+import { normalizeUuid } from '@wx/shared';
+import type { Advertisement } from '#types.ts';
 import { type DecodedAdvertisement, Meter } from './Meter.ts';
 
 export class IndoorMeter extends Meter {

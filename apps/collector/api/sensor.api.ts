@@ -1,12 +1,8 @@
 import { on } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 import noble, { type Peripheral } from '@stoprocent/noble';
-import { environment } from '../environment.ts';
-import {
-  type Advertisement,
-  advertisementSchema,
-  type Meter,
-} from '../types.ts';
+import { environment } from '#environment.ts';
+import { type Advertisement, advertisementSchema, type Meter } from '#types.ts';
 
 type IsAbortErrorInput = {
   error: unknown;

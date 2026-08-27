@@ -1,9 +1,10 @@
 import { setTimeout } from 'node:timers/promises';
+import type { Measure } from '@wx/shared';
 import { closeDatabaseConnection } from './db/db.ts';
 import { environment } from './environment.ts';
 import NoCompleteReadingError from './errors/NoCompleteReadingError.ts';
 import { createMeter } from './meters/meter.factory.ts';
-import type { Measure, Meter } from './types.ts';
+import type { Meter } from './types.ts';
 
 const readMeter = async (meterConfig: Meter): Promise<Measure> => {
   const meter = createMeter(meterConfig);

@@ -13,7 +13,10 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY apps/collector/package.json ./apps/collector/
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+RUN npm ci --omit=dev --workspace @wx/collector
 
 FROM node:26-bookworm-slim
 
@@ -29,9 +32,7 @@ RUN apt-get update \
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/package.json ./package.json
-COPY knexfile.js ./
-COPY migrations ./migrations
-COPY src ./src
-COPY ble-raw.ts ./ble-raw.ts
+COPY packages/shared ./packages/shared
+COPY apps/collector ./apps/collector
 
-CMD ["node", "src/collector/index.ts"]
+CMD ["node", "apps/collector/index.ts"]
