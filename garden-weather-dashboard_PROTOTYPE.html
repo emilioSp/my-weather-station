@@ -1,0 +1,463 @@
+<!doctype html>
+  <html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weather station</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
+    :root { --night:#10191b; --ink:#eaf0e9; --muted:#9bad9e; --line:#2b3a38; --panel:#192524; --leaf:#b9e53b; --sky:#83d2e5; --sun:#ffbb60; --clay:#dd7e5c; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; color:var(--ink); background:radial-gradient(circle at 86% 0%, #294033 0, transparent 26rem), var(--night); font-family:Manrope, sans-serif; }
+    button { font:inherit; }
+    .shell { max-width:1440px; margin:auto; padding:22px clamp(20px,4vw,64px) 48px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:13px; }
+    .brand-mark { width:27px; height:34px; display:grid; place-items:center; color:var(--leaf); }
+    .brand-mark svg { width:27px; height:34px; overflow:visible; }
+    .eyebrow, .label, .meta { color:var(--muted); font:500 11px/1.2 'DM Mono', monospace; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { margin:0; font-size:17px; letter-spacing:-.035em; }
+    .updated { text-align:right; }
+    .updated strong { display:block; margin-top:4px; color:var(--ink); font-size:13px; font-weight:700; }
+    main { padding-top:16px; }
+    .stations { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:stretch; }
+    .station { border:1px solid var(--line); border-radius:16px; padding:22px; min-height:388px; position:relative; overflow:hidden; }
+    .station.indoor { background:linear-gradient(135deg,#203638,#182525); }
+    .station.outdoor { background:linear-gradient(135deg,#343223,#1d2822); }
+    .station-head { display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1; }
+    .place { display:flex; gap:9px; align-items:center; font-size:14px; font-weight:700; }
+    .place span { font-size:18px; }
+    .reading { margin:25px 0 12px; font-size:clamp(58px,7vw,82px); line-height:.85; letter-spacing:-.09em; font-weight:600; }
+    .reading small { margin-left:8px; font-size:22px; letter-spacing:-.04em; }
+    .grid { display:flex; flex-direction:column; gap:16px; margin-top:16px; }
+    .card { background:rgba(25,37,36,.82); border:1px solid var(--line); border-radius:16px; padding:23px; }
+    .card-head { display:flex; justify-content:space-between; gap:12px; align-items:start; }
+    .chart-head { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; }
+    .chart-head .legend { justify-self:end; }
+    .chart-actions { display:flex; align-items:center; gap:14px; }
+    .global-chart-controls { display:flex; justify-content:flex-end; align-items:center; gap:12px; min-height:42px; }
+    .active-range { color:var(--ink); font-size:14px; font-weight:700; }
+    .zoom-controls { display:flex; gap:6px; padding:4px; background:#15201f; border:1px solid var(--line); border-radius:10px; }
+    .zoom-button { width:42px; height:42px; display:grid; place-items:center; padding:0; color:var(--ink); background:transparent; border:0; border-radius:7px; cursor:pointer; }
+    .zoom-button:hover { background:#30403a; }
+    .zoom-button:focus-visible { outline:2px solid var(--sky); outline-offset:2px; }
+    .zoom-button:disabled { color:#52635b; cursor:not-allowed; }
+    .zoom-button svg { width:20px; height:20px; }
+    h3 { margin:4px 0 0; font-size:18px; letter-spacing:-.035em; }
+    .legend { display:flex; gap:15px; color:var(--muted); font-size:11px; }
+    .legend i { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+    .chart-plot { position:relative; height:310px; margin-top:18px; }
+    .chart { width:100%; height:100%; display:block; overflow:hidden; touch-action:none; }
+    .chart text { fill:#82948a; font:11px 'DM Mono', monospace; }
+    .chart-tooltip { position:absolute; z-index:2; min-width:252px; padding:10px 12px; color:var(--ink); background:#10191b; border:1px solid #53675e; border-radius:7px; box-shadow:0 10px 28px rgba(0,0,0,.3); font-size:12px; pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity .12s ease,transform .12s ease; }
+    .chart-tooltip.visible { opacity:1; transform:translateY(0); }
+    .tooltip-time { margin-bottom:7px; color:var(--muted); font:10px 'DM Mono', monospace; }
+    .tooltip-sensors { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .tooltip-sensor { min-width:0; }
+    .tooltip-sensor-label { margin-bottom:5px; color:var(--muted); font:10px 'DM Mono', monospace; letter-spacing:.08em; text-transform:uppercase; }
+    .tooltip-row { display:flex; justify-content:space-between; gap:8px; padding:2px 0; color:var(--muted); font-size:11px; }
+    .tooltip-row span:last-child { color:var(--ink); font-weight:700; }
+    .metrics { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); margin:20px -23px -23px; border-radius:0 0 15px 15px; overflow:hidden; }
+    .metric { background:#172221; padding:17px 22px; }
+    .metric b { display:block; margin-top:7px; font-size:23px; font-weight:700; line-height:1; letter-spacing:-.05em; }
+    .inline-metrics { display:flex; align-items:baseline; justify-content:center; gap:18px; margin:0; }
+    .inline-metrics .metric { display:flex; align-items:baseline; gap:5px; padding:0; background:transparent; white-space:nowrap; }
+    .inline-metrics .label { font-size:9px; }
+    .inline-metrics .metric b { margin:0; font-size:15px; }
+    .summary { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px; }
+    .station .summary { margin-top:26px; position:relative; z-index:1; }
+    .stat { border-top:1px solid var(--line); padding-top:13px; }
+    .stat b { display:block; margin-top:7px; font-size:23px; letter-spacing:-.05em; }
+    .health { margin-top:20px; padding-top:17px; border-top:1px solid var(--line); }
+    .station .health { position:relative; z-index:1; }
+    .health-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(43,58,56,.65); }
+    .health-row:last-child { border:0; }
+    .health-name { font-size:13px; font-weight:600; }
+    .health-val { color:var(--muted); font:12px 'DM Mono', monospace; }
+    .bar { height:5px; width:64px; background:#2c3735; border-radius:10px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:8px; }
+    .bar span { display:block; height:100%; border-radius:inherit; background:var(--leaf); }
+    @media (max-width:780px) { header { align-items:flex-start; flex-direction:column; } .updated { text-align:left; } .stations { grid-template-columns:1fr; } .card-head,.chart-actions { align-items:flex-start; flex-direction:column; } .chart-head { display:flex; } .inline-metrics { flex-wrap:wrap; justify-content:flex-start; gap:8px 14px; } .global-chart-controls { justify-content:flex-start; } }
+    @media (prefers-reduced-motion:no-preference) { .station { transition:transform .25s ease,border-color .25s ease; } .station:hover { transform:translateY(-3px); border-color:#65766a; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 28 36" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21V8a5 5 0 0 1 10 0v13a8 8 0 1 1-10 0Z" stroke-width="3"/><path d="M14 15v11" stroke-width="3"/><circle cx="14" cy="27" r="3.6" fill="currentColor" stroke="none"/><path d="M10 12h4M10 16h4" stroke-width="2.5"/></svg></div><h1>Weather station</h1></div>
+      <div class="updated"><div class="meta">Last update</div><strong>Tue, 26 Aug · 20:59:14</strong></div>
+    </header>
+    <main>
+      <section class="stations" aria-label="Current readings">
+        <article class="station indoor"><div class="station-head"><div class="place"><span>⌂</span> Indoor</div></div><div class="reading">22.4<small>°C</small></div><div class="summary"><div class="stat"><div class="label">Humidity</div><b>54%</b></div><div class="stat"><div class="label">Dew point</div><b>12.8°</b></div><div class="stat"><div class="label">Heat index</div><b>22.2°</b></div><div class="stat"><div class="label">Comfort</div><b style="color:var(--leaf)">Good</b></div></div><div class="health"><div class="label">Sensor health</div><div class="health-row"><span class="health-name">Battery</span><span class="health-val">91% <i class="bar"><span style="width:91%"></span></i></span></div><div class="health-row"><span class="health-name">Signal</span><span class="health-val">−66 dBm <i class="bar"><span style="width:72%"></span></i></span></div></div></article>
+        <article class="station outdoor"><div class="station-head"><div class="place"><span>♧</span> Outdoor</div></div><div class="reading">25.5<small>°C</small></div><div class="summary"><div class="stat"><div class="label">Humidity</div><b>69%</b></div><div class="stat"><div class="label">Dew point</div><b>19.4°</b></div><div class="stat"><div class="label">Heat index</div><b>25.7°</b></div><div class="stat"><div class="label">Comfort</div><b style="color:var(--leaf)">Good</b></div></div><div class="health"><div class="label">Sensor health</div><div class="health-row"><span class="health-name">Battery</span><span class="health-val">96% <i class="bar"><span style="width:96%"></span></i></span></div><div class="health-row"><span class="health-name">Signal</span><span class="health-val">−72 dBm <i class="bar"><span style="width:64%"></span></i></span></div></div></article>
+      </section>
+      <div class="grid">
+        <div class="global-chart-controls"><div class="active-range" id="active-range">Last day</div><div class="zoom-controls" aria-label="Chart zoom"><button class="zoom-button" id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M8 11h6M16 16l4 4"/></svg></button><button class="zoom-button" id="zoom-in" type="button" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M8 11h6M11 8v6M16 16l4 4"/></svg></button></div></div>
+        <section class="card"><div class="card-head chart-head"><div class="label">Temperature</div><div class="inline-metrics"><div class="metric"><div class="label">Indoor low</div><b id="indoor-low">20.1°C</b></div><div class="metric"><div class="label">Indoor high</div><b id="indoor-high">24.3°C</b></div><div class="metric"><div class="label">Outdoor low</div><b id="outdoor-low">19.8°C</b></div><div class="metric"><div class="label">Outdoor high</div><b id="outdoor-high">27.1°C</b></div></div><div class="legend"><span><i style="background:#83d2e5"></i>Indoor</span><span><i style="background:#b9e53b"></i>Outdoor</span></div></div>
+          <div class="chart-plot" id="chart-plot"><svg class="chart" id="temperature-chart" viewBox="0 0 920 300" role="img" aria-label="Interactive temperature chart. Move the pointer over the chart to inspect a reading."></svg><div class="chart-tooltip" id="chart-tooltip" role="status"></div></div>
+        </section>
+        <section class="card"><div class="card-head chart-head"><div class="label">Humidity</div><div class="inline-metrics"><div class="metric"><div class="label">Indoor low</div><b id="indoor-humidity-low">50%</b></div><div class="metric"><div class="label">Indoor high</div><b id="indoor-humidity-high">58%</b></div><div class="metric"><div class="label">Outdoor low</div><b id="outdoor-humidity-low">60%</b></div><div class="metric"><div class="label">Outdoor high</div><b id="outdoor-humidity-high">78%</b></div></div><div class="legend"><span><i style="background:#83d2e5"></i>Indoor</span><span><i style="background:#b9e53b"></i>Outdoor</span></div></div><div class="chart-plot" id="moisture-chart-plot"><svg class="chart" id="moisture-chart" viewBox="0 0 920 300" role="img" aria-label="Interactive humidity chart."></svg><div class="chart-tooltip" id="moisture-chart-tooltip" role="status"></div></div></section>
+        <section class="card"><div class="card-head chart-head"><div class="label">Dew point</div><div class="inline-metrics"><div class="metric"><div class="label">Indoor low</div><b id="indoor-dew-low">10.0°C</b></div><div class="metric"><div class="label">Indoor high</div><b id="indoor-dew-high">14.0°C</b></div><div class="metric"><div class="label">Outdoor low</div><b id="outdoor-dew-low">15.0°C</b></div><div class="metric"><div class="label">Outdoor high</div><b id="outdoor-dew-high">21.0°C</b></div></div><div class="legend"><span><i style="background:#83d2e5"></i>Indoor</span><span><i style="background:#b9e53b"></i>Outdoor</span></div></div><div class="chart-plot" id="dew-chart-plot"><svg class="chart" id="dew-chart" viewBox="0 0 920 300" role="img" aria-label="Interactive dew point chart."></svg><div class="chart-tooltip" id="dew-chart-tooltip" role="status"></div></div></section>
+      </div>
+    </main>
+  </div>
+  <script>
+    const chart = document.querySelector('#temperature-chart');
+    const chartPlot = document.querySelector('#chart-plot');
+    const activeRange = document.querySelector('#active-range');
+    const tooltip = document.querySelector('#chart-tooltip');
+    const moistureChart = document.querySelector('#moisture-chart');
+    const moistureChartPlot = document.querySelector('#moisture-chart-plot');
+    const moistureTooltip = document.querySelector('#moisture-chart-tooltip');
+    const dewChart = document.querySelector('#dew-chart');
+    const dewTooltip = document.querySelector('#dew-chart-tooltip');
+    const zoomOut = document.querySelector('#zoom-out');
+    const zoomIn = document.querySelector('#zoom-in');
+    const namespace = 'http://www.w3.org/2000/svg';
+    const chartWidth = 920;
+    const chartHeight = 300;
+    const margin = { top: 16, right: 18, bottom: 46, left: 50 };
+    const anchorReadings = [
+      ['2026-08-25T20:59:14+02:00', 21.1, 22.6],
+      ['2026-08-25T22:59:14+02:00', 21.0, 22.9],
+      ['2026-08-26T00:59:14+02:00', 20.8, 22.7],
+      ['2026-08-26T02:59:14+02:00', 20.9, 23.5],
+      ['2026-08-26T04:59:14+02:00', 21.4, 25.1],
+      ['2026-08-26T06:59:14+02:00', 22.2, 26.3],
+      ['2026-08-26T08:59:14+02:00', 22.8, 24.8],
+      ['2026-08-26T10:59:14+02:00', 23.1, 22.4],
+      ['2026-08-26T12:59:14+02:00', 23.0, 21.3],
+      ['2026-08-26T14:59:14+02:00', 22.6, 20.4],
+      ['2026-08-26T16:59:14+02:00', 22.2, 20.8],
+      ['2026-08-26T18:59:14+02:00', 22.5, 22.7],
+      ['2026-08-26T20:59:14+02:00', 22.4, 25.5]
+    ].map(([measuredAt, indoor, outdoor]) => ({ measuredAt: new Date(measuredAt), indoor, outdoor }));
+    const recentReadings = anchorReadings.flatMap((start, index) => {
+      const end = anchorReadings[index + 1];
+      if (end == null) return [start];
+      const steps = (end.measuredAt.getTime() - start.measuredAt.getTime()) / (5 * 60 * 1000);
+      return Array.from({ length: steps }, (_, step) => {
+        const progress = step / steps;
+        return {
+          measuredAt: new Date(start.measuredAt.getTime() + step * 5 * 60 * 1000),
+          indoor: start.indoor + (end.indoor - start.indoor) * progress,
+          outdoor: start.outdoor + (end.outdoor - start.outdoor) * progress
+        };
+      });
+    });
+    const fiveMinutes = 5 * 60 * 1000;
+    const latestReading = recentReadings.at(-1);
+    const historicStart = anchorReadings[0].measuredAt.getTime() - 29 * 24 * 60 * 60 * 1000;
+    const historicReadings = Array.from({ length: 29 * 24 * 12 }, (_, index) => {
+      const minutesIntoDay = (index * 5) % (24 * 60);
+      const dayPhase = (minutesIntoDay / (24 * 60)) * Math.PI * 2;
+      const weekPhase = (index / (7 * 24 * 12)) * Math.PI * 2;
+      return {
+        measuredAt: new Date(historicStart + index * fiveMinutes),
+        indoor: 22 + Math.sin(dayPhase - 1.2) * 1.1 + Math.sin(weekPhase) * 0.35,
+        outdoor: 22.8 + Math.sin(dayPhase - 0.7) * 3.1 + Math.sin(weekPhase + 0.8) * 0.75
+      };
+    });
+    const dewPoint = (temperature, humidity) => {
+      const alpha = Math.log(humidity / 100) + (17.27 * temperature) / (237.7 + temperature);
+      return (237.7 * alpha) / (17.27 - alpha);
+    };
+    const readings = [...historicReadings, ...recentReadings].map((reading, index, all) => {
+      const dayPhase = ((reading.measuredAt.getHours() * 60 + reading.measuredAt.getMinutes()) / (24 * 60)) * Math.PI * 2;
+      const indoorHumidity = 54 + Math.cos(dayPhase + 0.4) * 4;
+      const outdoorHumidity = 69 - Math.sin(dayPhase - 0.2) * 9;
+      const enriched = {
+        ...reading,
+        indoorHumidity,
+        outdoorHumidity,
+        indoorDewPoint: dewPoint(reading.indoor, indoorHumidity),
+        outdoorDewPoint: dewPoint(reading.outdoor, outdoorHumidity),
+        indoorHeatIndex: reading.indoor,
+        outdoorHeatIndex: reading.outdoor + Math.max(0, (outdoorHumidity - 55) * 0.01)
+      };
+      return index === all.length - 1 ? { ...enriched, indoorHumidity:54, outdoorHumidity:69, indoorDewPoint:12.8, outdoorDewPoint:19.4, indoorHeatIndex:22.2, outdoorHeatIndex:25.7 } : enriched;
+    });
+    const zoomLevels = [
+      { hours: 30 * 24, label: 'Last month' },
+      { hours: 14 * 24, label: 'Last 2 weeks' },
+      { hours: 7 * 24, label: 'Last week' },
+      { hours: 3 * 24, label: 'Last 3 days' },
+      { hours: 24, label: 'Last day' },
+      { hours: 12, label: 'Last 12 hours' },
+      { hours: 6, label: 'Last 6 hours' }
+    ];
+    let zoomIndex = 4;
+    let displayedReadings = readings;
+    let scale = null;
+    let moistureScale = null;
+    let dewScale = null;
+
+    const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
+    const dateLabel = (date) => new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Europe/Rome' }).format(date).replace(',', ' ·');
+    const axisLabel = (date) => new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Europe/Rome' }).format(date).replace(',', '\n');
+    const svgElement = (name, attributes = {}) => {
+      const element = document.createElementNS(namespace, name);
+      Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+      return element;
+    };
+    const makeTicks = (min, max, count) => Array.from({ length: count }, (_, index) => min + ((max - min) * index) / (count - 1));
+    const pathFor = (data, field) => data.map((reading, index) => `${index === 0 ? 'M' : 'L'} ${scale.x(reading.measuredAt.getTime()).toFixed(1)} ${scale.y(reading[field]).toFixed(1)}`).join(' ');
+
+    function renderChart() {
+      const { hours, label } = zoomLevels[zoomIndex];
+      const end = readings.at(-1).measuredAt.getTime();
+      const start = end - hours * 60 * 60 * 1000;
+      displayedReadings = readings.filter((reading) => reading.measuredAt.getTime() >= start);
+      const first = displayedReadings[0];
+      const last = displayedReadings.at(-1);
+      const values = displayedReadings.flatMap((reading) => [reading.indoor, reading.outdoor]);
+      const yMin = Math.floor(Math.min(...values) - 1);
+      const yMax = Math.ceil(Math.max(...values) + 1);
+      const plotWidth = chartWidth - margin.left - margin.right;
+      const plotHeight = chartHeight - margin.top - margin.bottom;
+      const xStart = first.measuredAt.getTime();
+      const xEnd = last.measuredAt.getTime();
+      scale = {
+        x: (value) => margin.left + ((value - xStart) / (xEnd - xStart || 1)) * plotWidth,
+        y: (value) => margin.top + ((yMax - value) / (yMax - yMin || 1)) * plotHeight,
+        yMin, yMax, xStart, xEnd, plotWidth, plotHeight
+      };
+      chart.replaceChildren();
+      const plotBottom = margin.top + plotHeight;
+      const yTicks = makeTicks(yMin, yMax, 5);
+      yTicks.forEach((tick) => {
+        const y = scale.y(tick);
+        chart.append(svgElement('line', { x1:margin.left, x2:chartWidth - margin.right, y1:y, y2:y, stroke:'#2b3a38', 'stroke-width':'1' }));
+        const label = svgElement('text', { x:margin.left - 10, y:y + 4, 'text-anchor':'end' });
+        label.textContent = `${tick}°`;
+        chart.append(label);
+      });
+      makeTicks(xStart, xEnd, 5).forEach((tick) => {
+        const x = scale.x(tick);
+        chart.append(svgElement('line', { x1:x, x2:x, y1:margin.top, y2:plotBottom, stroke:'#2b3a38', 'stroke-width':'1' }));
+        const [date, time] = axisLabel(new Date(tick)).split('\n');
+        const dateText = svgElement('text', { x, y:plotBottom + 20, 'text-anchor':'middle' });
+        dateText.textContent = date;
+        const timeText = svgElement('text', { x, y:plotBottom + 34, 'text-anchor':'middle', fill:'#b3c1b7' });
+        timeText.textContent = time;
+        chart.append(dateText, timeText);
+      });
+      chart.append(svgElement('path', { d:pathFor(displayedReadings, 'indoor'), fill:'none', stroke:'#83d2e5', 'stroke-width':'3', 'stroke-linecap':'round', 'stroke-linejoin':'round' }));
+      chart.append(svgElement('path', { d:pathFor(displayedReadings, 'outdoor'), fill:'none', stroke:'#b9e53b', 'stroke-width':'3', 'stroke-linecap':'round', 'stroke-linejoin':'round' }));
+      const cursor = svgElement('g', { id:'chart-cursor', visibility:'hidden' });
+      cursor.append(svgElement('line', { id:'cursor-line', x1:0, x2:0, y1:margin.top, y2:plotBottom, stroke:'#dce7df', 'stroke-opacity':'.55', 'stroke-width':'1' }));
+      cursor.append(svgElement('circle', { id:'indoor-point', r:'4', fill:'#83d2e5', stroke:'#10191b', 'stroke-width':'2' }));
+      cursor.append(svgElement('circle', { id:'outdoor-point', r:'4', fill:'#b9e53b', stroke:'#10191b', 'stroke-width':'2' }));
+      chart.append(cursor);
+      activeRange.textContent = label;
+      chart.setAttribute('aria-label', `Interactive temperature chart for ${label.toLowerCase()}.`);
+      document.querySelector('#indoor-low').textContent = `${Math.min(...displayedReadings.map((reading) => reading.indoor)).toFixed(1)}°C`;
+      document.querySelector('#indoor-high').textContent = `${Math.max(...displayedReadings.map((reading) => reading.indoor)).toFixed(1)}°C`;
+      document.querySelector('#outdoor-low').textContent = `${Math.min(...displayedReadings.map((reading) => reading.outdoor)).toFixed(1)}°C`;
+      document.querySelector('#outdoor-high').textContent = `${Math.max(...displayedReadings.map((reading) => reading.outdoor)).toFixed(1)}°C`;
+      zoomOut.disabled = zoomIndex === 0;
+      zoomIn.disabled = zoomIndex === zoomLevels.length - 1;
+      renderMoistureChart(label);
+      renderDewChart(label);
+    }
+
+    function renderMoistureChart(label) {
+      const humidityValues = displayedReadings.flatMap((reading) => [reading.indoorHumidity, reading.outdoorHumidity]);
+      const humidityMin = Math.floor(Math.min(...humidityValues) / 5) * 5 - 5;
+      const humidityMax = Math.ceil(Math.max(...humidityValues) / 5) * 5 + 5;
+      const plotWidth = chartWidth - margin.left - margin.right;
+      const plotHeight = chartHeight - margin.top - margin.bottom;
+      const xStart = displayedReadings[0].measuredAt.getTime();
+      const xEnd = displayedReadings.at(-1).measuredAt.getTime();
+      const x = (value) => margin.left + ((value - xStart) / (xEnd - xStart || 1)) * plotWidth;
+      const humidityY = (value) => margin.top + ((humidityMax - value) / (humidityMax - humidityMin || 1)) * plotHeight;
+      moistureScale = { x, humidityY, xStart, xEnd, plotWidth, plotHeight };
+      moistureChart.replaceChildren();
+      const plotBottom = margin.top + plotHeight;
+      makeTicks(humidityMin, humidityMax, 5).forEach((tick) => {
+        const y = humidityY(tick);
+        moistureChart.append(svgElement('line', { x1:margin.left, x2:chartWidth - margin.right, y1:y, y2:y, stroke:'#2b3a38', 'stroke-width':'1' }));
+        const label = svgElement('text', { x:margin.left - 10, y:y + 4, 'text-anchor':'end' });
+        label.textContent = `${Math.round(tick)}%`;
+        moistureChart.append(label);
+      });
+      makeTicks(xStart, xEnd, 5).forEach((tick) => {
+        const position = x(tick);
+        moistureChart.append(svgElement('line', { x1:position, x2:position, y1:margin.top, y2:plotBottom, stroke:'#2b3a38', 'stroke-width':'1' }));
+        const [date, time] = axisLabel(new Date(tick)).split('\n');
+        const dateText = svgElement('text', { x:position, y:plotBottom + 20, 'text-anchor':'middle' });
+        dateText.textContent = date;
+        const timeText = svgElement('text', { x:position, y:plotBottom + 34, 'text-anchor':'middle' });
+        timeText.textContent = time;
+        moistureChart.append(dateText, timeText);
+      });
+      const moisturePath = (field, yScale) => displayedReadings.map((reading, index) => `${index === 0 ? 'M' : 'L'} ${x(reading.measuredAt.getTime()).toFixed(1)} ${yScale(reading[field]).toFixed(1)}`).join(' ');
+      [
+        ['indoorHumidity', humidityY, '#83d2e5'],
+        ['outdoorHumidity', humidityY, '#b9e53b']
+      ].forEach(([field, yScale, color]) => moistureChart.append(svgElement('path', { d:moisturePath(field, yScale), fill:'none', stroke:color, 'stroke-width':'2.5', 'stroke-linecap':'round', 'stroke-linejoin':'round' })));
+      const cursor = svgElement('g', { id:'moisture-chart-cursor', visibility:'hidden' });
+      cursor.append(svgElement('line', { id:'moisture-cursor-line', x1:0, x2:0, y1:margin.top, y2:plotBottom, stroke:'#dce7df', 'stroke-opacity':'.55', 'stroke-width':'1' }));
+      moistureChart.append(cursor);
+      moistureChart.setAttribute('aria-label', `Interactive humidity chart for ${label.toLowerCase()}.`);
+      document.querySelector('#indoor-humidity-low').textContent = `${Math.min(...displayedReadings.map((reading) => reading.indoorHumidity)).toFixed(0)}%`;
+      document.querySelector('#indoor-humidity-high').textContent = `${Math.max(...displayedReadings.map((reading) => reading.indoorHumidity)).toFixed(0)}%`;
+      document.querySelector('#outdoor-humidity-low').textContent = `${Math.min(...displayedReadings.map((reading) => reading.outdoorHumidity)).toFixed(0)}%`;
+      document.querySelector('#outdoor-humidity-high').textContent = `${Math.max(...displayedReadings.map((reading) => reading.outdoorHumidity)).toFixed(0)}%`;
+    }
+
+    function renderDewChart(label) {
+      const values = displayedReadings.flatMap((reading) => [reading.indoorDewPoint, reading.outdoorDewPoint]);
+      const yMin = Math.floor(Math.min(...values) - 1);
+      const yMax = Math.ceil(Math.max(...values) + 1);
+      const plotWidth = chartWidth - margin.left - margin.right;
+      const plotHeight = chartHeight - margin.top - margin.bottom;
+      const xStart = displayedReadings[0].measuredAt.getTime();
+      const xEnd = displayedReadings.at(-1).measuredAt.getTime();
+      const x = (value) => margin.left + ((value - xStart) / (xEnd - xStart || 1)) * plotWidth;
+      const y = (value) => margin.top + ((yMax - value) / (yMax - yMin || 1)) * plotHeight;
+      dewScale = { x, y, xStart, xEnd, plotWidth, plotHeight };
+      dewChart.replaceChildren();
+      const plotBottom = margin.top + plotHeight;
+      makeTicks(yMin, yMax, 5).forEach((tick) => {
+        const position = y(tick);
+        dewChart.append(svgElement('line', { x1:margin.left, x2:chartWidth - margin.right, y1:position, y2:position, stroke:'#2b3a38', 'stroke-width':'1' }));
+        const axis = svgElement('text', { x:margin.left - 10, y:position + 4, 'text-anchor':'end' });
+        axis.textContent = `${tick}°`;
+        dewChart.append(axis);
+      });
+      makeTicks(xStart, xEnd, 5).forEach((tick) => {
+        const position = x(tick);
+        dewChart.append(svgElement('line', { x1:position, x2:position, y1:margin.top, y2:plotBottom, stroke:'#2b3a38', 'stroke-width':'1' }));
+        const [date, time] = axisLabel(new Date(tick)).split('\n');
+        const dateText = svgElement('text', { x:position, y:plotBottom + 20, 'text-anchor':'middle' });
+        dateText.textContent = date;
+        const timeText = svgElement('text', { x:position, y:plotBottom + 34, 'text-anchor':'middle' });
+        timeText.textContent = time;
+        dewChart.append(dateText, timeText);
+      });
+      const path = (field) => displayedReadings.map((reading, index) => `${index === 0 ? 'M' : 'L'} ${x(reading.measuredAt.getTime()).toFixed(1)} ${y(reading[field]).toFixed(1)}`).join(' ');
+      dewChart.append(svgElement('path', { d:path('indoorDewPoint'), fill:'none', stroke:'#83d2e5', 'stroke-width':'2.5', 'stroke-linecap':'round', 'stroke-linejoin':'round' }));
+      dewChart.append(svgElement('path', { d:path('outdoorDewPoint'), fill:'none', stroke:'#b9e53b', 'stroke-width':'2.5', 'stroke-linecap':'round', 'stroke-linejoin':'round' }));
+      const cursor = svgElement('g', { id:'dew-chart-cursor', visibility:'hidden' });
+      cursor.append(svgElement('line', { id:'dew-cursor-line', x1:0, x2:0, y1:margin.top, y2:plotBottom, stroke:'#dce7df', 'stroke-opacity':'.55', 'stroke-width':'1' }));
+      dewChart.append(cursor);
+      dewChart.setAttribute('aria-label', `Interactive dew point chart for ${label.toLowerCase()}.`);
+      document.querySelector('#indoor-dew-low').textContent = `${Math.min(...displayedReadings.map((reading) => reading.indoorDewPoint)).toFixed(1)}°C`;
+      document.querySelector('#indoor-dew-high').textContent = `${Math.max(...displayedReadings.map((reading) => reading.indoorDewPoint)).toFixed(1)}°C`;
+      document.querySelector('#outdoor-dew-low').textContent = `${Math.min(...displayedReadings.map((reading) => reading.outdoorDewPoint)).toFixed(1)}°C`;
+      document.querySelector('#outdoor-dew-high').textContent = `${Math.max(...displayedReadings.map((reading) => reading.outdoorDewPoint)).toFixed(1)}°C`;
+    }
+
+    function hideTooltip() {
+      hideAllTooltips();
+      hideAllCursors();
+    }
+
+    function tooltipContent(reading) {
+      const sensor = (label, temperature, heatIndex) => `<div class="tooltip-sensor"><div class="tooltip-sensor-label">${label}</div><div class="tooltip-row"><span>Temp</span><span>${temperature.toFixed(1)}°C</span></div><div class="tooltip-row"><span>Heat index</span><span>${heatIndex.toFixed(1)}°C</span></div></div>`;
+      return `<div class="tooltip-time">${escapeHtml(dateLabel(reading.measuredAt))}</div><div class="tooltip-sensors">${sensor('Indoor', reading.indoor, reading.indoorHeatIndex)}${sensor('Outdoor', reading.outdoor, reading.outdoorHeatIndex)}</div>`;
+    }
+
+    function hideAllCursors() {
+      ['#chart-cursor', '#moisture-chart-cursor', '#dew-chart-cursor'].forEach((selector) => {
+        const cursor = document.querySelector(selector);
+        if (cursor) cursor.setAttribute('visibility', 'hidden');
+      });
+    }
+
+    function hideAllTooltips() {
+      [tooltip, moistureTooltip, dewTooltip].forEach((item) => item.classList.remove('visible'));
+    }
+
+    function syncCursors(reading) {
+      const temperatureX = scale.x(reading.measuredAt.getTime());
+      const temperatureCursor = document.querySelector('#chart-cursor');
+      temperatureCursor.setAttribute('visibility', 'visible');
+      document.querySelector('#cursor-line').setAttribute('x1', temperatureX);
+      document.querySelector('#cursor-line').setAttribute('x2', temperatureX);
+      document.querySelector('#indoor-point').setAttribute('cx', temperatureX);
+      document.querySelector('#indoor-point').setAttribute('cy', scale.y(reading.indoor));
+      document.querySelector('#outdoor-point').setAttribute('cx', temperatureX);
+      document.querySelector('#outdoor-point').setAttribute('cy', scale.y(reading.outdoor));
+      const moistureX = moistureScale.x(reading.measuredAt.getTime());
+      const moistureCursor = document.querySelector('#moisture-chart-cursor');
+      moistureCursor.setAttribute('visibility', 'visible');
+      document.querySelector('#moisture-cursor-line').setAttribute('x1', moistureX);
+      document.querySelector('#moisture-cursor-line').setAttribute('x2', moistureX);
+      const dewX = dewScale.x(reading.measuredAt.getTime());
+      const dewCursor = document.querySelector('#dew-chart-cursor');
+      dewCursor.setAttribute('visibility', 'visible');
+      document.querySelector('#dew-cursor-line').setAttribute('x1', dewX);
+      document.querySelector('#dew-cursor-line').setAttribute('x2', dewX);
+    }
+
+    function placeTooltip(element, host, fraction) {
+      const hostWidth = host.getBoundingClientRect().width;
+      element.style.left = `${Math.max(8, Math.min(fraction * hostWidth + 14, hostWidth - 276))}px`;
+      element.style.top = '12px';
+      element.classList.add('visible');
+    }
+
+    function syncTooltips(reading, fraction) {
+      tooltip.innerHTML = tooltipContent(reading);
+      moistureTooltip.innerHTML = `<div class="tooltip-time">${escapeHtml(dateLabel(reading.measuredAt))}</div><div class="tooltip-sensors"><div class="tooltip-sensor"><div class="tooltip-sensor-label">Indoor</div><div class="tooltip-row"><span>Humidity</span><span>${reading.indoorHumidity.toFixed(0)}%</span></div></div><div class="tooltip-sensor"><div class="tooltip-sensor-label">Outdoor</div><div class="tooltip-row"><span>Humidity</span><span>${reading.outdoorHumidity.toFixed(0)}%</span></div></div></div>`;
+      dewTooltip.innerHTML = `<div class="tooltip-time">${escapeHtml(dateLabel(reading.measuredAt))}</div><div class="tooltip-sensors"><div class="tooltip-sensor"><div class="tooltip-sensor-label">Indoor</div><div class="tooltip-row"><span>Dew point</span><span>${reading.indoorDewPoint.toFixed(1)}°C</span></div></div><div class="tooltip-sensor"><div class="tooltip-sensor-label">Outdoor</div><div class="tooltip-row"><span>Dew point</span><span>${reading.outdoorDewPoint.toFixed(1)}°C</span></div></div></div>`;
+      placeTooltip(tooltip, chartPlot, fraction);
+      placeTooltip(moistureTooltip, moistureChartPlot, fraction);
+      placeTooltip(dewTooltip, document.querySelector('#dew-chart-plot'), fraction);
+    }
+
+    function showReading(event) {
+      const bounds = chart.getBoundingClientRect();
+      const pointerX = ((event.clientX - bounds.left) / bounds.width) * chartWidth;
+      if (pointerX < margin.left || pointerX > chartWidth - margin.right) return hideTooltip();
+      const targetTime = scale.xStart + ((pointerX - margin.left) / scale.plotWidth) * (scale.xEnd - scale.xStart);
+      const reading = displayedReadings.reduce((nearest, item) => Math.abs(item.measuredAt.getTime() - targetTime) < Math.abs(nearest.measuredAt.getTime() - targetTime) ? item : nearest);
+      syncCursors(reading);
+      syncTooltips(reading, (event.clientX - bounds.left) / bounds.width);
+    }
+
+    function hideMoistureTooltip() {
+      hideAllTooltips();
+      hideAllCursors();
+    }
+
+    function showMoistureReading(event) {
+      const bounds = moistureChart.getBoundingClientRect();
+      const pointerX = ((event.clientX - bounds.left) / bounds.width) * chartWidth;
+      if (pointerX < margin.left || pointerX > chartWidth - margin.right) return hideMoistureTooltip();
+      const targetTime = moistureScale.xStart + ((pointerX - margin.left) / moistureScale.plotWidth) * (moistureScale.xEnd - moistureScale.xStart);
+      const reading = displayedReadings.reduce((nearest, item) => Math.abs(item.measuredAt.getTime() - targetTime) < Math.abs(nearest.measuredAt.getTime() - targetTime) ? item : nearest);
+      syncCursors(reading);
+      syncTooltips(reading, (event.clientX - bounds.left) / bounds.width);
+    }
+
+    function hideDewTooltip() {
+      hideAllTooltips();
+      hideAllCursors();
+    }
+
+    function showDewReading(event) {
+      const bounds = dewChart.getBoundingClientRect();
+      const pointerX = ((event.clientX - bounds.left) / bounds.width) * chartWidth;
+      if (pointerX < margin.left || pointerX > chartWidth - margin.right) return hideDewTooltip();
+      const targetTime = dewScale.xStart + ((pointerX - margin.left) / dewScale.plotWidth) * (dewScale.xEnd - dewScale.xStart);
+      const reading = displayedReadings.reduce((nearest, item) => Math.abs(item.measuredAt.getTime() - targetTime) < Math.abs(nearest.measuredAt.getTime() - targetTime) ? item : nearest);
+      syncCursors(reading);
+      syncTooltips(reading, (event.clientX - bounds.left) / bounds.width);
+    }
+
+    zoomIn.addEventListener('click', () => { zoomIndex += 1; renderChart(); });
+    zoomOut.addEventListener('click', () => { zoomIndex -= 1; renderChart(); });
+    chart.addEventListener('pointermove', showReading);
+    chart.addEventListener('pointerleave', hideTooltip);
+    moistureChart.addEventListener('pointermove', showMoistureReading);
+    moistureChart.addEventListener('pointerleave', hideMoistureTooltip);
+    dewChart.addEventListener('pointermove', showDewReading);
+    dewChart.addEventListener('pointerleave', hideDewTooltip);
+    renderChart();
+  </script>
+</body>
+</html>
