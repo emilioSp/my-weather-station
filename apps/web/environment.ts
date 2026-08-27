@@ -1,0 +1,9 @@
+type Environment = {
+  VITE_SUPABASE_URL: string;
+  VITE_SUPABASE_PUBLISHABLE_KEY: string;
+};
+
+export const environment: Environment = {
+  VITE_SUPABASE_URL: 'https://kbrukwhrsbcaobugmmnz.supabase.co',
+  VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_GZOurnYoEZ3xGR7U9-HQuA_R9015MFC',
+};

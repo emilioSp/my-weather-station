@@ -1,0 +1,5 @@
+.env
+.npmrc
+.idea
+node_modules
+dist
