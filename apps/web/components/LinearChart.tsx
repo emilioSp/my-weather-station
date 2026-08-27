@@ -65,6 +65,9 @@ export const LinearChart = ({
   sensor,
   measures,
 }: LinearChartProps) => {
+  const [touchTooltipActive, setTouchTooltipActive] = React.useState<
+    boolean | null
+  >(null);
   const chartMeasures = React.useMemo(
     () => downsampleMeasures({ measures, metric }),
     [measures, metric],
@@ -100,9 +103,11 @@ export const LinearChart = ({
       <div className="mt-[18px] h-[380px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
+            aria-label={`Interactive ${details.label.toLowerCase()} chart for ${sensor.toLowerCase()} measurements in ${range.label.toLowerCase()}.`}
             data={chartData}
             margin={{ top: 20, right: 20, bottom: 50, left: 20 }}
-            aria-label={`Interactive ${details.label.toLowerCase()} chart for ${sensor.toLowerCase()} measurements in ${range.label.toLowerCase()}.`}
+            onTouchEnd={() => setTouchTooltipActive(false)}
+            onTouchStart={() => setTouchTooltipActive(true)}
           >
             <CartesianGrid stroke="#2b3a38" />
             <XAxis
@@ -132,6 +137,7 @@ export const LinearChart = ({
               content={(tooltipProps) => (
                 <ChartTooltip {...tooltipProps} metric={metric} />
               )}
+              active={touchTooltipActive ?? undefined}
               cursor={{ stroke: '#dce7df', strokeOpacity: 0.55 }}
               isAnimationActive={false}
             />
