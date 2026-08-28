@@ -94,23 +94,9 @@ docker compose -f apps/collector/docker-compose.yml up -d
 npm run migrate -w @wx/collector
 ```
 
-`apps/collector/.env.local` holds the credentials of that PostgreSQL container, and is read
-by the compose file next to it. The compose file pins `name: my-weather-station`, so the
-volume does not depend on the directory the file sits in.
-
 ### Web app
 
-The web app reads the `measures` table straight from Supabase in the browser. There is no
-API server. Create `apps/web/.env`:
-
-```dotenv
-VITE_SUPABASE_URL=https://<project>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<publishable key>
-```
-
-Only variables prefixed with `VITE_` reach the bundle, and Vite substitutes them at build
-time, so both values end up inside the published JavaScript. That is expected for a
-publishable key: the table is protected by row level security, not by hiding the key.
+The web app reads the `measures` table straight from Supabase in the browser. There is no API server.
 
 ## Commands
 

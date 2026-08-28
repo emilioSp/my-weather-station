@@ -3,8 +3,8 @@ import { type Measure, type MeterType, toCamelCaseKeys } from '@wx/shared';
 import { environment } from '#environment.ts';
 
 const supabase = createClient(
-  environment.VITE_SUPABASE_URL,
-  environment.VITE_SUPABASE_PUBLISHABLE_KEY,
+  environment.SUPABASE_URL,
+  environment.SUPABASE_PUBLISHABLE_KEY,
 );
 
 export type MeasureQueryResult = {

@@ -10,7 +10,7 @@
     "store-measure": "node --env-file=.env index.ts",
     "ble-raw": "node ble-raw.ts",
     "new:migration": "knex migrate:make -x ts",
-    "migrate": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:latest",
+    "migrate": "node --env-file=.env.prod ../../node_modules/knex/bin/cli.js migrate:latest",
     "rollback": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:rollback",
     "build": "tsc",
     "docker-build-and-push": "docker buildx build --platform linux/arm64 --file Dockerfile --tag espatola/my-weather-station:latest --push ../.."

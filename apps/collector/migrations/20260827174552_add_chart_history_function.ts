@@ -2,7 +2,7 @@ import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   await knex.raw(`
-    CREATE FUNCTION public.get_chart_history(
+    CREATE OR REPLACE FUNCTION public.get_chart_history(
       p_start TIMESTAMP WITH TIME ZONE,
       p_end TIMESTAMP WITH TIME ZONE
     )
@@ -12,23 +12,35 @@ export async function up(knex: Knex): Promise<void> {
     SECURITY INVOKER
     SET search_path = public
     AS $$
-      WITH filtered AS (
-        SELECT *
-        FROM measures
+      WITH requested AS (
+        SELECT least(p_end, now()) AS end_at
+      ),
+      bounds AS (
+        SELECT
+          requested.end_at,
+          greatest(p_start, requested.end_at - INTERVAL '31 days') AS start_at
+        FROM requested
+      ),
+      filtered AS (
+        SELECT measures.*
+        FROM measures, bounds
         WHERE device_type IN ('indoor', 'outdoor')
-          AND measured_at >= p_start
-          AND measured_at <= p_end
+          AND measured_at >= bounds.start_at
+          AND measured_at <= bounds.end_at
       ),
       bucketed AS (
         SELECT
           filtered.*,
           count(*) OVER (PARTITION BY device_type) > 1800 AS is_downsampled,
           date_bin(
-            (p_end - p_start) / 150,
+            greatest(
+              (bounds.end_at - bounds.start_at) / 150,
+              INTERVAL '1 microsecond'
+            ),
             measured_at,
-            p_start
+            bounds.start_at
           ) AS bucket_label
-        FROM filtered
+        FROM filtered, bounds
       ),
       ranked AS (
         SELECT

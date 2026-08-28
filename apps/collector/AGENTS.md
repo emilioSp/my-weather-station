@@ -8,7 +8,6 @@ This workspace reads BLE advertisements from SwitchBot indoor and outdoor meters
 
 This workspace owns:
 
-- `.env` and `.env.local`
 - `Dockerfile` and `Dockerfile.dockerignore`
 - `docker-compose.yml`
 - `knexfile.js` and `migrations/`
