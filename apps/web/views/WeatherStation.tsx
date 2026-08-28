@@ -1,6 +1,7 @@
 import type { Measure } from '@wx/shared';
 import * as React from 'react';
 import {
+  FaArrowsRotate,
   FaHouse,
   FaMagnifyingGlassMinus,
   FaMagnifyingGlassPlus,
@@ -28,6 +29,11 @@ import {
 
 const chartMetrics: WeatherMetric[] = ['temperature', 'humidity', 'dewPoint'];
 
+const waitUntil = (deadline: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, Math.max(0, deadline - Date.now()));
+  });
+
 type CurrentMeasures = {
   indoor: Measure | null;
   outdoor: Measure | null;
@@ -50,6 +56,15 @@ const getLatestRows = ({
   error: indoorResult.error?.message ?? outdoorResult.error?.message ?? null,
 });
 
+const loadLatestMeasures = async (): Promise<CurrentMeasures> => {
+  const [indoorResult, outdoorResult] = await Promise.all([
+    getLatestMeasure({ deviceType: 'indoor' }),
+    getLatestMeasure({ deviceType: 'outdoor' }),
+  ]);
+
+  return getLatestRows({ indoorResult, outdoorResult });
+};
+
 const getHistoryRows = ({
   history,
   error,
@@ -64,6 +79,7 @@ export const WeatherStation = () => {
   const [measureHistory, setMeasureHistory] =
     React.useState<ChartHistory | null>(null);
   const [rangeIndex, setRangeIndex] = React.useState(4);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const currentRange = chartRanges[rangeIndex] as ChartRange;
   const lastUpdate = getLatestTimestamp({
     indoorMeasures:
@@ -80,20 +96,11 @@ export const WeatherStation = () => {
     let isMounted = true;
 
     const loadMeasures = async () => {
-      const [indoorLatest, outdoorLatest] = await Promise.all([
-        getLatestMeasure({ deviceType: 'indoor' }),
-        getLatestMeasure({ deviceType: 'outdoor' }),
-      ]);
+      const latestRows = await loadLatestMeasures();
 
-      if (!isMounted) {
-        return;
+      if (isMounted) {
+        setCurrentMeasures(latestRows);
       }
-
-      const latestRows = getLatestRows({
-        indoorResult: indoorLatest,
-        outdoorResult: outdoorLatest,
-      });
-      setCurrentMeasures(latestRows);
     };
 
     void loadMeasures();
@@ -136,6 +143,25 @@ export const WeatherStation = () => {
       isMounted = false;
     };
   }, [currentMeasures, currentRange, lastUpdate]);
+
+  const refreshMeasures = async () => {
+    setIsRefreshing(true);
+    const spinnerDeadline = Date.now() + 1_000; // 1 sec
+    const latestRows = await loadLatestMeasures();
+
+    // Guardrail to avoid calling rpc historical data
+    const isUnchanged =
+      latestRows.error === null &&
+      latestRows.indoor?.id === currentMeasures?.indoor?.id &&
+      latestRows.outdoor?.id === currentMeasures?.outdoor?.id;
+
+    if (!isUnchanged) {
+      setCurrentMeasures(latestRows);
+    }
+
+    await waitUntil(spinnerDeadline);
+    setIsRefreshing(false);
+  };
 
   const chartEnd =
     measureHistory === null
@@ -186,15 +212,29 @@ export const WeatherStation = () => {
             Weather station
           </h1>
         </div>
-        <div className="text-left sm:text-right">
-          <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
-            Last update
+        <div className="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
+          <div className="text-left sm:text-right">
+            <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
+              Last update
+            </div>
+            <strong className="mt-1 block text-[13px]">
+              {lastUpdate === null
+                ? 'No readings yet'
+                : formatMeasuredAt(new Date(lastUpdate).toISOString())}
+            </strong>
           </div>
-          <strong className="mt-1 block text-[13px]">
-            {lastUpdate === null
-              ? 'No readings yet'
-              : formatMeasuredAt(new Date(lastUpdate).toISOString())}
-          </strong>
+          <IconButton
+            aria-label="Refresh readings"
+            title="Refresh readings"
+            className="border border-[#2b3a38] bg-[#15201f]"
+            disabled={isRefreshing}
+            onClick={() => void refreshMeasures()}
+          >
+            <FaArrowsRotate
+              aria-hidden="true"
+              className={isRefreshing ? 'size-4 animate-spin' : 'size-4'}
+            />
+          </IconButton>
         </div>
       </header>
 
