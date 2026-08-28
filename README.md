@@ -72,6 +72,7 @@ Create `apps/collector/.env`:
 DEVICES=[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor"}]
 BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
+POSTGRES_TIMEOUT_MS=15000
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=my-weather-station
@@ -84,6 +85,7 @@ peripheral ID in `deviceId`. On Raspberry Pi Linux, use the Bluetooth address fr
 `ble-raw.ts` in `address`, including the colons. Meters are read sequentially.
 `BLE_TIMEOUT_MS` is the timeout of one scan attempt and defaults to 15 seconds.
 `SCAN_RETRIES` is the maximum number of attempts and defaults to 8.
+`POSTGRES_TIMEOUT_MS` is the connection, query, and pool timeout for PostgreSQL. It defaults to 15 seconds.
 
 The npm scripts use Node.js native `.env` support. No environment package is required.
 

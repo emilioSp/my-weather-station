@@ -16,7 +16,10 @@ const db = knex({
     database: environment.POSTGRES_DB,
     user: environment.POSTGRES_USER,
     password: environment.POSTGRES_PASSWORD,
+    connectionTimeoutMillis: environment.POSTGRES_TIMEOUT_MS,
+    query_timeout: environment.POSTGRES_TIMEOUT_MS,
   },
+  acquireConnectionTimeout: environment.POSTGRES_TIMEOUT_MS,
   pool: {
     min: 2,
     max: 15,
