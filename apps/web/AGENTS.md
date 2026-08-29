@@ -2,17 +2,17 @@
 
 ## Architecture
 
-This workspace has no server. The browser reads measurements from Supabase.
-
 ```text
 main.tsx
-  -> App.tsx
-     -> supabase.api.ts
-        -> @supabase/supabase-js -> PostgREST -> PostgreSQL
+  -> view
+     -> API module
+        -> external service
 ```
 
-- `supabase.api.ts` is the only Supabase boundary. It returns rows converted to domain case.
-- `environment.ts` validates `VITE_` variables with Zod at startup.
+- Keep external service access in dedicated API modules.
+- An API module returns application domain data.
+- Keep application configuration in a dedicated module.
+- Validate configuration at startup when it comes from external input.
 
 ## React components
 
@@ -22,14 +22,12 @@ main.tsx
 - Define a `<ComponentName>Props` type above a component when it has props.
 - Access built-in hooks through the `React` namespace, such as `React.useState()`.
 - Use `useMemo` and `useCallback` only when React Compiler does not optimize the case and the benefit exceeds the maintenance cost.
-- Create custom hooks only when reuse or performance justifies them.
-- Do not split a manageable view into subcomponents unless they are reused.
 - Do not use nested ternaries in JSX. Use guard clauses or single-level conditions.
 
 ## Styling and responsive layout
 
 - Use Tailwind utility classes.
-- Put frequently reused styles in reusable components in `ui/`. Do not use `@apply`.
+- Put small, reusable UI components in `components/primitives/`. Do not use `@apply`.
 - Avoid inline `style` properties unless values are dynamic.
 - Do not use CSS-in-JS.
 - Prefer CSS Grid over CSS Flex.
@@ -40,24 +38,51 @@ main.tsx
 - As the viewport becomes smaller, elements may only stack or hide. Keep the same DOM structure for all resolutions and users.
 - Use `react-icons` for icons.
 
-## Suggested structure
+## Folder structure rules
+
+### `views`
+
+Contains page components.
+
+A view defines page layout and page flow.  
+A view uses components and hooks.  
+Keep a view small and easy to read.
+
+### `components/<feature>`
+
+Contains components for one feature.
+
+A feature component shows one page section or completes one feature task.  
+It can use application data and feature terms.
+
+### `components/primitives`
+
+Contains small general UI components.
+
+A primitive must not use feature terms, application data, or business rules.  
+Examples are `Accordion`, `IconButton`, and `ProgressBar`.
+
+### `hooks`
+
+Contains hooks.
+
+A hook manages related state, data loading, and user actions.  
+Use a hook when it makes a view or component easier to read.
+
 
 ```text
 main.tsx
 index.html
 components/
-  WeatherCard.tsx
-  WeatherCardItem.tsx
-  LinearChart.tsx
+  primitives/
+    Accordion.tsx
+    IconButton.tsx
+    ProgressBar.tsx
+  <feature>/
+    FeatureCard.tsx
+    FeatureChart.tsx
 hooks/
-  useMe.ts
-ui/
-  icons.tsx
-  Button.tsx
-  ProgressBar.tsx
+  useFeature.ts
 views/
-  Layout.tsx
-  Header.tsx
-  Footer.tsx
-  WeatherStation.tsx
+  FeatureView.tsx
 ```

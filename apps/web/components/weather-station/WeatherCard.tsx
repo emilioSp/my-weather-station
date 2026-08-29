@@ -1,6 +1,6 @@
 import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
-import { HealthBar } from '#ui/HealthBar.tsx';
+import { ProgressBar } from '#components/primitives/ProgressBar.tsx';
 import { getSignalPercentage } from '#weather-dashboard.util.ts';
 
 type WeatherCardProps = {
@@ -102,7 +102,7 @@ const HealthRow = ({ label, value, barValue }: HealthRowProps) => (
     <span className="text-[15px] font-semibold">{label}</span>
     <span className="font-mono text-sm text-[#9bad9e]">
       {value}
-      <HealthBar value={barValue} />
+      <ProgressBar value={barValue} />
     </span>
   </div>
 );

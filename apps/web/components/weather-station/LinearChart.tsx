@@ -4,6 +4,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  type MouseHandlerDataParam,
   ResponsiveContainer,
   Tooltip,
   type TooltipContentProps,
@@ -68,6 +69,9 @@ export const LinearChart = ({
   const [touchTooltipActive, setTouchTooltipActive] = React.useState<
     boolean | null
   >(null);
+  const [touchMeasure, setTouchMeasure] = React.useState<ChartDatum | null>(
+    null,
+  );
   const chartMeasures = React.useMemo(
     () => downsampleMeasures({ measures, metric }),
     [measures, metric],
@@ -100,14 +104,35 @@ export const LinearChart = ({
 
   return (
     <ChartCard metric={metric} sensor={sensor} extrema={extrema}>
-      <div className="mt-[18px] h-[380px]">
+      <div className="mt-4 grid min-h-19 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs sm:hidden">
+        {touchMeasure === null ? (
+          <span className="self-center text-[#9bad9e]">Touch and drag.</span>
+        ) : (
+          <ChartReadout metric={metric} measure={touchMeasure} />
+        )}
+      </div>
+      <div className="mt-4 h-[380px] sm:mt-[18px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             aria-label={`Interactive ${details.label.toLowerCase()} chart for ${sensor.toLowerCase()} measurements in ${range.label.toLowerCase()}.`}
             data={chartData}
             margin={{ top: 20, right: 20, bottom: 50, left: 20 }}
-            onTouchEnd={() => setTouchTooltipActive(false)}
-            onTouchStart={() => setTouchTooltipActive(true)}
+            onTouchEnd={() => {
+              setTouchMeasure(null);
+              setTouchTooltipActive(false);
+            }}
+            onTouchMove={({ activeIndex }: MouseHandlerDataParam) => {
+              if (activeIndex === null || activeIndex === undefined) {
+                setTouchMeasure(null);
+                return;
+              }
+
+              setTouchMeasure(chartData[Number(activeIndex)] ?? null);
+            }}
+            onTouchStart={() => {
+              setTouchMeasure(null);
+              setTouchTooltipActive(true);
+            }}
           >
             <CartesianGrid stroke="#2b3a38" />
             <XAxis
@@ -135,7 +160,13 @@ export const LinearChart = ({
             />
             <Tooltip
               content={(tooltipProps) => (
-                <ChartTooltip {...tooltipProps} metric={metric} />
+                <div
+                  className={
+                    touchTooltipActive === true ? 'hidden sm:block' : ''
+                  }
+                >
+                  <ChartTooltip {...tooltipProps} metric={metric} />
+                </div>
               )}
               active={touchTooltipActive ?? undefined}
               cursor={{ stroke: '#dce7df', strokeOpacity: 0.55 }}
@@ -169,7 +200,7 @@ const ChartCard = ({ metric, sensor, extrema, children }: ChartCardProps) => {
   const details = chartMetricDetails[metric];
 
   return (
-    <section className="rounded-2xl border border-[#2b3a38] bg-[#192524]/82 p-5 sm:p-[23px]">
+    <section className="rounded-2xl border border-[#2b3a38] bg-[#192524]/82 p-3 sm:p-[23px]">
       <div className="grid items-center gap-4 sm:grid-cols-[1fr_auto]">
         <div>
           <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
@@ -229,22 +260,33 @@ const ChartTooltip = ({
 
   return (
     <div className="min-w-44 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs shadow-[0_10px_28px_rgb(0_0_0_/_0.3)]">
-      <div className="mb-2 font-mono text-xs text-[#9bad9e]">
-        {formatMeasuredAt(new Date(label).toISOString())}
-      </div>
-      <TooltipRow
-        label={chartMetricDetails[metric].label}
-        value={formatMeasureValue({ value: measure[metric], metric })}
-      />
-      {metric === 'temperature' && (
-        <TooltipRow
-          label="Heat index"
-          value={`${measure.heatIndex.toFixed(1)}°C`}
-        />
-      )}
+      <ChartReadout metric={metric} measure={measure} />
     </div>
   );
 };
+
+type ChartReadoutProps = {
+  metric: WeatherMetric;
+  measure: ChartDatum;
+};
+
+const ChartReadout = ({ metric, measure }: ChartReadoutProps) => (
+  <>
+    <div className="mb-2 font-mono text-xs text-[#9bad9e]">
+      {formatMeasuredAt(new Date(measure.timestamp).toISOString())}
+    </div>
+    <TooltipRow
+      label={chartMetricDetails[metric].label}
+      value={formatMeasureValue({ value: measure[metric], metric })}
+    />
+    {metric === 'temperature' && (
+      <TooltipRow
+        label="Heat index"
+        value={`${measure.heatIndex.toFixed(1)}°C`}
+      />
+    )}
+  </>
+);
 
 type TooltipRowProps = {
   label: string;
