@@ -24,21 +24,24 @@ export const MeasurementHistory = ({
 }: MeasurementHistoryProps) => (
   <section className="mt-4 grid gap-4" aria-label="Measurement history">
     <RangeControls
+      isLoading={isLoading}
       rangeIndex={rangeIndex}
       range={range}
       onRangeIndexChange={onRangeIndexChange}
     />
-    {isLoading && <HistoryLoading />}
-    {!isLoading && error !== null && <HistoryError message={error} />}
-    {!isLoading && error === null && (
+    {error !== null ? (
+      <HistoryError message={error} />
+    ) : (
       <>
         <MeterAccordion
           defaultOpen
+          isLoading={isLoading}
           measures={outdoorMeasures}
           range={range}
           sensor="Outdoor"
         />
         <MeterAccordion
+          isLoading={isLoading}
           measures={indoorMeasures}
           range={range}
           sensor="Indoor"
@@ -46,12 +49,6 @@ export const MeasurementHistory = ({
       </>
     )}
   </section>
-);
-
-const HistoryLoading = () => (
-  <div className="grid h-56 place-items-center rounded-2xl border border-[#2b3a38] bg-[#192524]/82 text-sm text-[#9bad9e]">
-    Loading history...
-  </div>
 );
 
 type HistoryErrorProps = {

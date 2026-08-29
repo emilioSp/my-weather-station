@@ -109,6 +109,7 @@ export const useWeatherStation = () => {
     setMeasureHistory(null);
 
     const loadHistory = async () => {
+      const placeholderDeadline = Date.now() + 1_000;
       const measuredAfter = new Date(
         latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000,
       );
@@ -116,6 +117,8 @@ export const useWeatherStation = () => {
         measuredAfter,
         measuredBefore: new Date(latestMeasuredAt),
       });
+
+      await waitUntil(placeholderDeadline);
 
       if (isMounted) {
         setMeasureHistory(getHistoryRows(history));
