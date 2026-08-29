@@ -81,7 +81,7 @@ export const WeatherStation = () => {
   const [rangeIndex, setRangeIndex] = React.useState(4);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const currentRange = chartRanges[rangeIndex] as ChartRange;
-  const lastUpdate = getLatestTimestamp({
+  const latestMeasuredAt = getLatestTimestamp({
     indoorMeasures:
       currentMeasures?.indoor === null || currentMeasures === null
         ? []
@@ -115,7 +115,7 @@ export const WeatherStation = () => {
       return;
     }
 
-    if (lastUpdate === null) {
+    if (latestMeasuredAt === null) {
       setMeasureHistory({ indoor: [], outdoor: [], error: null });
       return;
     }
@@ -125,11 +125,11 @@ export const WeatherStation = () => {
 
     const loadHistory = async () => {
       const measuredAfter = new Date(
-        lastUpdate - currentRange.hours * 60 * 60 * 1_000,
+        latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000,
       );
       const history = await getChartHistory({
         measuredAfter,
-        measuredBefore: new Date(lastUpdate),
+        measuredBefore: new Date(latestMeasuredAt),
       });
 
       if (isMounted) {
@@ -142,7 +142,7 @@ export const WeatherStation = () => {
     return () => {
       isMounted = false;
     };
-  }, [currentMeasures, currentRange, lastUpdate]);
+  }, [currentMeasures, currentRange, latestMeasuredAt]);
 
   const refreshMeasures = async () => {
     setIsRefreshing(true);
@@ -215,12 +215,12 @@ export const WeatherStation = () => {
         <div className="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
           <div className="text-left sm:text-right">
             <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
-              Last update
+              Latest available measurement
             </div>
             <strong className="mt-1 block text-[13px]">
-              {lastUpdate === null
+              {latestMeasuredAt === null
                 ? 'No readings yet'
-                : formatMeasuredAt(new Date(lastUpdate).toISOString())}
+                : formatMeasuredAt(new Date(latestMeasuredAt).toISOString())}
             </strong>
           </div>
           <IconButton
