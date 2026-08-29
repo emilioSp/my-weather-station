@@ -8,7 +8,7 @@ import {
   FaSeedling,
   FaTemperatureHalf,
 } from 'react-icons/fa6';
-import { LinearChart } from '#components/LinearChart.tsx';
+import { MeterAccordion } from '#components/MeterAccordion.tsx';
 import { WeatherCard } from '#components/WeatherCard.tsx';
 import {
   getChartHistory,
@@ -24,10 +24,7 @@ import {
   filterMeasuresForRange,
   formatMeasuredAt,
   getLatestTimestamp,
-  type WeatherMetric,
 } from '#weather-dashboard.util.ts';
-
-const chartMetrics: WeatherMetric[] = ['temperature', 'humidity', 'dewPoint'];
 
 const waitUntil = (deadline: number): Promise<void> =>
   new Promise((resolve) => {
@@ -244,14 +241,14 @@ export const WeatherStation = () => {
           aria-label="Current readings"
         >
           <WeatherCard
-            label="Indoor"
-            icon={FaHouse}
-            measure={currentMeasures.indoor}
-          />
-          <WeatherCard
             label="Outdoor"
             icon={FaSeedling}
             measure={currentMeasures.outdoor}
+          />
+          <WeatherCard
+            label="Indoor"
+            icon={FaHouse}
+            measure={currentMeasures.indoor}
           />
         </section>
 
@@ -265,24 +262,21 @@ export const WeatherStation = () => {
           {measureHistory !== null && measureHistory.error !== null && (
             <HistoryError message={measureHistory.error} />
           )}
-          {measureHistory !== null &&
-            measureHistory.error === null &&
-            chartMetrics.map((metric) => (
-              <div key={metric} className="grid gap-4">
-                <LinearChart
-                  metric={metric}
-                  range={currentRange}
-                  sensor="Indoor"
-                  measures={indoorMeasures}
-                />
-                <LinearChart
-                  metric={metric}
-                  range={currentRange}
-                  sensor="Outdoor"
-                  measures={outdoorMeasures}
-                />
-              </div>
-            ))}
+          {measureHistory !== null && measureHistory.error === null && (
+            <>
+              <MeterAccordion
+                defaultOpen
+                measures={outdoorMeasures}
+                range={currentRange}
+                sensor="Outdoor"
+              />
+              <MeterAccordion
+                measures={indoorMeasures}
+                range={currentRange}
+                sensor="Indoor"
+              />
+            </>
+          )}
         </section>
       </div>
     </main>
