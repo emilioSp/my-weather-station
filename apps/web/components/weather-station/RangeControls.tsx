@@ -4,7 +4,7 @@ import {
   FaMagnifyingGlassPlus,
 } from 'react-icons/fa6';
 import { IconButton } from '#components/primitives/IconButton.tsx';
-import { type ChartRange, chartRanges } from '#weather-dashboard.util.ts';
+import { type ChartRange, chartRangeKeys } from '#weather-dashboard.util.ts';
 
 type RangeControlsProps = {
   isLoading: boolean;
@@ -43,7 +43,7 @@ export const RangeControls = ({
       <IconButton
         aria-label="Zoom in"
         title="Zoom in"
-        disabled={isLoading || rangeIndex === chartRanges.length - 1}
+        disabled={isLoading || rangeIndex === chartRangeKeys.length - 1}
         onClick={() => onRangeIndexChange(rangeIndex + 1)}
       >
         <FaMagnifyingGlassPlus aria-hidden="true" className="size-5" />

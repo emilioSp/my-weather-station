@@ -8,7 +8,10 @@ import {
   type MeasureQueryResult,
 } from '#supabase.api.ts';
 import {
+  CHART_RANGES,
   type ChartRange,
+  type ChartRangeKey,
+  chartRangeKeys,
   chartRanges,
   filterMeasuresForRange,
   getLatestTimestamp,
@@ -63,9 +66,12 @@ export const useWeatherStation = () => {
     React.useState<CurrentMeasures | null>(null);
   const [measureHistory, setMeasureHistory] =
     React.useState<ChartHistory | null>(null);
-  const [rangeIndex, setRangeIndex] = React.useState(4);
+  const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(
+    CHART_RANGES.LAST_DAY,
+  );
   const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const currentRange = chartRanges[rangeIndex] as ChartRange;
+  const currentRange: ChartRange = chartRanges[rangeKey];
+  const rangeIndex = chartRangeKeys.indexOf(rangeKey);
   const latestMeasuredAt = getLatestTimestamp({
     indoorMeasures:
       currentMeasures?.indoor === null || currentMeasures === null
@@ -150,12 +156,14 @@ export const useWeatherStation = () => {
   };
 
   const changeRange = (nextRangeIndex: number): void => {
-    if (measureHistory === null) {
+    const nextRangeKey = chartRangeKeys[nextRangeIndex];
+
+    if (measureHistory === null || nextRangeKey === undefined) {
       return;
     }
 
     setMeasureHistory(null);
-    setRangeIndex(nextRangeIndex);
+    setRangeKey(nextRangeKey);
   };
 
   const chartEnd =
