@@ -18,7 +18,7 @@ export const WeatherStation = () => {
     outdoorMeasures,
     rangeIndex,
     refreshMeasures,
-    setRangeIndex,
+    changeRange,
   } = useWeatherStation();
 
   if (currentMeasures === null) {
@@ -48,7 +48,7 @@ export const WeatherStation = () => {
           outdoorMeasures={outdoorMeasures}
           range={currentRange}
           rangeIndex={rangeIndex}
-          onRangeIndexChange={setRangeIndex}
+          onRangeIndexChange={changeRange}
         />
       </div>
     </main>

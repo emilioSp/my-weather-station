@@ -149,6 +149,15 @@ export const useWeatherStation = () => {
     setIsRefreshing(false);
   };
 
+  const changeRange = (nextRangeIndex: number): void => {
+    if (measureHistory === null) {
+      return;
+    }
+
+    setMeasureHistory(null);
+    setRangeIndex(nextRangeIndex);
+  };
+
   const chartEnd =
     measureHistory === null
       ? null
@@ -189,6 +198,6 @@ export const useWeatherStation = () => {
     outdoorMeasures,
     rangeIndex,
     refreshMeasures,
-    setRangeIndex,
+    changeRange,
   };
 };

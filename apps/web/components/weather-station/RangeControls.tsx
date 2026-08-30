@@ -35,7 +35,7 @@ export const RangeControls = ({
       <IconButton
         aria-label="Zoom out"
         title="Zoom out"
-        disabled={rangeIndex === 0}
+        disabled={isLoading || rangeIndex === 0}
         onClick={() => onRangeIndexChange(rangeIndex - 1)}
       >
         <FaMagnifyingGlassMinus aria-hidden="true" className="size-5" />
@@ -43,7 +43,7 @@ export const RangeControls = ({
       <IconButton
         aria-label="Zoom in"
         title="Zoom in"
-        disabled={rangeIndex === chartRanges.length - 1}
+        disabled={isLoading || rangeIndex === chartRanges.length - 1}
         onClick={() => onRangeIndexChange(rangeIndex + 1)}
       >
         <FaMagnifyingGlassPlus aria-hidden="true" className="size-5" />
