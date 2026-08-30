@@ -9,7 +9,6 @@ This workspace reads BLE advertisements from SwitchBot indoor and outdoor meters
 This workspace owns:
 
 - `Dockerfile` and `Dockerfile.dockerignore`
-- `docker-compose.yml`
 - `knexfile.js` and `migrations/`
 - BLE, meter, database, and collector configuration code
 
@@ -74,16 +73,17 @@ npm run new:migration -w @wx/collector -- <name>
 
 - Store migrations in `migrations/`.
 - Write migration changes as raw SQL through Knex.
-- Apply migrations with:
+- Apply local migrations with:
 
 ```sh
-npm run migrate -w @wx/collector
+npm run migrate:local -w @wx/collector
 ```
 
-## Docker and Compose
+## Docker and Supabase local
 
+- Supabase CLI owns the local PostgreSQL and API stack.
+- The collector connects to Supabase local PostgreSQL through `apps/collector/.env` on port `54322`.
 - The Docker build context is the repository root because it contains the lockfile and `packages/shared`.
 - `docker-build-and-push` passes `../..` as the build context.
 - Keep the Docker ignore file named `Dockerfile.dockerignore`. A plain `.dockerignore` in this workspace does not apply to the root build context.
-- Keep `name: my-weather-station` in `docker-compose.yml`. It keeps the PostgreSQL volume name stable.
 - `DEPLOY.md` at the repository root contains collector deployment instructions.

@@ -14,10 +14,14 @@
     "lint": "biome check --write .",
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status -o env"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
+    "supabase": "2.116.0",
     "typescript": "7.0.2"
   },
   "allowScripts": {

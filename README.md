@@ -18,9 +18,8 @@ The collector reads and calculates:
 An npm workspaces monorepo with three workspaces.
 
 ```text
-apps/collector    @wx/collector  BLE daemon. Reads the meters, writes to PostgreSQL.
-                                 Owns .env, Dockerfile, docker-compose.yml,
-                                 knexfile.js and migrations/.
+apps/collector    @wx/collector  BLE daemon. Reads the meters and writes to PostgreSQL.
+                                 Owns .env, Dockerfile, knexfile.js and migrations/.
 apps/web          @wx/web        React + Vite app. Reads the measures from Supabase.
 packages/shared   @wx/shared     Domain schemas, the camelCase <-> snake_case mapping,
                                  and UUID normalization.
@@ -54,7 +53,7 @@ import { createMeter } from '#meters/meter.factory.ts';
 
 * Node.js 26 or newer, for native TypeScript support
 * A Bluetooth adapter, and Bluetooth permission for the terminal or Node.js
-* PostgreSQL 17 or Docker
+* Docker or another Docker-compatible container runtime
 
 ## Local development setup
 
@@ -74,8 +73,8 @@ BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
 POSTGRES_TIMEOUT_MS=15000
 POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=my-weather-station
+POSTGRES_PORT=54322
+POSTGRES_DB=postgres
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 ```
@@ -89,16 +88,22 @@ peripheral ID in `deviceId`. On Raspberry Pi Linux, use the Bluetooth address fr
 
 The npm scripts use Node.js native `.env` support. No environment package is required.
 
-Start PostgreSQL and run the migrations:
+Start Supabase local, then apply the Knex schema and create the dataset:
 
 ```sh
-docker compose -f apps/collector/docker-compose.yml up -d
-npm run migrate -w @wx/collector
+npm run supabase:start
+npm run migrate:local -w @wx/collector
+npm run seed:local -w @wx/collector
 ```
+
+`npm run supabase:status` shows the local API and PostgreSQL URLs.
 
 ### Web app
 
-The web app reads the `measures` table straight from Supabase in the browser. There is no API server.
+The web app reads the `measures` table through the local Supabase API.
+`apps/web/.env` contains the local endpoint and public key. `apps/web/.env.prod`
+contains the production values. Vite loads `.env` during development. Its build
+command uses the `prod` mode, which gives `.env.prod` priority.
 
 ## Commands
 
@@ -108,16 +113,24 @@ A script that concerns one workspace lives in that workspace, so run it with `-w
 npm run store-measure -w @wx/collector              # read the meters once and store
 npm run dev -w @wx/web                              # web app in development mode
 npm run new:migration -w @wx/collector -- <name>    # create a migration
-npm run migrate -w @wx/collector                    # apply migrations
-npm run rollback -w @wx/collector                   # undo the last migration
+npm run migrate:local -w @wx/collector              # apply migrations to local Supabase
+npm run migrate -w @wx/collector                    # apply migrations to production
+npm run rollback:local -w @wx/collector             # undo the last local migration
+npm run seed:local -w @wx/collector                 # replace local measures with one year of test data
 ```
+
+`seed:local` runs only with `NODE_ENV=development` and uses `apps/collector/.env`.
+It deletes every row from the local `measures` table before it creates the test dataset.
 
 The root keeps only the scripts that act on every workspace:
 
 ```sh
-npm run lint      # Biome, whole repository
-npm run build     # type check, plus the production build of the web app
-npm run dev       # every workspace that defines dev
+npm run supabase:start   # start the local Supabase stack
+npm run supabase:stop    # stop the local Supabase stack
+npm run supabase:status  # show local endpoints
+npm run lint             # Biome, whole repository
+npm run build            # type check, plus the production build of the web app
+npm run dev              # every workspace that defines dev
 ```
 
 ## Deployment
@@ -130,7 +143,7 @@ The web UI deploys automatically after each push to `main`:
 
 In GitHub, open **Settings** → **Pages** and set **Source** to **GitHub Actions**.
 The Supabase URL and publishable key are deliberately committed in
-`apps/web/environment.ts`. They are public browser credentials; Supabase row level
+`apps/web/.env.prod`. They are public browser credentials; Supabase row level
 security protects the data.
 
 ### Collector

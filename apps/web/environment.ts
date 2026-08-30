@@ -1,9 +1,13 @@
-type Environment = {
-  SUPABASE_URL: string;
-  SUPABASE_PUBLISHABLE_KEY: string;
-};
+import { z } from 'zod';
 
-export const environment: Environment = {
-  SUPABASE_URL: 'https://kbrukwhrsbcaobugmmnz.supabase.co',
-  SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_GZOurnYoEZ3xGR7U9-HQuA_R9015MFC',
+const environmentSchema = z.object({
+  VITE_SUPABASE_URL: z.url(),
+  VITE_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+});
+
+const viteEnvironment = environmentSchema.parse(import.meta.env);
+
+export const environment = {
+  SUPABASE_URL: viteEnvironment.VITE_SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY: viteEnvironment.VITE_SUPABASE_PUBLISHABLE_KEY,
 };
