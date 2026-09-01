@@ -81,12 +81,15 @@ process.stdout.write(JSON.stringify(report, null, 2) + "\n");
 nohup sh -c '
   worktree=$1
   prompt_file=$2
-  log_file=$3
-  exit_file=$4
+  exit_file=$3
 
-  cd "$worktree" || exit 127
-  codex exec --model gpt-5.6-terra --json --sandbox workspace-write - < "$prompt_file" > "$log_file" 2>&1
-  exit_code=$?
+  exit_code=0
+  if ! cd "$worktree"; then
+    exit_code=127
+  else
+    codex exec --model gpt-5.6-terra --json --sandbox workspace-write - < "$prompt_file"
+    exit_code=$?
+  fi
 
   FLEET_EXIT_CODE=$exit_code FLEET_FINISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     node --input-type=module -e '\''
@@ -98,7 +101,7 @@ nohup sh -c '
     '\'' > "$exit_file"
 
   exit "$exit_code"
-' sh "$worktree" "$prompt_file" "$log_file" "$exit_file" >/dev/null 2>&1 &
+' sh "$worktree" "$prompt_file" "$exit_file" >> "$log_file" 2>&1 &
 
 pid=$!
 
