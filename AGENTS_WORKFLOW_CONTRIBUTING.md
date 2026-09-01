@@ -19,7 +19,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - The maintainer gives work and decisions only to the orchestrator.
 - The orchestrator is the only agent that launches, monitors, and directs workers and reviewers.
 - Workers and reviewers do not ask the maintainer for direction. They write a gate handoff and stop when a maintainer decision is required.
-- The maintainer may inspect worker or reviewer status through the helper scripts, but status inspection does not direct a sub agent.
+- The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
 
 ## Files and scope
 
@@ -61,7 +61,7 @@ Probes must observe the real effect. Do not accept a probe that reads a mock, wr
 - Create one story for one reversible change. Split changes that mix data model changes with behaviour changes.
 - Define direct, falsifiable probes before creating a story.
 - Open a gate when a decision belongs to the maintainer.
-- Launch and monitor every worker and reviewer. Report their recorded state to the maintainer.
+- Launch and supervise every worker and reviewer. Report only observed process state and recorded handoffs to the maintainer.
 - Do not open a gate for a dirty or uncommitted launch base. This is a launch precondition failure. Tell the maintainer to commit the intended workflow files or remove unwanted changes, then refer to `CONTRIBUTING.md`.
 
 ### Launch a worker
@@ -74,10 +74,10 @@ The orchestrator checks that the base is clean, then creates the worktree direct
 git worktree add -b fleet/<id> .worktree/<id> HEAD
 ```
 
-The orchestrator then invokes Codex directly in that worktree and waits for it to finish. Do not run it in the background and do not use a shell launcher:
+The orchestrator then invokes Codex directly in that worktree and waits on the command runner's same process handle until it exits. Do not run it in the background and do not use a shell launcher:
 
 ```sh
-codex exec --model gpt-5.6-terra --sandbox danger-full-access -C .worktree/<id> "<worker prompt>"
+codex exec --json --model gpt-5.6-terra --sandbox danger-full-access -C .worktree/<id> "<worker prompt>"
 ```
 
 The worker prompt must state:
@@ -88,9 +88,16 @@ The worker prompt must state:
 - Open a gate when blocked.
 - Write the required evidence and worker report.
 
-The orchestrator waits for the direct `codex exec` result. It reports progress and the final exit result to the maintainer. No status script or background PID is used.
+### Supervise a worker
 
-Do not launch a second worker for the same story. If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
+- A worker is `running` until the command runner reports that same `codex exec` process has exited. No new JSON event, no new message, or no worker report means `running with no new observation`. It never means `dead`.
+- Keep the command runner's process or session handle. When the runner yields, wait on that exact handle again. Do not start another `codex exec` to obtain status.
+- Stream and retain the `--json` events only as execution observations. The final status comes from the command runner exit code plus the required handoff, not from a conversational message.
+- When `codex exec` exits, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`.
+- If the command exits and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, exact command, exit code or interruption state, last received JSON event, and the missing handoffs.
+- Treat an incident handoff as a failed worker execution. Do not relaunch automatically. Report it to the maintainer and wait for direction.
+
+If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
 
 ## Worker
 
@@ -120,7 +127,7 @@ Do not launch a second worker for the same story. If the base is dirty, tell the
 
 - Do not review code you wrote.
 - Use a clean worktree at the pull request HEAD. Install dependencies from scratch when required.
-- The orchestrator creates the reviewer worktree and invokes `codex exec` directly, then waits for its result.
+- The orchestrator creates the reviewer worktree and invokes `codex exec --json` directly. Apply the same single-process supervision and incident-handoff rules used for a worker.
 - Do not read `.fleet/stories/<id>.evidence.md`.
 - Bring up real dependencies. Do not use a stand in for the boundary under test.
 - Independently run every probe and every `red_when` breakage.
