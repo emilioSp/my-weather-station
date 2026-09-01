@@ -84,6 +84,12 @@ scripts/fleet/worker-status.sh <id>
 
 The status command reads the recorded PID and exit result. It reports the worker worktree and JSONL log path. Read the log only to diagnose the process. The worker report and independent reviewer report remain the workflow records for implementation claims.
 
+`launch-worker.sh` runs in the foreground. Keep that terminal open until Codex exits. Use another terminal for status or to follow the log:
+
+```sh
+scripts/fleet/worker-log.sh <id>
+```
+
 Do not launch a second worker for the same story while its recorded worker process is running. If the launcher reports a dirty base, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision. Do not say that a worker started unless the launch command created its worker run record.
 
 ## Worker
@@ -161,4 +167,5 @@ scripts/fleet/open-gate.sh <id>
 scripts/fleet/record-build.sh <id>
 scripts/fleet/launch-worker.sh <id>
 scripts/fleet/worker-status.sh <id>
+scripts/fleet/worker-log.sh <id>
 ```

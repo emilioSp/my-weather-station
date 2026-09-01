@@ -78,32 +78,7 @@ const report = {
 process.stdout.write(JSON.stringify(report, null, 2) + "\n");
 ' > "$run_file"
 
-nohup sh -c '
-  worktree=$1
-  prompt_file=$2
-  exit_file=$3
-
-  exit_code=0
-  if ! cd "$worktree"; then
-    exit_code=127
-  else
-    codex exec --model gpt-5.6-terra --json --sandbox workspace-write - < "$prompt_file"
-    exit_code=$?
-  fi
-
-  FLEET_EXIT_CODE=$exit_code FLEET_FINISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    node --input-type=module -e '\''
-      process.stdout.write(JSON.stringify({
-        status: "finished",
-        exit_code: Number(process.env.FLEET_EXIT_CODE),
-        finished_at: process.env.FLEET_FINISHED_AT
-      }, null, 2) + "\\n");
-    '\'' > "$exit_file"
-
-  exit "$exit_code"
-' sh "$worktree" "$prompt_file" "$exit_file" >> "$log_file" 2>&1 &
-
-pid=$!
+pid=$$
 
 FLEET_RUN_FILE=$run_file FLEET_PID=$pid node --input-type=module -e '
 import { readFile, writeFile } from "node:fs/promises";
@@ -119,3 +94,22 @@ echo "Story: $id"
 echo "PID: $pid"
 echo "Worktree: $worktree"
 echo "Status: scripts/fleet/worker-status.sh $id"
+echo "Log: scripts/fleet/worker-log.sh $id"
+
+write_exit_record() {
+  exit_code=$?
+
+  FLEET_EXIT_CODE=$exit_code FLEET_FINISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    node --input-type=module -e '
+      process.stdout.write(JSON.stringify({
+        status: "finished",
+        exit_code: Number(process.env.FLEET_EXIT_CODE),
+        finished_at: process.env.FLEET_FINISHED_AT
+      }, null, 2) + "\n");
+    ' > "$exit_file"
+}
+
+trap write_exit_record 0
+
+cd "$worktree"
+codex exec --model gpt-5.6-terra --json --sandbox workspace-write - < "$prompt_file" > "$log_file" 2>&1
