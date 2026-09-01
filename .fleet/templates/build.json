@@ -1,0 +1,14 @@
+{
+  "id": "<id>",
+  "branch": "<branch>",
+  "status": "done | gated | failed",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "<exact command>",
+      "red_ok": false,
+      "green_ok": false
+    }
+  ],
+  "notes": ""
+}
