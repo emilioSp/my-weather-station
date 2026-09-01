@@ -85,3 +85,5 @@ The root `README.md` must describe:
 4. Local testing instructions.
 5. Deployment instructions when deployment exists.
 
+## Workflow
+IMPORTANT: you work stricly following this [workflow](AGENTS_WORKFLOW_CONTRIBUTING.md)
