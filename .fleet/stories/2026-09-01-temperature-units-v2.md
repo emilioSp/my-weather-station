@@ -29,6 +29,7 @@ Allow web app users to switch all displayed temperature values between Celsius a
 - `apps/web/components/weather-station/LinearChart.tsx`
 - `apps/web/weather-dashboard.util.ts`
 - `apps/web/temperature-unit.util.ts`
+- in general all files in web workspace
 
 ## Acceptance criteria
 

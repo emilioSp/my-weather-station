@@ -66,31 +66,31 @@ Probes must observe the real effect. Do not accept a probe that reads a mock, wr
 
 ### Launch a worker
 
-After creating a story, the maintainer must commit the story and all workflow files that the worker must read. The launcher creates `.worktree/<id>` from the current committed `HEAD`; uncommitted files are not copied.
+After creating a story, the maintainer must commit the story and all workflow files that the worker must read. The orchestrator creates `.worktree/<id>` from the current committed `HEAD`; uncommitted files are not copied.
 
-Run:
-
-```sh
-scripts/fleet/launch-worker.sh <id>
-```
-
-The command writes `.fleet/handoffs/<id>.worker-run.json`. This file is the record that a worker was launched. A chat message such as “Started” is not a record.
-
-Check the worker with:
+The orchestrator checks that the base is clean, then creates the worktree directly:
 
 ```sh
-scripts/fleet/worker-status.sh <id>
+git worktree add -b fleet/<id> .worktree/<id> HEAD
 ```
 
-The status command reads the recorded PID and exit result. It reports the worker worktree and JSONL log path. Read the log only to diagnose the process. The worker report and independent reviewer report remain the workflow records for implementation claims.
-
-`launch-worker.sh` runs in the foreground. Keep that terminal open until Codex exits. Use another terminal for status or to follow the log:
+The orchestrator then invokes Codex directly in that worktree and waits for it to finish. Do not run it in the background and do not use a shell launcher:
 
 ```sh
-scripts/fleet/worker-log.sh <id>
+codex exec --model gpt-5.6-terra --sandbox workspace-write -C .worktree/<id> "<worker prompt>"
 ```
 
-Do not launch a second worker for the same story while its recorded worker process is running. If the launcher reports a dirty base, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision. Do not say that a worker started unless the launch command created its worker run record.
+The worker prompt must state:
+
+- Read `AGENTS.md` and `AGENTS_WORKFLOW_CONTRIBUTING.md` first.
+- Read `.fleet/stories/<id>.md` at the start of every pass.
+- Implement only the listed paths and constraints.
+- Open a gate when blocked.
+- Write the required evidence and worker report.
+
+The orchestrator waits for the direct `codex exec` result. It reports progress and the final exit result to the maintainer. No status script or background PID is used.
+
+Do not launch a second worker for the same story. If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
 
 ## Worker
 
@@ -120,6 +120,7 @@ Do not launch a second worker for the same story while its recorded worker proce
 
 - Do not review code you wrote.
 - Use a clean worktree at the pull request HEAD. Install dependencies from scratch when required.
+- The orchestrator creates the reviewer worktree and invokes `codex exec` directly, then waits for its result.
 - Do not read `.fleet/stories/<id>.evidence.md`.
 - Bring up real dependencies. Do not use a stand in for the boundary under test.
 - Independently run every probe and every `red_when` breakage.
@@ -165,7 +166,4 @@ Use these scripts to create standard files. They refuse to overwrite existing fi
 scripts/fleet/new-story.sh <id>
 scripts/fleet/open-gate.sh <id>
 scripts/fleet/record-build.sh <id>
-scripts/fleet/launch-worker.sh <id>
-scripts/fleet/worker-status.sh <id>
-scripts/fleet/worker-log.sh <id>
 ```
