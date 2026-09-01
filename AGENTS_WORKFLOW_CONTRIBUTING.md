@@ -5,7 +5,7 @@ This file controls agents that use the `.fleet` workflow. Follow it exactly.
 ## Non negotiable rules
 
 1. A builder does not verify its own work. An independent reviewer regenerates every claim.
-2. Use `gpt-5.6-terra` for workers and reviewers.
+2. Workers and reviewers run as the subagents defined in `.codex/agents/`. Their model is set there, not in the prompt.
 3. A probe must touch the claimed result and must fail when its `red_when` breakage is applied.
 4. When a requirement is ambiguous, stop and open a gate. Do not guess.
 5. The repository is the only persistent state. Write important outcomes to `.fleet/handoffs/` before ending a pass.
@@ -66,7 +66,7 @@ Probes must observe the real effect. Do not accept a probe that reads a mock, wr
 
 ### Launch a worker
 
-After creating a story, the maintainer must commit the story and all workflow files that the worker must read. The orchestrator creates `.worktree/<id>` from the current committed `HEAD`; uncommitted files are not copied.
+After creating a story, the maintainer must commit the story and all workflow files that the worker must read, including `.codex/agents/`. The orchestrator creates `.worktree/<id>` from the current committed `HEAD`; uncommitted files are not copied.
 
 The orchestrator checks that the base is clean, then creates the worktree directly:
 
@@ -74,32 +74,61 @@ The orchestrator checks that the base is clean, then creates the worktree direct
 git worktree add -b fleet/<id> .worktree/<id> HEAD
 ```
 
-The orchestrator then invokes Codex directly in that worktree and waits on the command runner's same process handle until it exits. Do not run it in the background and do not use a shell launcher:
+The orchestrator then spawns the `fleet-worker` subagent defined in `.codex/agents/worker.toml`. Do not shell out to `codex exec`. The runtime owns the child's lifecycle, so its completion is a first class result instead of a string parsed from terminal output.
 
-```sh
-codex exec --json --model gpt-5.6-terra --sandbox danger-full-access -C .worktree/<id> "<worker prompt>"
-```
+The spawn instruction must state:
 
-The worker prompt must state:
+- The story id.
+- The absolute path of the assigned worktree, which is the worker's root.
+- That the worker must read `AGENTS.md` and `AGENTS_WORKFLOW_CONTRIBUTING.md` first, then `.fleet/stories/<id>.md` at the start of every pass.
 
-- Read `AGENTS.md` and `AGENTS_WORKFLOW_CONTRIBUTING.md` first.
-- Read `.fleet/stories/<id>.md` at the start of every pass.
-- Implement only the listed paths and constraints.
-- Open a gate when blocked.
-- Write the required evidence and worker report.
+Everything else the worker needs is already in `.codex/agents/worker.toml`. Do not restate the role in the prompt and do not weaken it.
+
+If the running session cannot spawn a custom agent by name and only exposes a generic subagent, copy the `developer_instructions` from `.codex/agents/worker.toml` into the spawn instruction verbatim. Tell the maintainer that you had to do this.
 
 ### Supervise a worker
 
-- A worker is `running` until the command runner reports that same `codex exec` process has exited. No new JSON event, no new message, or no worker report means `running with no new observation`. It never means `dead`.
-- Keep the command runner's process or session handle. When the runner yields, wait on that exact handle again. Do not start another `codex exec` to obtain status.
-- Stream and retain the `--json` events only as execution observations. The final status comes from the command runner exit code plus the required handoff, not from a conversational message.
-- When `codex exec` exits, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`.
-- If the command exits and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, exact command, exit code or interruption state, last received JSON event, and the missing handoffs.
+- Wait on the subagent. The runtime reports its completion. There is no exit file, no process check, and no polling loop.
+- The worker is `running` until the runtime returns it. A quiet subagent, a long pause, or no intermediate message all mean `running with no new observation`. None of them means `dead`.
+- Never use `ps` or any process listing. It is blocked by the sandbox and forces a maintainer escalation prompt.
+- Do not spawn a second agent to ask about the first one.
+- When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. The handoff is the report. The subagent's closing message is not.
+- If the subagent returns and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs.
+- Never write an incident handoff while the subagent is still running. Reporting a running worker as dead is a supervision error, not a worker failure.
 - Treat an incident handoff as a failed worker execution. Do not relaunch automatically. Report it to the maintainer and wait for direction.
 
 If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
 
+### Fallback launch without subagents
+
+Use this only when subagents are unavailable in the running session.
+
+Never stream `--json` into the command runner's own output. The stream exceeds the runner's output budget, the runner truncates it and reports `Script completed` while the process is still running. That false signal is what makes an orchestrator declare a live worker dead.
+
+```sh
+mkdir -p .worktree/<id>/.fleet/run
+nohup sh -c 'codex exec --json --model gpt-5.6-terra --sandbox danger-full-access \
+  -C .worktree/<id> "<worker prompt>" </dev/null \
+  > .worktree/<id>/.fleet/run/worker.log 2>&1; \
+  echo $? > .worktree/<id>/.fleet/run/worker.exit' >/dev/null 2>&1 &
+```
+
+`</dev/null` is required. Without it Codex prints `Reading additional input from stdin...` and waits for prompt input that never arrives.
+
+Under this fallback, `.fleet/run/<role>.exit` is the only exit signal, and every supervision rule above applies with the exit file in place of the subagent's return. Wait inside the command so it returns as soon as the worker exits, and keep the wait under the runner's yield window:
+
+```sh
+for i in $(seq 1 30); do [ -f .worktree/<id>/.fleet/run/worker.exit ] && break; sleep 1; done
+cat .worktree/<id>/.fleet/run/worker.exit 2>/dev/null || echo running
+tail -n 20 .worktree/<id>/.fleet/run/worker.log
+ls .worktree/<id>/.fleet/handoffs/
+```
+
+`.fleet/run/` is orchestrator state. It is not committed and workers must not write to it.
+
 ## Worker
+
+The spawn definition is `.codex/agents/worker.toml`. This section is the canonical rule set; the definition must not contradict it.
 
 - Implement exactly the assigned story.
 - Respect all story constraints, including dependencies, performance, security, and permitted error content.
@@ -125,9 +154,11 @@ If the base is dirty, tell the maintainer to fix it. Open a gate only when the s
 
 ## Reviewer
 
+The spawn definition is `.codex/agents/reviewer.toml`. This section is the canonical rule set; the definition must not contradict it.
+
 - Do not review code you wrote.
 - Use a clean worktree at the pull request HEAD. Install dependencies from scratch when required.
-- The orchestrator creates the reviewer worktree and invokes `codex exec --json` directly. Apply the same single-process supervision and incident-handoff rules used for a worker.
+- The orchestrator creates the reviewer worktree and spawns the `fleet-reviewer` subagent defined in `.codex/agents/reviewer.toml`. Apply the same supervision and incident handoff rules used for a worker.
 - Do not read `.fleet/stories/<id>.evidence.md`.
 - Bring up real dependencies. Do not use a stand in for the boundary under test.
 - Independently run every probe and every `red_when` breakage.
