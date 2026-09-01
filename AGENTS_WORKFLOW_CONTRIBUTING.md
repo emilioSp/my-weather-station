@@ -90,7 +90,6 @@ If the running session cannot spawn a custom agent by name and only exposes a ge
 
 - Wait on the subagent. The runtime reports its completion. There is no exit file, no process check, and no polling loop.
 - The worker is `running` until the runtime returns it. A quiet subagent, a long pause, or no intermediate message all mean `running with no new observation`. None of them means `dead`.
-- Never use `ps` or any process listing. It is blocked by the sandbox and forces a maintainer escalation prompt.
 - Do not spawn a second agent to ask about the first one.
 - When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. The handoff is the report. The subagent's closing message is not.
 - If the subagent returns and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs.
@@ -98,33 +97,6 @@ If the running session cannot spawn a custom agent by name and only exposes a ge
 - Treat an incident handoff as a failed worker execution. Do not relaunch automatically. Report it to the maintainer and wait for direction.
 
 If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
-
-### Fallback launch without subagents
-
-Use this only when subagents are unavailable in the running session.
-
-Never stream `--json` into the command runner's own output. The stream exceeds the runner's output budget, the runner truncates it and reports `Script completed` while the process is still running. That false signal is what makes an orchestrator declare a live worker dead.
-
-```sh
-mkdir -p .worktree/<id>/.fleet/run
-nohup sh -c 'codex exec --json --model gpt-5.6-terra --sandbox danger-full-access \
-  -C .worktree/<id> "<worker prompt>" </dev/null \
-  > .worktree/<id>/.fleet/run/worker.log 2>&1; \
-  echo $? > .worktree/<id>/.fleet/run/worker.exit' >/dev/null 2>&1 &
-```
-
-`</dev/null` is required. Without it Codex prints `Reading additional input from stdin...` and waits for prompt input that never arrives.
-
-Under this fallback, `.fleet/run/<role>.exit` is the only exit signal, and every supervision rule above applies with the exit file in place of the subagent's return. Wait inside the command so it returns as soon as the worker exits, and keep the wait under the runner's yield window:
-
-```sh
-for i in $(seq 1 30); do [ -f .worktree/<id>/.fleet/run/worker.exit ] && break; sleep 1; done
-cat .worktree/<id>/.fleet/run/worker.exit 2>/dev/null || echo running
-tail -n 20 .worktree/<id>/.fleet/run/worker.log
-ls .worktree/<id>/.fleet/handoffs/
-```
-
-`.fleet/run/` is orchestrator state. It is not committed and workers must not write to it.
 
 ## Worker
 
