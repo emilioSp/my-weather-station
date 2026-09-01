@@ -77,8 +77,15 @@ git worktree add -b fleet/<id> .worktree/<id> HEAD
 The orchestrator then invokes Codex directly in that worktree and waits for it to finish. Do not run it in the background and do not use a shell launcher:
 
 ```sh
-codex exec --model gpt-5.6-terra -C .worktree/<id> "<worker prompt>"
+codex exec \
+  --model gpt-5.6-terra \
+  --sandbox workspace-write \
+  -c 'sandbox_workspace_write.network_access=true' \
+  -C .worktree/<id> \
+  "<worker prompt>"
 ```
+
+This grants network access only to that Codex execution. Use it only when the story permits a dependency download or another network operation.
 
 The worker prompt must state:
 
