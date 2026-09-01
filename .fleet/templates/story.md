@@ -22,4 +22,4 @@ Describe the requested change.
 
 ## Out of scope
 
-- <work that must not be done>
+- < work that must not be done>

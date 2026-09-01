@@ -1,0 +1,14 @@
+{
+  "id": "2026-09-01-temperature-units",
+  "decision_so_far": "The maintainer approved adding a browser test runner. Playwright with Chromium will test real browser localStorage.",
+  "blocked": "Resolved. The initial story remains unchanged because workflow rules prohibit editing its invalid acceptance criteria.",
+  "options": [
+    "Add a browser integration test using the project's existing tooling, if an installed browser test runner is available.",
+    "Approve adding a browser test runner dependency and use it for the persistence probe.",
+    "Allow a fake localStorage in a unit test, accepting that this verifies application logic but not the browser boundary."
+  ],
+  "recommendation": "Use the replacement story, 2026-09-01-temperature-units-v2.",
+  "next_steps": {
+    "option": "Implement only the replacement story. Do not implement 2026-09-01-temperature-units."
+  }
+}

@@ -54,6 +54,7 @@ npm run <script> -w <workspace-name>
 - Use `async` and `await`. Do not introduce callback APIs.
 - Use named parameters for functions with multiple inputs. Define the input type close to the function.
 - Use explicit methods. Do not use property accessors.
+- Do not use --experimental-strip-types. We run on node version that support TypeScript stripping by default.
 
 ## Testing and checks
 
