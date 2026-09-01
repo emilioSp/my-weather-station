@@ -15,3 +15,7 @@ Users can view temperatures in Celsius or Fahrenheit.
 ## Known constraints
 
 - None recorded yet.
+
+## Maintainer decision, 2026-09-01
+
+Use an accessible Celsius/Fahrenheit radio group in the WeatherStation header, next to the refresh control.
