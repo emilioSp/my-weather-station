@@ -100,56 +100,11 @@ If the base is dirty, tell the maintainer to fix it. Open a gate only when the s
 
 ## Worker
 
-The spawn definition is `.codex/agents/worker.toml`. This section is the canonical rule set; the definition must not contradict it.
-
-- Implement exactly the assigned story.
-- Respect all story constraints, including dependencies, performance, security, and permitted error content.
-- Do not present your checks as verification. They are builder evidence for the reviewer to regenerate.
-- For every acceptance criterion, apply the stated `red_when` breakage, run the probe, restore the code, and run the probe again.
-- Record both command outputs in `.fleet/stories/<id>.evidence.md`.
-- For migrations, execute the reverse path at least once before reporting.
-- Write `.fleet/handoffs/<id>.build.json` before ending the pass:
-
-```json
-{
-  "id": "...",
-  "branch": "...",
-  "status": "done | gated | failed",
-  "acs": [
-    { "ac": "AC1", "probe": "...", "red_ok": true, "green_ok": true }
-  ],
-  "notes": "Every assumption not stated by the story."
-}
-```
-
-`failed` is a valid result. Do not weaken checks, disable tests, increase timeouts, add retries, suppress errors, or change acceptance criteria to produce green.
+The worker role and its terminal handoff format are defined in `.codex/agents/worker.toml`. A worker follows the shared rules in this file and the role instructions in that definition.
 
 ## Reviewer
 
-The spawn definition is `.codex/agents/reviewer.toml`. This section is the canonical rule set; the definition must not contradict it.
-
-- Do not review code you wrote.
-- Use a clean worktree at the pull request HEAD. Install dependencies from scratch when required.
-- The orchestrator creates the reviewer worktree and spawns the `fleet-reviewer` subagent defined in `.codex/agents/reviewer.toml`. Apply the same supervision and incident handoff rules used for a worker.
-- Do not read `.fleet/stories/<id>.evidence.md`.
-- Bring up real dependencies. Do not use a stand in for the boundary under test.
-- Independently run every probe and every `red_when` breakage.
-- For schema changes, apply, roll back, and apply again.
-- Check each story constraint separately.
-- Write findings to stdout as JSON only. Do not issue a pass or fail verdict:
-
-```json
-[
-  {
-    "ac": "AC1",
-    "severity": "high | medium | low",
-    "confidence": 0.0,
-    "evidence": "Executed command and observed output"
-  }
-]
-```
-
-The reviewer may review a story twice. If the second review still has findings, open a gate for the maintainer.
+The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates the reviewer worktree and spawns the `fleet-reviewer` subagent with the same supervision and incident handoff rules used for a worker.
 
 ## Gates
 
