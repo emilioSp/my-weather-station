@@ -19,7 +19,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - The maintainer gives work and decisions only to the orchestrator.
 - The orchestrator is the only agent that launches, monitors, and directs workers and reviewers.
 - Workers and reviewers do not ask the maintainer for direction. They write a gate handoff and stop when a maintainer decision is required.
-- The orchestrator reports worker and reviewer progress and final results to the maintainer while it waits for direct `codex exec` execution.
+- The maintainer may inspect worker or reviewer status through the helper scripts, but status inspection does not direct a sub agent.
 
 ## Files and scope
 
@@ -77,15 +77,8 @@ git worktree add -b fleet/<id> .worktree/<id> HEAD
 The orchestrator then invokes Codex directly in that worktree and waits for it to finish. Do not run it in the background and do not use a shell launcher:
 
 ```sh
-codex exec \
-  --model gpt-5.6-terra \
-  --sandbox workspace-write \
-  -c 'sandbox_workspace_write.network_access=true' \
-  -C .worktree/<id> \
-  "<worker prompt>"
+codex exec --model gpt-5.6-terra --sandbox danger-full-access -C .worktree/<id> "<worker prompt>"
 ```
-
-This grants network access only to that Codex execution. Use it only when the story permits a dependency download or another network operation.
 
 The worker prompt must state:
 

@@ -7,3 +7,10 @@ dist
 .codex
 .worktree/*
 !.worktree/.gitkeep
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
