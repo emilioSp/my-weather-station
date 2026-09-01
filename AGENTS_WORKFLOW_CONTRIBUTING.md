@@ -66,7 +66,7 @@ Probes must observe the real effect. Do not accept a probe that reads a mock, wr
 
 ### Launch a worker
 
-After creating a story, the maintainer must commit the story and all workflow files that the worker must read. The launcher creates the worker worktree from the current committed `HEAD`; uncommitted files are not copied.
+After creating a story, the maintainer must commit the story and all workflow files that the worker must read. The launcher creates `.worktree/<id>` from the current committed `HEAD`; uncommitted files are not copied.
 
 Run:
 

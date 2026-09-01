@@ -9,3 +9,5 @@ dist
 .fleet/handoffs/*.worker-exit.json
 .fleet/handoffs/*.worker.log
 .fleet/handoffs/*.worker-prompt.md
+.worktree/*
+!.worktree/.gitkeep

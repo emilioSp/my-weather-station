@@ -21,9 +21,7 @@ run_file="$root/.fleet/handoffs/$id.worker-run.json"
 exit_file="$root/.fleet/handoffs/$id.worker-exit.json"
 log_file="$root/.fleet/handoffs/$id.worker.log"
 prompt_file="$root/.fleet/handoffs/$id.worker-prompt.md"
-repo_name=$(basename "$root")
-parent=$(dirname "$root")
-worktree="$parent/$repo_name-$id"
+worktree="$root/.worktree/$id"
 branch="fleet/$id"
 
 if [ ! -f "$story" ]; then
@@ -31,15 +29,15 @@ if [ ! -f "$story" ]; then
   exit 1
 fi
 
-if [ -e "$run_file" ]; then
-  echo "Worker run already exists: $run_file" >&2
-  exit 1
-fi
-
 if [ -n "$(git status --porcelain)" ]; then
   echo "Cannot launch worker: the base working tree is not clean." >&2
   echo "Commit the intended story and workflow files, or remove unwanted changes." >&2
   echo "Read CONTRIBUTING.md, The normal path, step 3." >&2
+  exit 1
+fi
+
+if [ -e "$run_file" ]; then
+  echo "Worker run already exists: $run_file" >&2
   exit 1
 fi
 
