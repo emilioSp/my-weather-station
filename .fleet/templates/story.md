@@ -11,9 +11,7 @@ Describe the requested change.
 ## Allowed paths
 
 - `path/allowed-by-this-story`
-- `.fleet/stories/**` (required workflow artefacts)
-- `.fleet/handoffs/**` (required workflow artefacts)
-- `.fleet/designs/**` (required for frontend stories)
+- `.fleet/**` (required workflow artefacts)
 
 ## Frontend prototype design
 
@@ -34,4 +32,3 @@ Describe the agreed implementation approach.
 ## Out of scope
 
 - &lt; work that must not be done&gt;
-

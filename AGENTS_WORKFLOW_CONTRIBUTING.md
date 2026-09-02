@@ -35,13 +35,8 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - Before working in a workspace, read the applicable `AGENTS.md` for that workspace.
 - Work in the assigned worktree only.
 - Change only the paths listed in the story. Do not widen the list.
-- Every story must list these workflow artefact paths in its allowed paths:
-  - `.fleet/stories/<id>.evidence.md`
-  - `.fleet/handoffs/<id>.build.json`
-  - `.fleet/handoffs/<id>.review.json`
-  - `.fleet/handoffs/<id>.gate.json`
-  - `.fleet/handoffs/<id>.gate.superseded.json`
-- A frontend story must list `.fleet/designs/<id>.html` in its allowed paths. The orchestrator creates the prototype during story preparation. It must be present before the worker starts implementation. A prototype is accurate only in the part related to the story.
+- Every story must list `.fleet/**` in its allowed paths. This authorizes workflow artefacts, stories, handoffs, and designs.
+- A frontend story must reference its prototype in the Design section. The orchestrator creates the prototype during story preparation. It must be present before the worker starts implementation. A prototype is accurate only in the part related to the story.
 - A frontend story uses its prototype as the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The story specifies a viewport only when it requires a non-standard size.
 - Never delete branches, worktrees, or files that you did not create.
 
@@ -55,7 +50,7 @@ The maintainer and orchestrator create stories from their discussion. A story mu
 - A Design section with `.fleet/designs/<id>.html` for frontend stories
 - Acceptance criteria
 - Out of scope work
-- Every required workflow artefact path
+- The `.fleet/**` allowed path
 
 Each acceptance criterion must use this form:
 
