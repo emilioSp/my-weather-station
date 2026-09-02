@@ -20,7 +20,8 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - The orchestrator is the only agent that launches, monitors, and directs workers and reviewers.
 - Workers and reviewers do not ask the maintainer for direction. They write a gate handoff and stop when a maintainer decision is required.
 - The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
-- The maintainer reviews generated code and makes the final commit. The orchestrator must not commit worker or reviewer changes.
+- The orchestrator makes every commit needed by the workflow except the final one that occurs once the story is declared completed.
+- The maintainer makes the final commit.
 
 ## Files and scope
 
@@ -96,6 +97,7 @@ If the running session cannot spawn a custom agent by name and only exposes a ge
 - The worker is `running` until the runtime returns it. A quiet subagent, a long pause, or no intermediate message all mean `running with no new observation`. None of them means `dead`.
 - Do not spawn a second agent to ask about the first one.
 - When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. The handoff is the report. The subagent's closing message is not.
+- After a `done` build handoff, commit the worker changes before launching a reviewer. The reviewer requires a clean worktree at that commit.
 - If the subagent returns and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs.
 - Never write an incident handoff while the subagent is still running. Reporting a running worker as dead is a supervision error, not a worker failure.
 - Treat an incident handoff as a failed worker execution. Do not relaunch automatically. Report it to the maintainer and wait for direction.
