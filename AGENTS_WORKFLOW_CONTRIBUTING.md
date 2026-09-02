@@ -26,7 +26,6 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 
 ## Files and scope
 
-- `.fleet/history/` contains source requests and maintainer decisions. It is the only source of new work.
 - `.fleet/stories/<id>.md` is the work order for one reversible change.
 - `.fleet/handoffs/` contains build records, gates, and review findings.
 - `.fleet/designs/` contains one standalone HTML prototype for each frontend story.
@@ -46,7 +45,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 
 ## Stories
 
-An orchestrator creates stories from `.fleet/history/`. A story must contain:
+The maintainer and orchestrator create stories from their discussion. A story must contain:
 
 - Problem
 - Constraints
@@ -74,7 +73,7 @@ For frontend screenshot probes, render the prototype and the actual app at every
 ## Orchestrator
 
 - Do not edit product code, except for a non-functional chore explicitly requested by the maintainer during the final human review.
-- Do not invent work. Create a story only from a file in `.fleet/history/` or a recorded maintainer discussion.
+- Do not invent work. Create a story only from the current maintainer discussion.
 - Create one story for one reversible change. Split changes that mix data model changes with behaviour changes.
 - Define direct, falsifiable probes before creating a story.
 - Open a gate when a decision belongs to the maintainer.
@@ -98,6 +97,7 @@ The spawn instruction must state:
 - The story id.
 - The absolute path of the assigned worktree, which is the worker's root.
 - That the worker must read `AGENTS.md` and `AGENTS_WORKFLOW_CONTRIBUTING.md` first, then `.fleet/stories/<id>.md` at the start of every pass.
+- For a repair pass, that it must read `.fleet/handoffs/<id>.review.json` after the story.
 
 Everything else the worker needs is already in `.codex/agents/worker.toml`. Do not restate the role in the prompt and do not weaken it.
 
@@ -106,7 +106,7 @@ Everything else the worker needs is already in `.codex/agents/worker.toml`. Do n
 - Wait on the subagent. The runtime reports its completion. There is no exit file, no process check, and no polling loop.
 - The worker is `running` until the runtime returns it. A quiet subagent, a long pause, or no intermediate message all mean `running with no new observation`. None of them means `dead`.
 - Do not spawn a second agent to ask about the first one.
-- When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. The handoff is the report. The subagent's closing message is not.
+- When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. The worker must overwrite its terminal handoff for the current pass. The handoff is the report. The subagent's closing message is not.
 - After a `done` build handoff, commit the worker changes before launching a reviewer. The reviewer requires a clean worktree at that commit.
 - After a `failed` build handoff, commit the worker changes and handoff, do not launch a reviewer or relaunch the worker automatically, and report the failure to the maintainer.
 - If the subagent returns and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs.
@@ -115,15 +115,32 @@ Everything else the worker needs is already in `.codex/agents/worker.toml`. Do n
 
 If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
 
+### Launch a reviewer
+
+The orchestrator creates one reviewer branch and one dedicated clean worktree for each review. It starts the branch at the current `fleet/<id>` commit:
+
+```sh
+git worktree add -b fleet/<id>-review-<n> .worktree/<id>-review-<n> fleet/<id>
+```
+
+`<n>` is a new review sequence number. The orchestrator spawns `fleet-reviewer` in that worktree. Its spawn instruction states the story id, the absolute worktree path, and that it must read `AGENTS.md`, `AGENTS_WORKFLOW_CONTRIBUTING.md`, and `.fleet/stories/<id>.md` first.
+
 ### Supervise a reviewer
 
 - Wait on the subagent. The runtime reports its completion.
-- When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.review.json` or `.fleet/handoffs/<id>.gate.json`. The handoff is the report. The subagent's closing message is not.
+- When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.review.json` or `.fleet/handoffs/<id>.gate.json`. The reviewer must overwrite its terminal handoff for the current pass and write `[]` when it has no findings. The handoff is the report. The subagent's closing message is not.
 - If the subagent returns and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs. Never write an incident handoff while the subagent is still running.
-- Commit every reviewer handoff immediately after inspection. A review-record commit contains no product changes and does not need another review.
-- When the reviewer reports findings, do not run a second review against the same commit.
-- If a finding is repairable within the story and its allowed paths, send the worker a repair pass. Commit the repair, then launch a newly spawned reviewer in a clean worktree at the new commit. The reviewer must be a separate subagent instance and must not receive the previous review result or conversation.
-- Open a gate when a finding cannot be repaired within the story or remains after a repair and fresh review. The maintainer decides whether to accept the finding. If the maintainer rejects it, declare the technical story completed. If the maintainer accepts it, send the worker a repair pass and launch a fresh independent reviewer after the repair commit.
+- Commit every reviewer handoff immediately in the reviewer worktree. A review-record commit contains no product changes and does not need another review.
+- A review cycle has at most two reviews. When a review reports findings, do not run another review against the same commit.
+- After the first review commit, fast forward merge its reviewer branch into `fleet/<id>` in the worker worktree:
+
+  ```sh
+  git -C .worktree/<id> merge --ff-only fleet/<id>-review-<n>
+  ```
+
+  No findings complete the technical story. If its findings are repairable within the story and its allowed paths, send the worker a repair pass. The worker reads the merged `review.json`. Commit the repair, then launch the second review in a clean worktree at the new commit.
+- After the second review commit, its reviewer branch tip is the candidate commit. Do not merge it into `fleet/<id>` before the final maintainer review.
+- Open a gate after findings from the second review, or when a finding from either review cannot be repaired within the story and its allowed paths. The maintainer decides whether to accept the finding. If the maintainer rejects it, declare the technical story completed. If the maintainer accepts it, fast forward merge the reviewer branch into `fleet/<id>`, send the worker a repair pass, and start a new review cycle with a fresh independent first review after the repair commit.
 
 ### Final maintainer review
 
@@ -164,7 +181,7 @@ Examples of `failed`:
 
 ### `gate.json`
 
-Use `.fleet/handoffs/<id>.gate.json`, not `build.json`, when a maintainer decision is required.
+Use `.fleet/handoffs/<id>.gate.json`, not `build.json`, when a maintainer decision is required. Overwrite the gate handoff for every new gate pass.
 
 Examples of a gate:
 
@@ -180,7 +197,7 @@ The worker role and its terminal handoff format are defined in `.codex/agents/wo
 
 ## Reviewer
 
-The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates a dedicated reviewer worktree at the candidate commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision and incident handoff rules.
+The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates a dedicated reviewer worktree at the current `fleet/<id>` commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision and incident handoff rules.
 
 ## Gates
 
@@ -201,10 +218,12 @@ The gate must let the maintainer decide without reopening the work. Do not wait 
 
 ## Helpers
 
-Use these scripts to create standard files. They refuse to overwrite existing files.
+Use these scripts to write standard files. Handoff scripts overwrite the existing handoff for the current pass.
 
 ```sh
 scripts/fleet/new-story.sh <id>
 scripts/fleet/open-gate.sh <id>
 scripts/fleet/record-build.sh <id>
+scripts/fleet/record-review.sh <id>
+scripts/fleet/record-incident.sh <id>
 ```

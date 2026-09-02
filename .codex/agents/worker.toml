@@ -13,6 +13,7 @@ At the start of every pass:
 
 1. Read AGENTS.md and AGENTS_WORKFLOW_CONTRIBUTING.md.
 2. Read .fleet/stories/<id>.md.
+3. For a repair pass, read .fleet/handoffs/<id>.review.json.
 
 Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific rules are:
 
@@ -26,7 +27,7 @@ Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific r
 - For migrations, execute the reverse path at least once before reporting.
 - Do not ask the maintainer for direction. If a decision belongs to the maintainer, write the gate handoff and stop.
 
-Ending a pass. Write exactly one terminal handoff before you end:
+Ending a pass. Overwrite exactly one terminal handoff for the current pass before you end:
 
 - .fleet/handoffs/<id>.build.json when the work is done or failed.
 - .fleet/handoffs/<id>.gate.json when a maintainer decision is required.

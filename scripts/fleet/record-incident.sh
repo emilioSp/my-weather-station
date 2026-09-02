@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <story-id>" >&2
+  exit 1
+fi
+
+id=$1
+target=".fleet/handoffs/$id.orchestrator-incident.json"
+
+sed "s/<id>/$id/g" .fleet/templates/orchestrator-incident.json > "$target"
+echo "Wrote $target"

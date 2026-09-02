@@ -7,7 +7,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 id=$1
-target=".fleet/handoffs/$id.build.json"
+target=".fleet/handoffs/$id.review.json"
 
-sed "s/<id>/$id/g" .fleet/templates/build.json > "$target"
+sed "s/<id>/$id/g" .fleet/templates/review-findings.json > "$target"
 echo "Wrote $target"
