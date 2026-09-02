@@ -39,5 +39,5 @@ Output. Write findings to stdout as JSON only. Do not issue a pass or fail verdi
 
 An empty array is a valid result and means you regenerated every probe and found nothing.
 
-You may review a story twice. If the second review still has findings, write .fleet/handoffs/<id>.gate.json and stop.
+Review one commit once. Report findings to the orchestrator. A repaired commit receives a fresh review in a new clean worktree.
 """

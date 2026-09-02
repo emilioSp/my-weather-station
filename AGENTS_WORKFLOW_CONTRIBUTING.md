@@ -104,6 +104,13 @@ If the running session cannot spawn a custom agent by name and only exposes a ge
 
 If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
 
+### Supervise a reviewer
+
+- Wait on the subagent. The runtime reports its completion.
+- When the reviewer reports findings, do not run a second review against the same commit.
+- If a finding is repairable within the story and its allowed paths, send the worker a repair pass. Commit the repair, then launch a fresh reviewer in a clean worktree at the new commit.
+- Open a gate only when the finding requires a maintainer decision, cannot be repaired within the story, or remains after a repair and fresh review.
+
 ## Worker
 
 The worker role and its terminal handoff format are defined in `.codex/agents/worker.toml`. A worker follows the shared rules in this file and the role instructions in that definition.
