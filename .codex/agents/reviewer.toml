@@ -46,6 +46,8 @@ The review handoff is a JSON array. Do not issue a pass or fail verdict:
 
 An empty array is valid and means you regenerated every probe and found nothing. Always write `[]` when it is the result; do not leave a previous handoff in place.
 
+After writing the terminal handoff, commit it in the assigned worktree. Do not include unrelated changes.
+
 Review one commit once. Report the terminal handoff path to the orchestrator. A repaired commit receives a fresh review in a new clean worktree.
 
 Your final message to the orchestrator states only: the story id and the terminal handoff you wrote. The handoff file is the report. The message is not.

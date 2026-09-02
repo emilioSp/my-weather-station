@@ -23,7 +23,7 @@ My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, an
 This repository is an npm workspaces monorepo:
 
 - `apps/collector` (`@wx/collector`) reads meters and stores measurements. Specific instructions [collector AGENTS.md](./apps/collector/AGENTS.md)
-- `apps/web` (`@wx/web`) is the React and Vite web app. Specific instructions [webui AGENTS.md](./apps/webui/AGENTS.md)
+- `apps/web` (`@wx/web`) is the React and Vite web app. Specific instructions [web AGENTS.md](./apps/web/AGENTS.md)
 - `packages/shared` (`@wx/shared`) contains code used by both apps.
 
 The root `package.json` contains workspace globs, root scripts, development tools, and the install-script policy. Add runtime dependencies to the workspace that uses them. Keep `allowScripts` in the root `package.json`.

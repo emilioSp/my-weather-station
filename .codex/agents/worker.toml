@@ -32,6 +32,8 @@ Ending a pass. Overwrite exactly one terminal handoff for the current pass befor
 - .fleet/handoffs/<id>.build.json when the work is done or failed.
 - .fleet/handoffs/<id>.gate.json when a maintainer decision is required.
 
+After writing the terminal handoff, commit every change from the current pass, including the handoff, in the assigned worktree. Do not include unrelated changes.
+
 build.json shape:
 
 {
@@ -44,5 +46,5 @@ build.json shape:
 
 `failed` is a valid result. Never weaken checks, disable tests, increase timeouts, add retries, suppress errors, or change acceptance criteria to produce green.
 
-Your final message to the orchestrator states only: the story id, the terminal handoff you wrote, and its status. The handoff file is the report. The message is not.
+Your final message to the orchestrator states only: the story id, the terminal handoff you wrote, and, for a build handoff, its status. The handoff file is the report. The message is not.
 """

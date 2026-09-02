@@ -21,7 +21,9 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - Workers and reviewers do not ask the maintainer for direction. They write a gate handoff and stop when a maintainer decision is required.
 - The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
 - The maintainer commits the initial story and workflow files before a worker starts.
-- The orchestrator commits worker changes, repairs, and reviewer handoffs.
+- Workers commit their changes and terminal handoffs in their assigned worktrees.
+- Reviewers commit their terminal handoffs in their assigned worktrees.
+- The orchestrator commits only its own incident handoffs.
 - The maintainer makes the final commit.
 
 ## Files and scope
@@ -76,7 +78,7 @@ For frontend screenshot probes, render the prototype and the actual app at every
 - Do not invent work. Create a story only from the current maintainer discussion.
 - Create one story for one reversible change. Split changes that mix data model changes with behaviour changes.
 - Define direct, falsifiable probes before creating a story.
-- Open a gate when a decision belongs to the maintainer.
+- When a decision belongs to the maintainer, require the worker or reviewer that found it to open a gate. Do not open a gate yourself.
 - Launch and supervise every worker and reviewer. Report only observed process state and recorded handoffs to the maintainer.
 - Do not open a gate for a dirty or uncommitted launch base. This is a launch precondition failure. Tell the maintainer to commit the intended workflow files or remove unwanted changes, then refer to `CONTRIBUTING.md`.
 
@@ -107,13 +109,13 @@ Everything else the worker needs is already in `.codex/agents/worker.toml`. Do n
 - The worker is `running` until the runtime returns it. A quiet subagent, a long pause, or no intermediate message all mean `running with no new observation`. None of them means `dead`.
 - Do not spawn a second agent to ask about the first one.
 - When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. The worker must overwrite its terminal handoff for the current pass. The handoff is the report. The subagent's closing message is not.
-- After a `done` build handoff, commit the worker changes before launching a reviewer. The reviewer requires a clean worktree at that commit.
-- After a `failed` build handoff, commit the worker changes and handoff, do not launch a reviewer or relaunch the worker automatically, and report the failure to the maintainer.
-- If the subagent returns and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs.
+- The worker commits its changes and terminal handoff before it ends. After a `done` build handoff, confirm that the worker worktree is clean and its handoff is committed before launching a reviewer. The reviewer requires a clean worktree at that commit.
+- After a `failed` build handoff, confirm that the worker worktree is clean and its handoff is committed. Do not launch a reviewer or relaunch the worker automatically, and report the failure to the maintainer.
+- If the subagent returns and neither terminal handoff exists, write and commit `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs.
 - Never write an incident handoff while the subagent is still running. Reporting a running worker as dead is a supervision error, not a worker failure.
 - Treat an incident handoff as a failed worker execution. Do not relaunch automatically. Report it to the maintainer and wait for direction.
 
-If the base is dirty, tell the maintainer to fix it. Open a gate only when the story itself needs a maintainer decision.
+If the base is dirty, tell the maintainer to fix it. A worker or reviewer opens a gate only when the story itself needs a maintainer decision.
 
 ### Launch a reviewer
 
@@ -129,8 +131,8 @@ git worktree add -b fleet/<id>-review-<n> .worktree/<id>-review-<n> fleet/<id>
 
 - Wait on the subagent. The runtime reports its completion.
 - When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.review.json` or `.fleet/handoffs/<id>.gate.json`. The reviewer must overwrite its terminal handoff for the current pass and write `[]` when it has no findings. The handoff is the report. The subagent's closing message is not.
-- If the subagent returns and neither terminal handoff exists, write `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs. Never write an incident handoff while the subagent is still running.
-- Commit every reviewer handoff immediately in the reviewer worktree. A review-record commit contains no product changes and does not need another review.
+- If the subagent returns and neither terminal handoff exists, write and commit `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs. Never write an incident handoff while the subagent is still running.
+- The reviewer commits its terminal handoff before it ends. Confirm that the reviewer worktree is clean and its handoff is committed. A review-record commit contains no product changes and does not need another review.
 - A review cycle has at most two reviews. When a review reports findings, do not run another review against the same commit.
 - After the first review commit, fast forward merge its reviewer branch into `fleet/<id>` in the worker worktree:
 
@@ -138,13 +140,13 @@ git worktree add -b fleet/<id>-review-<n> .worktree/<id>-review-<n> fleet/<id>
   git -C .worktree/<id> merge --ff-only fleet/<id>-review-<n>
   ```
 
-  No findings complete the technical story. If its findings are repairable within the story and its allowed paths, send the worker a repair pass. The worker reads the merged `review.json`. Commit the repair, then launch the second review in a clean worktree at the new commit.
-- After the second review commit, its reviewer branch tip is the candidate commit. Do not merge it into `fleet/<id>` before the final maintainer review.
-- Open a gate after findings from the second review, or when a finding from either review cannot be repaired within the story and its allowed paths. The maintainer decides whether to accept the finding. If the maintainer rejects it, declare the technical story completed. If the maintainer accepts it, fast forward merge the reviewer branch into `fleet/<id>`, send the worker a repair pass, and start a new review cycle with a fresh independent first review after the repair commit.
+  No findings complete the technical story. If its findings are repairable within the story and its allowed paths, send the worker a repair pass. The worker reads the merged `review.json`, commits the repair and its build handoff, then launch the second review in a clean worktree at the new commit.
+- After a second review with no findings, its reviewer branch tip is the candidate commit. It is the last reviewer handoff commit whose `review.json` contains `[]`. Do not merge it into `fleet/<id>` before the final maintainer review.
+- The reviewer opens a gate after findings from the second review, or when a finding from either review cannot be repaired within the story and its allowed paths. The maintainer decides whether to accept the finding. If the maintainer rejects it, declare the technical story completed. If the maintainer accepts it, fast forward merge the reviewer branch into `fleet/<id>`, send the worker a repair pass, and start a new review cycle with a fresh independent first review after the repair commit.
 
 ### Final maintainer review
 
-After the reviewer reports no findings, declare the technical story completed. On the base branch, run `git merge --squash <candidate-commit>` for the last reviewed commit. Do not commit the merge result. The candidate product changes must remain staged for the maintainer. Keep every worktree until the maintainer makes the final commit.
+After the reviewer reports no findings, declare the technical story completed. The candidate commit is the last reviewer handoff commit whose `review.json` contains `[]`. On the base branch, run `git merge --squash <candidate-commit>`. Do not commit the merge result. The candidate product changes must remain staged for the maintainer. Keep every worktree until the maintainer makes the final commit.
 
 The maintainer reviews code quality on the base branch. If satisfied, the maintainer commits and pushes the candidate change.
 
