@@ -11,6 +11,11 @@ Describe the requested change.
 ## Paths
 
 - `path/allowed-by-this-story`
+- `.fleet/designs/<id>.html` (required for frontend stories)
+
+## Design
+
+For a frontend story, add the required standalone HTML prototype at `.fleet/designs/<id>.html`. It shows the intended visual result and does not need to be functional.
 
 ## Acceptance criteria
 

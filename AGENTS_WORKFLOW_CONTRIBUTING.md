@@ -26,9 +26,11 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - `.fleet/history/` contains source requests and maintainer decisions. It is the only source of new work.
 - `.fleet/stories/<id>.md` is the work order for one reversible change.
 - `.fleet/handoffs/` contains build records, gates, and review findings.
+- `.fleet/designs/` contains one standalone HTML prototype for each frontend story.
 - Read the assigned story at the start of every pass.
 - Work in the assigned worktree only.
 - Change only the paths listed in the story. Do not widen the list.
+- A frontend story must list `.fleet/designs/<id>.html` in its allowed paths. The orchestrator creates the prototype during story preparation. It must be present before the worker starts implementation.
 - Never delete branches, worktrees, or files that you did not create.
 
 ## Stories
@@ -38,6 +40,7 @@ An orchestrator creates stories from `.fleet/history/`. A story must contain:
 - Problem
 - Constraints
 - Allowed paths
+- A Design section with `.fleet/designs/<id>.html` for frontend stories
 - Acceptance criteria
 - Out of scope work
 
