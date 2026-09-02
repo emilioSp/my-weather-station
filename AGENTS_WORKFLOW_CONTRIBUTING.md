@@ -89,7 +89,7 @@ After creating a story, the maintainer must commit the story, its frontend proto
 The orchestrator checks that the base is clean, then creates the worktree directly:
 
 ```sh
-git worktree add -b fleet/<id> .worktree/<id> HEAD
+git worktree add -b worker/<id> .worktree/<id> HEAD
 ```
 
 The orchestrator then spawns the `fleet-worker` subagent defined in `.codex/agents/worker.toml`. Do not shell out to `codex exec`. The runtime owns the child's lifecycle, so its completion is a first class result instead of a string parsed from terminal output.
@@ -118,10 +118,10 @@ If the base is dirty, tell the maintainer to fix it. A worker or reviewer opens 
 
 ### Launch a reviewer
 
-The orchestrator creates one reviewer branch and one dedicated clean worktree for each review. It starts the branch at the current `fleet/<id>` commit:
+The orchestrator creates one reviewer branch and one dedicated clean worktree for each review. It starts the branch at the current `worker/<id>` commit:
 
 ```sh
-git worktree add -b fleet/<id>-review-<n> .worktree/<id>-review-<n> fleet/<id>
+git worktree add -b reviewer/<id>/<n> .worktree/<id>-review-<n> worker/<id>
 ```
 
 `<n>` is a new review sequence number. The orchestrator spawns `fleet-reviewer` in that worktree. Its spawn instruction states the story id, the absolute worktree path, and that it must read `AGENTS.md`, `AGENTS_WORKFLOW_CONTRIBUTING.md`, and `.fleet/stories/<id>.md` first.
@@ -133,15 +133,15 @@ git worktree add -b fleet/<id>-review-<n> .worktree/<id>-review-<n> fleet/<id>
 - If the subagent returns without the required handoff files for the current pass, report the exception to the maintainer and stop. Do not change the repository or relaunch automatically. Never report a running reviewer as terminated.
 - The reviewer commits its handoff files before it ends. Confirm that the reviewer worktree is clean and its handoff files are committed. A review-record commit contains no product changes and does not need another review.
 - A review cycle has at most two reviews. When a review reports findings, do not run another review against the same commit.
-- After the first review commit, fast forward merge its reviewer branch into `fleet/<id>` in the worker worktree:
+- If the first review has no gate, fast forward merge its reviewer branch into `worker/<id>` in the worker worktree:
 
   ```sh
-  git -C .worktree/<id> merge --ff-only fleet/<id>-review-<n>
+  git -C .worktree/<id> merge --ff-only reviewer/<id>/<n>
   ```
 
   No findings complete the technical story. If its findings are repairable within the story and its allowed paths, send the worker a repair pass. The worker reads the merged `review.json`, commits the repair and its build handoff, then launch the second review in a clean worktree at the new commit.
-- After a second review with no findings, its reviewer branch tip is the candidate commit. It is the last reviewer handoff commit whose `review.json` contains `[]`. Do not merge it into `fleet/<id>` before the final maintainer review.
-- The reviewer opens a gate after findings from the second review, or when a finding from either review cannot be repaired within the story and its allowed paths. It writes the findings to `review.json` before it writes the gate. The maintainer decides whether to accept the finding. If the maintainer rejects it, record `finding_rejected` and the reason in the superseded gate. That resolved-gate commit is an exception candidate commit and completes the technical story. If the maintainer accepts it, record the decision in the superseded gate, fast forward merge the reviewer branch into `fleet/<id>`, send the worker a repair pass, and start a new review cycle with a fresh independent first review after the repair commit.
+- After a second review with no findings, its reviewer branch tip is the candidate commit. It is the last reviewer handoff commit whose `review.json` contains `[]`. Do not merge it into `worker/<id>` before the final maintainer review.
+- The reviewer opens a gate after findings from the second review, or when a finding from either review cannot be repaired within the story and its allowed paths. It writes the findings to `review.json` before it writes the gate. The maintainer decides whether to accept the finding. If the maintainer rejects it, record `finding_rejected` and the reason in the superseded gate. That resolved-gate commit is an exception candidate commit and completes the technical story. If the maintainer accepts it, record the decision in the superseded gate, fast forward merge the reviewer branch into `worker/<id>`, send the worker a repair pass, and start a new review cycle with a fresh independent first review after the repair commit.
 
 ### Final maintainer review
 
@@ -198,7 +198,7 @@ The worker role and its terminal handoff format are defined in `.codex/agents/wo
 
 ## Reviewer
 
-The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates a dedicated reviewer worktree at the current `fleet/<id>` commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision rules.
+The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates a dedicated reviewer worktree at the current `worker/<id>` commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision rules.
 
 ## Gates
 
@@ -218,7 +218,7 @@ Stop immediately when a maintainer decision is required. A reviewer first record
 
 The gate must let the maintainer decide without reopening the work. Do not wait in process after writing it. An active gate has `"resolution": null`.
 
-When the maintainer resolves a gate, the orchestrator records the decision and reason in `resolution`, then renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json` in the worktree that holds the active gate. Use `finding_rejected` as `resolution.decision` when the maintainer rejects a reviewer finding. Replace an older superseded gate when necessary. Git preserves every earlier version. The orchestrator commits the change before it launches a resumed pass or declares an exception candidate commit.
+When the maintainer resolves a gate, the orchestrator records the decision and reason in `resolution`, then renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json` in the worktree that holds the active gate. Use `finding_rejected` as `resolution.decision` when the maintainer rejects a reviewer finding. Replace an older superseded gate when necessary. Git preserves every earlier version. The orchestrator commits the change before it launches a resumed pass or declares an exception candidate commit. The orchestrator must not fast forward merge a reviewer branch with an active gate into `worker/<id>`.
 
 ## Helpers
 
