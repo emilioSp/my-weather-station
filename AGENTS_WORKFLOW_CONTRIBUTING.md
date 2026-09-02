@@ -20,7 +20,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - The orchestrator is the only agent that launches, monitors, and directs workers and reviewers.
 - Workers and reviewers do not ask the maintainer for direction. They write a gate handoff and stop when a maintainer decision is required.
 - The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
-- The orchestrator makes every commit needed by the workflow except the final one that occurs once the story is declared completed.
+- The orchestrator makes every commit needed by the worker and reviewer workflow.
 - The maintainer makes the final commit.
 
 ## Files and scope
@@ -65,7 +65,7 @@ For frontend screenshot probes, render the prototype and the actual app at every
 
 ## Orchestrator
 
-- Do not edit product code.
+- Do not edit product code, except for a non-functional chore explicitly requested by the maintainer during the final human review.
 - Do not invent work. Create a story only from a file in `.fleet/history/` or a recorded maintainer discussion.
 - Create one story for one reversible change. Split changes that mix data model changes with behaviour changes.
 - Define direct, falsifiable probes before creating a story.
@@ -113,7 +113,15 @@ If the base is dirty, tell the maintainer to fix it. Open a gate only when the s
 - Wait on the subagent. The runtime reports its completion.
 - When the reviewer reports findings, do not run a second review against the same commit.
 - If a finding is repairable within the story and its allowed paths, send the worker a repair pass. Commit the repair, then launch a fresh reviewer in a clean worktree at the new commit.
-- Open a gate only when the finding requires a maintainer decision, cannot be repaired within the story, or remains after a repair and fresh review.
+- Open a gate when a finding cannot be repaired within the story or remains after a repair and fresh review. The maintainer decides whether to accept the finding. If the maintainer rejects it, declare the technical story completed. If the maintainer accepts it, send the worker a repair pass and launch a fresh independent reviewer after the repair commit.
+
+### Final maintainer review
+
+After the reviewer reports no findings, declare the technical story completed. On the base branch, run `git merge --squash <candidate-commit>` for the last reviewed commit. Do not commit the merge result. The candidate product changes must remain staged for the maintainer. Keep every worktree until the maintainer makes the final commit.
+
+The maintainer reviews code quality on the base branch. If satisfied, the maintainer commits and pushes the candidate change.
+
+If the maintainer requests a non-functional chore, the orchestrator applies it directly on the base branch. It must not change acceptance criteria, probes, `red_when` breakages, tests, or functional behaviour. The orchestrator runs relevant existing tests only as regression checks, stages the chore changes, then returns the staged change to the maintainer for another final review. These tests are not a replacement for independent acceptance verification.
 
 ## Worker
 
@@ -121,7 +129,7 @@ The worker role and its terminal handoff format are defined in `.codex/agents/wo
 
 ## Reviewer
 
-The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates the reviewer worktree and spawns the `fleet-reviewer` subagent with the same supervision and incident handoff rules used for a worker.
+The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates the reviewer worktree at the candidate commit and spawns the `fleet-reviewer` subagent with the same supervision and incident handoff rules used for a worker.
 
 ## Gates
 
