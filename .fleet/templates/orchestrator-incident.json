@@ -1,8 +1,0 @@
-{
-  "id": "<id>",
-  "role": "worker | reviewer",
-  "spawn_instruction": "",
-  "ended": "",
-  "last_observed_step": "",
-  "missing_handoffs": []
-}

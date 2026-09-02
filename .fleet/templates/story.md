@@ -16,7 +16,6 @@ Describe the requested change.
 - `.fleet/handoffs/<id>.review.json` (required workflow artefact)
 - `.fleet/handoffs/<id>.gate.json` (required workflow artefact)
 - `.fleet/handoffs/<id>.gate.superseded.json` (required workflow artefact)
-- `.fleet/handoffs/<id>.orchestrator-incident.json` (required workflow artefact)
 - `.fleet/designs/<id>.html` (required for frontend stories)
 
 ## Frontend prototype design

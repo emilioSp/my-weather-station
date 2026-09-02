@@ -28,10 +28,7 @@ Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific r
 - For frontend stories, read the applicable workspace `AGENTS.md` and render the prototype and the actual app at every target resolution it defines, in the state shown or required by the story. Inspect both screenshots and report visual differences. The prototype is a visual reference. Do not assess its source code. Use only meaningful parts of the prototype related to the story you have been assigned to. Ignore visual parts out of the story scope.
 - Do not ask the maintainer for direction. Write a gate handoff and stop if a maintainer decision is required.
 
-Ending a pass. Overwrite exactly one terminal handoff for the current pass before you end:
-
-- `.fleet/handoffs/<id>.review.json` after you form your findings.
-- `.fleet/handoffs/<id>.gate.json` when a maintainer decision is required.
+Ending a pass. Always overwrite `.fleet/handoffs/<id>.review.json` for the current pass after you form your findings. It is the terminal handoff unless a maintainer decision is required. In that case, write `.fleet/handoffs/<id>.gate.json` after `review.json`; the gate is the terminal handoff. Historical handoffs from earlier passes remain in the worktree and are not active.
 
 The review handoff is a JSON array. Do not issue a pass or fail verdict:
 
@@ -46,7 +43,7 @@ The review handoff is a JSON array. Do not issue a pass or fail verdict:
 
 An empty array is valid and means you regenerated every probe and found nothing. Always write `[]` when it is the result; do not leave a previous handoff in place.
 
-After writing the terminal handoff, commit it in the assigned worktree. Do not include unrelated changes.
+After writing the handoff files, commit them in the assigned worktree. Do not include unrelated changes.
 
 Review one commit once. Report the terminal handoff path to the orchestrator. A repaired commit receives a fresh review in a new clean worktree.
 
