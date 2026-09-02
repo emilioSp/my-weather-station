@@ -146,7 +146,7 @@ After the reviewer reports no findings, or after the maintainer rejects a review
 
 The maintainer reviews code quality on the base branch. If satisfied, the maintainer commits and pushes the candidate change.
 
-If the maintainer requests a non-functional chore, the orchestrator applies it directly on the base branch. It must not change acceptance criteria, probes, `red_when` breakages, tests, or functional behaviour. The orchestrator runs relevant existing tests only as regression checks, stages the chore changes, then returns the staged change to the maintainer for another final review. These tests are not a replacement for independent acceptance verification.
+If the maintainer requests a non-functional chore, the orchestrator applies it directly on the base branch. It must not change acceptance criteria, probes, `red_when` breakages, tests, or functional behaviour. The orchestrator runs the complete existing test suite for each affected workspace as a regression check, stages the chore changes, then returns the staged change to the maintainer for another final review. These tests are not a replacement for independent acceptance verification.
 
 ## Build statuses
 

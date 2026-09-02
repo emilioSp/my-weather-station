@@ -41,6 +41,7 @@ npm run <script> -w <workspace-name>
 - `packages/shared` owns stored-row domain schemas, case mapping, and UUID normalization.
 - Shared code must not contain browser or Node platform types and APIs.
 - Types that describe stored rows belong in `packages/shared/types.ts`. Types used by one workspace stay in that workspace.
+- Keep utility modules under a `utils` folder.
 
 ## TypeScript conventions
 
@@ -54,7 +55,8 @@ npm run <script> -w <workspace-name>
 - Use `async` and `await`. Do not introduce callback APIs.
 - Use named parameters for functions with multiple inputs. Define the input type close to the function.
 - Use explicit methods. Do not use property accessors.
-- Do not use --experimental-strip-types. We run on node version that support TypeScript stripping by default.
+- Do not use `--experimental-strip-types`. We run on node version that support TypeScript stripping by default.
+- Use named domain constants instead of repeated string literals.
 
 ## Testing and checks
 

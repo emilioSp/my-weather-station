@@ -60,7 +60,7 @@ flowchart TD
 7. After a repair, the worker commits it and its build handoff on `worker/<id>`. The orchestrator then creates a dedicated reviewer 2 branch and clean worktree from that commit. Reviewer 2 sees the previous review and the repair build handoff, regenerates the checks, and writes `review.json`. If a maintainer decision is required, it also writes `gate.json`; the gate is then the terminal handoff. It commits the handoff files in the reviewer 2 worktree. If it has no findings, its handoff commit is the candidate commit and the orchestrator declares the technical story completed. If it finds issues, the reviewer opens a gate. If the maintainer rejects the finding, the orchestrator records `finding_rejected` and the reason in the superseded gate. That commit is an exception candidate commit. If the maintainer accepts the finding, the orchestrator records the decision in the superseded gate, fast forward merges the resolved reviewer branch into `worker/<id>`, then starts a new review cycle with a worker repair and a fresh independent, informed first review. A review cycle has at most two reviews.
 8. The candidate commit is either the last reviewer handoff commit whose `review.json` contains `[]`, or an exception candidate commit with a superseded gate whose `resolution.decision` is `finding_rejected`. It is the technical approval stamp. On the base branch, the orchestrator runs `git merge --squash <candidate-commit>`. It does not commit the merge result. The candidate product changes remain staged for the maintainer.
 9. The maintainer reviews the generated code on the base branch. If satisfied, the maintainer makes the final commit and pushes it.
-10. If the maintainer requests a chore, the orchestrator applies it only when it does not change functional behaviour, acceptance criteria, probes, `red_when` breakages, or tests. The orchestrator runs relevant existing tests as regression checks, stages the chore changes, and returns the staged change to the maintainer for review.
+10. If the maintainer requests a chore, the orchestrator applies it only when it does not change functional behaviour, acceptance criteria, probes, `red_when` breakages, or tests. The orchestrator runs the complete existing test suite for each affected workspace as a regression check, stages the chore changes, and returns the staged change to the maintainer for review.
 
 ## Outcomes between agents
 
@@ -143,5 +143,3 @@ No agent may approve its own work. A passing check must be able to fail when the
 | `.fleet/designs/`   | Standalone HTML prototypes for frontend stories  | Orchestrator during story preparation |
 | `.fleet/templates/` | Starting files for stories and handoffs          | Repository                            |
 | `.fleet/examples/`  | A small reference story                          | Repository                            |
-
-

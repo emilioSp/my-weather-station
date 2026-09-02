@@ -69,6 +69,10 @@ Contains hooks.
 A hook manages related state, data loading, and user actions.  
 Use a hook when it makes a view or component easier to read.
 
+### `utils`
+
+Folder used to store utility modules.
+
 
 ```text
 main.tsx
@@ -85,4 +89,6 @@ hooks/
   useFeature.ts
 views/
   FeatureView.tsx
+utils/
+  convertSomethingIntoSomethingElse.util.ts
 ```
