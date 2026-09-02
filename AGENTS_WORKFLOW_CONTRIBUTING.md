@@ -20,6 +20,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - The orchestrator is the only agent that launches, monitors, and directs workers and reviewers.
 - Workers and reviewers do not ask the maintainer for direction. They write a gate handoff and stop when a maintainer decision is required.
 - The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
+- The maintainer reviews generated code and makes the final commit. The orchestrator must not commit worker or reviewer changes.
 
 ## Files and scope
 

@@ -10,6 +10,7 @@
     "includes": [
       "**",
       "!!**/node_modules",
+      "!!.fleet/designs",
       "!!**/dist",
       "!!**/coverage",
       "!!**/build",

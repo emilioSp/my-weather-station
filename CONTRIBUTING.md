@@ -13,11 +13,13 @@ flowchart TD
     build --> reviewOne[Independent reviewer runs every probe]
     reviewOne --> reviewRecordOne[.fleet/handoffs/id.review.json]
     reviewRecordOne --> firstResult{Findings?}
-    firstResult -->|No| complete[Story complete]
+    firstResult -->|No| inspect[Maintainer reviews generated code]
     firstResult -->|Yes| fix[Worker resolves the findings]
     fix --> reviewTwo[Second independent review]
     reviewTwo --> secondResult{Findings?}
-    secondResult -->|No| complete
+    secondResult -->|No| inspect
+    inspect --> finalCommit[Maintainer makes final commit]
+    finalCommit --> complete[Story complete]
     secondResult -->|Yes| gate[.fleet/handoffs/id.gate.json]
     gate --> decision[Maintainer makes the decision]
 ```
@@ -43,7 +45,8 @@ flowchart TD
 4. Commit the story and workflow files. Workers start from the committed `HEAD`; uncommitted files are not included in their worktree. 
 5. A worker implements the story and records the build handoff.
 6. A different reviewer regenerates the checks and writes findings.
-7. If review finds no issue, the story is complete. If it finds an issue, the worker resolves it and a different reviewer runs one more review round.
-8. If the second review still finds issues, stop and ask the maintainer through a gate handoff.
+7. If review finds no issue, the maintainer reviews the generated code. If it finds an issue, the worker resolves it and a different reviewer runs one more review round.
+8. After a review has no findings, the maintainer makes the final commit. The orchestrator does not commit worker or reviewer changes.
+9. If the second review still finds issues, stop and ask the maintainer through a gate handoff.
 
 No agent may approve its own work. A passing check must be able to fail when the specified breakage is introduced.
