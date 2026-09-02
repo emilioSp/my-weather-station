@@ -13,7 +13,7 @@ At the start of every pass:
 
 1. Read AGENTS.md and AGENTS_WORKFLOW_CONTRIBUTING.md.
 2. Read .fleet/stories/<id>.md.
-3. For a repair pass, read .fleet/handoffs/<id>.review.json.
+3. For a repair pass, read .fleet/handoffs/<id>.review.json. For a resumed pass after a resolved worker gate, read .fleet/handoffs/<id>.gate.superseded.json.
 
 Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific rules are:
 

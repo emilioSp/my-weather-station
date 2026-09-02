@@ -100,6 +100,7 @@ The spawn instruction must state:
 - The absolute path of the assigned worktree, which is the worker's root.
 - That the worker must read `AGENTS.md` and `AGENTS_WORKFLOW_CONTRIBUTING.md` first, then `.fleet/stories/<id>.md` at the start of every pass.
 - For a repair pass, that it must read `.fleet/handoffs/<id>.review.json` after the story.
+- For a resumed pass after a resolved worker gate, that it must read `.fleet/handoffs/<id>.gate.superseded.json` after the story.
 
 Everything else the worker needs is already in `.codex/agents/worker.toml`. Do not restate the role in the prompt and do not weaken it.
 
@@ -111,6 +112,7 @@ Everything else the worker needs is already in `.codex/agents/worker.toml`. Do n
 - When the subagent returns, inspect the assigned worktree for the active terminal handoff written by the worker in the current pass: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. Historical handoffs from earlier roles or passes remain in Git history and are not active. Ignore `.fleet/handoffs/<id>.gate.superseded.json`. The worker must overwrite its terminal handoff for the current pass. The handoff is the report. The subagent's closing message is not.
 - The worker commits its changes and terminal handoff before it ends. After a `done` build handoff, confirm that the worker worktree is clean and its handoff is committed before launching a reviewer. The reviewer requires a clean worktree at that commit.
 - After a `failed` build handoff, confirm that the worker worktree is clean and its handoff is committed. Do not launch a reviewer or relaunch the worker automatically, and report the failure to the maintainer.
+- After a worker gate, confirm that the worker worktree is clean and its gate is committed, then report the gate to the maintainer. After the maintainer selects an option, record the decision and reason in the gate, rename it to `.fleet/handoffs/<id>.gate.superseded.json`, and commit the change on `worker/<id>`. Launch a resumed worker pass in that worktree. Do not launch a reviewer until that pass returns a committed `done` build handoff.
 - If the subagent returns without a terminal handoff for the current pass, report the exception to the maintainer and stop. Do not change the repository or relaunch automatically.
 - Never report a running worker as terminated.
 
@@ -198,7 +200,7 @@ The worker role and its terminal handoff format are defined in `.codex/agents/wo
 
 ## Reviewer
 
-The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. The orchestrator creates a dedicated reviewer worktree at the current `worker/<id>` commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision rules.
+The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. Reviewers are independent in their evidence generation and code ownership, but informed by the build and earlier review handoffs for the current story. The orchestrator creates a dedicated reviewer worktree at the current `worker/<id>` commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision rules.
 
 ## Gates
 

@@ -1,5 +1,5 @@
 name = "fleet-reviewer"
-description = "Independently reviews one .fleet story in a clean worktree that starts at its assigned review commit. Regenerates every probe and every red_when breakage from scratch and records findings as JSON. Never reviews code it wrote and never issues a verdict."
+description = "Independently regenerates evidence for one .fleet story in a clean worktree that starts at its assigned review commit. It is informed by current pass handoffs, regenerates every probe and every red_when breakage from scratch, and records findings as JSON. Never reviews code it wrote and never issues a verdict."
 model = "gpt-5.6-sol"
 model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
@@ -18,7 +18,7 @@ At the start of every pass:
 Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific rules are:
 
 - Work in a clean worktree at the assigned review commit. Dependencies must already be installed by the maintainer. Do not install dependencies.
-- The current build and review handoffs describe the pass history. Do not trust their evidence or conclusions. You must regenerate every probe and every red_when breakage yourself. You must not review code you wrote.
+- The current build and review handoffs describe the pass history. They inform your review but you do not trust their evidence or conclusions. You must regenerate every probe and every red_when breakage yourself. You must not review code you wrote.
 - You are a newly spawned subagent instance. Do not use or receive a previous reviewer conversation.
 - Bring up real dependencies. Never use a stand in for the boundary under test.
 - Independently run every probe and every red_when breakage. Restore the code after each breakage.
