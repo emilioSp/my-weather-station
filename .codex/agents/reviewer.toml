@@ -16,8 +16,9 @@ At the start of every pass:
 
 Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific rules are:
 
-- Work in a clean worktree at the pull request HEAD. Install dependencies from scratch when required.
-- Never read .fleet/stories/<id>.evidence.md. Never read the builder's handoff before forming your own result. You must not review code you wrote.
+- Work in a clean worktree at the pull request HEAD. Dependencies must already be installed by the maintainer. Do not install dependencies.
+- Never read `.fleet/stories/<id>.evidence.md`, the builder's handoff, or a previous reviewer handoff before forming your own result. You must not review code you wrote.
+- You are a newly spawned subagent instance. Do not use or receive a previous review result or conversation.
 - Bring up real dependencies. Never use a stand in for the boundary under test.
 - Independently run every probe and every red_when breakage. Restore the code after each breakage.
 - For schema changes, apply, roll back, and apply again.

@@ -7,18 +7,20 @@ flowchart TD
     request[Maintainer request or imported issue] --> history[.fleet/history/]
     history --> orchestrator[Orchestrator along with the maintainer create one small story]
     orchestrator --> story[.fleet/stories/id.md]
-    story --> setupCommit[Commit story and workflow files]
+    story --> setupCommit[Maintainer commits story and workflow files]
     setupCommit --> worker[Worker implements the story]
     worker --> build[.fleet/handoffs/id.build.json]
     build --> workerCommit[Orchestrator commits worker changes]
     workerCommit --> reviewOne[Independent reviewer runs every probe]
     reviewOne --> reviewRecordOne[.fleet/handoffs/id.review.json]
-    reviewRecordOne --> firstResult{Findings?}
+    reviewRecordOne --> reviewCommitOne[Orchestrator commits reviewer handoff]
+    reviewCommitOne --> firstResult{Findings?}
     firstResult -->|Yes| fix[Worker resolves the findings]
     fix --> fixCommit[Orchestrator commits the fix]
-    fixCommit --> reviewTwo[Second independent review]
+    fixCommit --> reviewTwo[New independent review]
     reviewTwo --> reviewRecordTwo[.fleet/handoffs/id.review.json]
-    reviewRecordTwo --> secondResult{Findings?}
+    reviewRecordTwo --> reviewCommitTwo[Orchestrator commits reviewer handoff]
+    reviewCommitTwo --> secondResult{Findings?}
     firstResult -->|No| complete[Orchestrator declares technical story complete]
     secondResult -->|No| complete
     secondResult -->|Yes| gate[.fleet/handoffs/id.gate.json]
@@ -36,15 +38,30 @@ flowchart TD
 ## Workflow usage
 
 1. Add one request to `.fleet/history/`.
-2. Turn it into one small story. Define its allowed paths and acceptance criteria.
+2. Turn it into one small story. Define its allowed paths and acceptance criteria. Every story must explicitly include its evidence and handoff paths in the allowed paths.
 3. For a frontend story, include `.fleet/designs/<id>.html` in the allowed paths and add it as the Design prototype. The orchestrator creates the standalone HTML prototype for each frontend story. It shows the intended visual result and does not need to be functional.
-4. Commit the story and workflow files. Workers start from the committed `HEAD`; uncommitted files are not included in their worktree.
+4. The maintainer commits the story and workflow files. Workers start from the committed `HEAD`; uncommitted files are not included in their worktree.
 5. A worker implements the story and records the build handoff. The orchestrator commits the worker changes so the reviewer has a clean worktree at the candidate commit.
-6. A different reviewer regenerates the checks and records its findings. If it finds an issue, the worker resolves it. The orchestrator commits the repair before a different reviewer runs a fresh review.
+6. A newly spawned, different reviewer regenerates the checks and records its findings. The orchestrator commits the reviewer handoff immediately. If it finds an issue, the worker resolves it. The orchestrator commits the repair before a newly spawned, different reviewer runs a fresh review.
 7. If the second review has no findings, the orchestrator declares the technical story completed. If it still finds issues, it opens a gate. The maintainer can reject the finding and continue to the final review, or accept it and send the worker to another repair and independent review.
 8. On the base branch, the orchestrator runs `git merge --squash <candidate-commit>` for the last reviewed commit. It does not commit the merge result. The candidate product changes remain staged for the maintainer.
 9. The maintainer reviews the generated code on the base branch. If satisfied, the maintainer makes the final commit and pushes it.
 10. If the maintainer requests a chore, the orchestrator applies it only when it does not change functional behaviour, acceptance criteria, probes, `red_when` breakages, or tests. The orchestrator runs relevant existing tests as regression checks, stages the chore changes, and returns the staged change to the maintainer for review.
+
+## Outcomes between agents
+
+
+| Role     | Situation                                                                                | Terminal handoff | Build status   |
+| -------- | ---------------------------------------------------------------------------------------- | ---------------- | -------------- |
+| Worker   | Implementation is ready for independent review                                           | `build.json`     | `done`         |
+| Worker   | The story cannot produce a reviewable candidate because of a technical execution problem | `build.json`     | `failed`       |
+| Worker   | A maintainer decision is required                                                        | `gate.json`      | None           |
+| Reviewer | The review is complete, with findings or an empty findings array                         | `review.json`    | Not applicable |
+| Reviewer | A maintainer decision is required                                                        | `gate.json`      | Not applicable |
+
+
+A gate is neither `done` nor `failed`. It has no build status because the pass stops for a maintainer decision. A reviewer never has a build status and never issues a pass or fail verdict.
+
 No agent may approve its own work. A passing check must be able to fail when the specified breakage is introduced. The regression checks after a maintainer chore do not replace independent acceptance verification.
 
 ## The folders
@@ -58,3 +75,5 @@ No agent may approve its own work. A passing check must be able to fail when the
 | `.fleet/designs/`   | Standalone HTML prototypes for frontend stories  | Orchestrator during story preparation |
 | `.fleet/templates/` | Starting files for stories and handoffs          | Repository                            |
 | `.fleet/examples/`  | A small reference story                          | Repository                            |
+
+

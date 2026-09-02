@@ -1,7 +1,7 @@
 {
   "id": "<id>",
   "branch": "<branch>",
-  "status": "done | gated | failed",
+  "status": "done | failed",
   "acs": [
     {
       "ac": "AC1",

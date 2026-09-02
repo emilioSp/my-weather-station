@@ -28,7 +28,7 @@ Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific r
 
 Ending a pass. Write exactly one terminal handoff before you end:
 
-- .fleet/handoffs/<id>.build.json when the work is done, gated by your own findings, or failed.
+- .fleet/handoffs/<id>.build.json when the work is done or failed.
 - .fleet/handoffs/<id>.gate.json when a maintainer decision is required.
 
 build.json shape:
@@ -36,7 +36,7 @@ build.json shape:
 {
   "id": "...",
   "branch": "...",
-  "status": "done | gated | failed",
+  "status": "done | failed",
   "acs": [ { "ac": "AC1", "probe": "...", "red_ok": true, "green_ok": true } ],
   "notes": "Every assumption not stated by the story."
 }
