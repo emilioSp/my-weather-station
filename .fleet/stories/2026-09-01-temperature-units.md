@@ -29,12 +29,9 @@ Allow web app users to switch all displayed temperature values between Celsius a
 - `apps/web/components/weather-station/LinearChart.tsx`
 - `apps/web/weather-dashboard.util.ts`
 - `apps/web/temperature-unit.util.ts`
-- `.fleet/stories/2026-09-01-temperature-units-v4.evidence.md`
-- `.fleet/handoffs/2026-09-01-temperature-units-v4.build.json`
-- `.fleet/handoffs/2026-09-01-temperature-units-v4.review.json`
-- `.fleet/handoffs/2026-09-01-temperature-units-v4.gate.json`
-- `.fleet/handoffs/2026-09-01-temperature-units-v4.gate.superseded.json`
-- `.fleet/designs/2026-09-01-temperature-units-v4.html`
+- `.fleet/stories/**`
+- `.fleet/handoffs/**`
+- `.fleet/designs/**`
 
 ## Design
 

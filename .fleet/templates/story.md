@@ -11,12 +11,9 @@ Describe the requested change.
 ## Allowed paths
 
 - `path/allowed-by-this-story`
-- `.fleet/stories/<id>.evidence.md` (required workflow artefact)
-- `.fleet/handoffs/<id>.build.json` (required workflow artefact)
-- `.fleet/handoffs/<id>.review.json` (required workflow artefact)
-- `.fleet/handoffs/<id>.gate.json` (required workflow artefact)
-- `.fleet/handoffs/<id>.gate.superseded.json` (required workflow artefact)
-- `.fleet/designs/<id>.html` (required for frontend stories)
+- `.fleet/stories/**` (required workflow artefacts)
+- `.fleet/handoffs/**` (required workflow artefacts)
+- `.fleet/designs/**` (required for frontend stories)
 
 ## Frontend prototype design
 
