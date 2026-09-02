@@ -1,12 +1,14 @@
-# 2026-09-01-temperature-units: Browser-persisted temperature units
+# 2026-09-01-temperature-units-v4: Browser-persisted temperature units
 
 ## Problem
 
-Allow web app users to switch all displayed temperature values between Celsius and Fahrenheit. Persist the selected unit in localStorage.
+Allow web app users to switch all displayed temperature values between Celsius and Fahrenheit. Persist the selected unit in real browser localStorage and verify it with the installed Playwright and Chromium.
 
 ## Constraints
 
-- No new dependencies.
+- Use the existing root `@playwright/test` 1.62.1 installation. Do not add or change dependencies.
+- Add the smallest Playwright configuration required to run Chromium against the web app.
+- Use an accessible Celsius/Fahrenheit radio group in the `WeatherStationHeader`, next to the refresh control.
 - Continue to receive and store measurements in Celsius. Convert values only for display.
 - Default to Celsius when no valid saved preference exists.
 - Persist only `celsius` or `fahrenheit` in localStorage. Invalid or unavailable stored data must fall back to Celsius.
@@ -15,34 +17,43 @@ Allow web app users to switch all displayed temperature values between Celsius a
 
 ## Paths
 
+- `apps/web/package.json`
+- `apps/web/playwright.config.ts`
+- `apps/web/e2e/temperature-units.spec.ts`
 - `apps/web/views/WeatherStation.tsx`
 - `apps/web/components/weather-station/WeatherStationHeader.tsx`
 - `apps/web/components/weather-station/CurrentReadings.tsx`
 - `apps/web/components/weather-station/WeatherCard.tsx`
+- `apps/web/components/weather-station/MeasurementHistory.tsx`
 - `apps/web/components/weather-station/MeterAccordion.tsx`
 - `apps/web/components/weather-station/LinearChart.tsx`
 - `apps/web/weather-dashboard.util.ts`
 - `apps/web/temperature-unit.util.ts`
-- `apps/web/temperature-unit.util.test.ts`
 
 ## Acceptance criteria
 
-### AC1: Temperature display conversion is correct
+### AC1: The web app switches every temperature display to Fahrenheit
 
-- probe: `node --test apps/web/temperature-unit.util.test.ts`
-- postcondition: The test proves 0°C displays as 32.0°F and 100°C displays as 212.0°F, while Celsius values retain one decimal place and the correct unit symbol.
-- red_when: Replace the Fahrenheit conversion with `value * 1.8` and rerun the probe.
+- probe: `npm run test -w @wx/web -- e2e/temperature-units.spec.ts`
+- postcondition: A Chromium browser loads the web app, selects the Fahrenheit radio button in the header, and observes Fahrenheit temperature, dew point, and heat index values in current-reading cards and the chart UI, with no Celsius unit shown for these values.
+- red_when: Remove the Fahrenheit conversion from the heat-index chart tooltip and rerun the probe.
 
-### AC2: The selected unit is persisted and safely restored
+### AC2: The selected unit survives a browser reload
 
-- probe: `node --test apps/web/temperature-unit.util.test.ts`
-- postcondition: The test proves a saved `fahrenheit` preference is restored, a newly selected unit is saved, and missing or invalid values resolve to `celsius`.
-- red_when: Change the invalid-value fallback from `celsius` to `fahrenheit` and rerun the probe.
+- probe: `npm run test -w @wx/web -- e2e/temperature-units.spec.ts`
+- postcondition: A Chromium browser selects Fahrenheit, reloads the web app, and observes the selected Fahrenheit radio button, Fahrenheit values, and the `fahrenheit` localStorage value.
+- red_when: Remove the localStorage write performed after unit selection and rerun the probe.
 
-### AC3: The web app builds with the unit choice passed to all temperature displays
+### AC3: Celsius remains the safe default
+
+- probe: `npm run test -w @wx/web -- e2e/temperature-units.spec.ts`
+- postcondition: A Chromium browser with no saved unit and with an invalid saved unit both load the web app with the Celsius radio button selected and Celsius values displayed.
+- red_when: Change the invalid stored-value fallback from `celsius` to `fahrenheit` and rerun the probe.
+
+### AC4: The web workspace builds
 
 - probe: `npm run build -w @wx/web`
-- postcondition: TypeScript and Vite complete successfully with the selected unit required by current-reading cards and chart components.
+- postcondition: TypeScript and Vite complete successfully.
 - red_when: Remove the required unit property from the `LinearChart` call site in `MeterAccordion.tsx` and rerun the probe.
 
 ## Out of scope
