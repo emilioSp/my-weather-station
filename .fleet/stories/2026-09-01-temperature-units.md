@@ -1,4 +1,4 @@
-# 2026-09-01-temperature-units-v4: Browser-persisted temperature units
+# 2026-09-01-temperature-units: Browser-persisted temperature units
 
 ## Problem
 
@@ -30,6 +30,11 @@ Allow web app users to switch all displayed temperature values between Celsius a
 - `apps/web/weather-dashboard.util.ts`
 - `apps/web/temperature-unit.util.ts`
 - `.fleet/stories/2026-09-01-temperature-units.md`
+- `.fleet/stories/2026-09-01-temperature-units.evidence.md`
+- `.fleet/handoffs/2026-09-01-temperature-units.build.json`
+- `.fleet/handoffs/2026-09-01-temperature-units.review.json`
+- `.fleet/handoffs/2026-09-01-temperature-units.gate.json`
+- `.fleet/handoffs/2026-09-01-temperature-units.gate.superseded.json`
 - `.fleet/designs/2026-09-01-temperature-units.html`
 
 ## Design
