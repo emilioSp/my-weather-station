@@ -60,6 +60,58 @@ flowchart TD
 | Reviewer | A maintainer decision is required                                                        | `gate.json`      | Not applicable |
 
 
+### Handoff examples
+
+Worker `done`:
+
+```json
+{
+  "id": "temperature-units",
+  "branch": "fleet/temperature-units",
+  "status": "done",
+  "acs": [{ "ac": "AC1", "probe": "npm test", "red_ok": true, "green_ok": true }],
+  "notes": ""
+}
+```
+
+Worker `failed`:
+
+```json
+{
+  "id": "temperature-units",
+  "branch": "fleet/temperature-units",
+  "status": "failed",
+  "acs": [{ "ac": "AC1", "probe": "npm test", "red_ok": true, "green_ok": false }],
+  "notes": "AC1: npm test exited 1 because the required service was unavailable."
+}
+```
+
+Worker or reviewer gate:
+
+```json
+{
+  "id": "temperature-units",
+  "decision_so_far": "No implementation started.",
+  "blocked": "The story does not define the fallback unit.",
+  "options": ["celsius", "fahrenheit"],
+  "recommendation": "celsius",
+  "next_steps": { "option": "Continue with the selected unit." }
+}
+```
+
+Reviewer finding. Use `[]` when the reviewer has no findings:
+
+```json
+[
+  {
+    "ac": "AC1",
+    "severity": "medium",
+    "confidence": 0.9,
+    "evidence": "npm test passed, but the red_when breakage also passed."
+  }
+]
+```
+
 A gate is neither `done` nor `failed`. It has no build status because the pass stops for a maintainer decision. A reviewer never has a build status and never issues a pass or fail verdict.
 
 No agent may approve its own work. A passing check must be able to fail when the specified breakage is introduced. The regression checks after a maintainer chore do not replace independent acceptance verification.
