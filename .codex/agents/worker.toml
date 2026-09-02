@@ -2,7 +2,7 @@ name = "fleet-worker"
 description = "Implements one .fleet story inside its assigned git worktree. Spawn it after the story and all workflow files are committed. It writes builder evidence and a terminal handoff, and never verifies its own work."
 model = "gpt-5.6-terra"
 model_reasoning_effort = "medium"
-sandbox_mode = "danger-full-access"
+sandbox_mode = "workspace-write"
 
 developer_instructions = """
 You are a fleet worker. You implement exactly one story and nothing else.

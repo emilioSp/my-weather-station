@@ -8,7 +8,7 @@ Allow web app users to switch all displayed temperature values between Celsius a
 
 - Use the existing root `@playwright/test` 1.62.1 installation. Do not add or change dependencies.
 - Add the smallest Playwright configuration required to run Chromium against the web app.
-- Use an accessible Celsius/Fahrenheit radio group in the `WeatherStationHeader`, next to the refresh control.
+- Use an accessible Celsius/Fahrenheit radio group in the `WeatherStationHeader`, next to the refresh control. Use the attached prototype design as a reference.
 - Continue to receive and store measurements in Celsius. Convert values only for display.
 - Default to Celsius when no valid saved preference exists.
 - Persist only `celsius` or `fahrenheit` in localStorage. Invalid or unavailable stored data must fall back to Celsius.
@@ -29,6 +29,21 @@ Allow web app users to switch all displayed temperature values between Celsius a
 - `apps/web/components/weather-station/LinearChart.tsx`
 - `apps/web/weather-dashboard.util.ts`
 - `apps/web/temperature-unit.util.ts`
+- `.fleet/designs/2026-09-01-temperature-units.html`
+
+## Design
+
+Prototype: [`2026-09-01-temperature-units.html`](../designs/2026-09-01-temperature-units.html)
+
+## Technical details
+
+- `WeatherStation` owns the selected temperature unit in local React state.
+- `WeatherStationHeader` receives the selected unit and its change handler.
+- `WeatherStation` passes the selected unit to current-reading and history components so every temperature display uses one value.
+- Initialize the state from browser `localStorage`. Accept only `celsius` and `fahrenheit`. Use Celsius when storage is unavailable or contains another value.
+- Write the selected valid unit to `localStorage` after it changes.
+- Keep Celsius to Fahrenheit conversion and temperature formatting as pure functions in `apps/web/temperature-unit.util.ts`.
+- Keep stored measurements and API values in Celsius. Do not add backend state.
 
 ## Acceptance criteria
 
@@ -61,3 +76,4 @@ Allow web app users to switch all displayed temperature values between Celsius a
 - Changes to collector behavior, database schemas, migrations, or API responses.
 - User accounts, server-side preference storage, or synchronization across browsers.
 - Conversion of humidity, battery, signal, or timestamps.
+

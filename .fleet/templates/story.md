@@ -13,9 +13,13 @@ Describe the requested change.
 - `path/allowed-by-this-story`
 - `.fleet/designs/<id>.html` (required for frontend stories)
 
-## Design
+## Frontend prototype design
 
 For a frontend story, add the required standalone HTML prototype at `.fleet/designs/<id>.html`. It shows the intended visual result and does not need to be functional.
+
+## Technical details
+
+Describe the agreed implementation approach.
 
 ## Acceptance criteria
 
@@ -27,4 +31,5 @@ For a frontend story, add the required standalone HTML prototype at `.fleet/desi
 
 ## Out of scope
 
-- < work that must not be done>
+- &lt; work that must not be done&gt;
+
