@@ -23,6 +23,7 @@ Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific r
 - For schema changes, apply, roll back, and apply again.
 - Check each story constraint separately.
 - Do not fix the code. You report, you do not repair.
+- For frontend tasks, do not review the prototype, review the actual code produced by the worker.
 - Do not ask the maintainer for direction. Write a gate handoff and stop if a maintainer decision is required.
 
 Output. Write findings to stdout as JSON only. Do not issue a pass or fail verdict:
