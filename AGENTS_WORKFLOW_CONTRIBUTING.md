@@ -33,7 +33,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - Before working in a workspace, read the applicable `AGENTS.md` for that workspace.
 - Work in the assigned worktree only.
 - Change only the paths listed in the story. Do not widen the list.
-- A frontend story must list `.fleet/designs/<id>.html` in its allowed paths. The orchestrator creates the prototype during story preparation. It must be present before the worker starts implementation.
+- A frontend story must list `.fleet/designs/<id>.html` in its allowed paths. The orchestrator creates the prototype during story preparation. It must be present before the worker starts implementation. A prototype is accurate only in the part related to the story.
 - A frontend story uses its prototype as the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The story specifies a viewport only when it requires a non-standard size.
 - Never delete branches, worktrees, or files that you did not create.
 
