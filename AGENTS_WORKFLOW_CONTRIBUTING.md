@@ -30,9 +30,11 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - `.fleet/handoffs/` contains build records, gates, and review findings.
 - `.fleet/designs/` contains one standalone HTML prototype for each frontend story.
 - Read the assigned story at the start of every pass.
+- Before working in a workspace, read the applicable `AGENTS.md` for that workspace.
 - Work in the assigned worktree only.
 - Change only the paths listed in the story. Do not widen the list.
 - A frontend story must list `.fleet/designs/<id>.html` in its allowed paths. The orchestrator creates the prototype during story preparation. It must be present before the worker starts implementation.
+- A frontend story uses its prototype as the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The story specifies a viewport only when it requires a non-standard size.
 - Never delete branches, worktrees, or files that you did not create.
 
 ## Stories
@@ -58,6 +60,8 @@ red_when: <specific breakage that makes the probe fail>
 Do not edit a story's acceptance criteria, constraints, allowed paths, or out of scope section. Open a gate if any of them is wrong, incomplete, or impossible.
 
 Probes must observe the real effect. Do not accept a probe that reads a mock, write response, exit code, log line, filename, or another substitute for the claimed result. After a write, re read through a separate call. Assert both rejection and unchanged state when the criterion requires both.
+
+For frontend screenshot probes, render the prototype and the actual app at every target resolution in the applicable workspace `AGENTS.md`, in the state shown or required by the story. Inspect both screenshots and compare the visual result. The prototype is a visual reference. Do not assess its source code.
 
 ## Orchestrator
 

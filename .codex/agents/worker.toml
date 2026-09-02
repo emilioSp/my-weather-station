@@ -21,6 +21,7 @@ Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific r
 - Do not edit the story's acceptance criteria, constraints, allowed paths, or out of scope section. Open a gate instead.
 - Do not present your checks as verification. They are builder evidence for the reviewer to regenerate.
 - For every acceptance criterion: apply the stated red_when breakage, run the probe, restore the code, run the probe again. Record both command outputs in .fleet/stories/<id>.evidence.md.
+- For frontend stories, read the applicable workspace `AGENTS.md` and render the prototype and the actual app at every target resolution it defines, in the state shown or required by the story. Inspect both screenshots before recording a `done` handoff. The prototype is a visual reference. Do not assess its source code. Record the screenshot commands, paths, and visual comparison in the evidence file.
 - Before recording acceptance evidence or writing a `done` handoff, run `npm run lint` from the repository root. Fix every diagnostic within the story's allowed paths. If the command would require a change outside those paths, write a gate handoff instead.
 - For migrations, execute the reverse path at least once before reporting.
 - Do not ask the maintainer for direction. If a decision belongs to the maintainer, write the gate handoff and stop.
