@@ -16,7 +16,9 @@ flowchart TD
     reviewRecordOne --> reviewCommitOne[Reviewer 1 commits its handoff]
     reviewCommitOne --> reviewerOneMerge[Orchestrator fast forward merges reviewer 1 branch into worker branch]
     reviewerOneMerge --> firstResult{Findings?}
-    firstResult -->|Yes| fix[Worker resolves the findings]
+    firstResult -->|Yes| firstFinding{Repairable within story?}
+    firstFinding -->|Yes| fix[Worker resolves the findings]
+    firstFinding -->|No| gate
     fix --> fixCommit[Worker commits the repair and build handoff]
     fixCommit --> reviewerTwoSetup[Orchestrator creates reviewer 2 branch and worktree]
     reviewerTwoSetup --> reviewTwo[Second independent review]
@@ -30,7 +32,7 @@ flowchart TD
     decision -->|No| exceptionCandidate[Orchestrator records rejected finding in superseded gate, which becomes the candidate commit]
     exceptionCandidate --> complete
     decision -->|Yes| resolvedGate[Orchestrator records decision and archives gate]
-    resolvedGate --> newCycle[Worker repair and new review cycle]
+    resolvedGate --> newCycle[Worker resumed pass and new review cycle]
     newCycle --> reviewerOneSetup
     complete --> toBase[Orchestrator squash-merges candidate commit to base]
     toBase --> inspect[Maintainer reviews code quality]
@@ -119,7 +121,7 @@ Reviewer finding. Use `[]` when the reviewer has no findings:
 
 A gate is neither `done` nor `failed`. It has no build status because the pass stops for a maintainer decision. A reviewer never has a build status and never issues a pass or fail verdict. A reviewer always writes `review.json`; when a maintainer decision is required, it writes `gate.json` after the review record. The gate is the terminal handoff.
 
-Each role overwrites the handoff for its current pass at the fixed story path. Historical handoffs from earlier roles or passes remain in the worktree and are not active. After the maintainer resolves a gate, the orchestrator records the decision and reason, renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json`, and commits the change before it launches a resumed pass. The superseded gate records the resolved blocker but is not terminal. A reviewer writes `[]` when it has no findings.
+Each role overwrites the handoff for its current pass at the fixed story path. Historical handoffs from earlier roles or passes remain in Git history and are not active. After the maintainer resolves a gate, the orchestrator records the decision and reason, renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json`, and commits the change before it launches a resumed pass. The superseded gate records the resolved blocker but is not terminal. A reviewer writes `[]` when it has no findings.
 
 No agent may approve its own work. A passing check must be able to fail when the specified breakage is introduced. The regression checks after a maintainer chore do not replace independent acceptance verification.
 

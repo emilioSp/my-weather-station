@@ -27,7 +27,7 @@ Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific r
 - For migrations, execute the reverse path at least once before reporting.
 - Do not ask the maintainer for direction. If a decision belongs to the maintainer, write the gate handoff and stop.
 
-Ending a pass. Overwrite exactly one terminal handoff for the current pass before you end. Historical handoffs from earlier roles or passes remain in the worktree and are not active.
+Ending a pass. Overwrite exactly one terminal handoff for the current pass before you end. Historical handoffs from earlier roles or passes remain in Git history and are not active.
 
 - .fleet/handoffs/<id>.build.json when the work is done or failed.
 - .fleet/handoffs/<id>.gate.json when a maintainer decision is required.
