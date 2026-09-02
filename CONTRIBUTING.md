@@ -27,8 +27,10 @@ flowchart TD
     secondResult -->|No| complete
     secondResult -->|Yes| gate[Reviewer writes .fleet/handoffs/id.gate.json]
     gate --> decision{Maintainer accepts the finding?}
-    decision -->|No| complete
-    decision -->|Yes| newCycle[Worker repair and new review cycle]
+    decision -->|No| exceptionCandidate[Orchestrator records rejected finding in superseded gate, which becomes the candidate commit]
+    exceptionCandidate --> complete
+    decision -->|Yes| resolvedGate[Orchestrator records decision and archives gate]
+    resolvedGate --> newCycle[Worker repair and new review cycle]
     newCycle --> reviewerOneSetup
     complete --> toBase[Orchestrator squash-merges candidate commit to base]
     toBase --> inspect[Maintainer reviews code quality]
@@ -45,8 +47,8 @@ flowchart TD
 3. The maintainer commits the story and workflow files. Workers start from the committed `HEAD`; uncommitted files are not included in their worktree.
 4. A worker implements the story, records the build handoff, and commits its changes and handoff in its dedicated worktree.
 5. The orchestrator creates a dedicated reviewer 1 branch and clean worktree from the worker commit. Reviewer 1 regenerates the checks, writes its handoff, and commits it in the reviewer worktree. The orchestrator then fast forward merges the reviewer branch into `fleet/<id>`. No findings complete the technical story. A repairable finding sends the worker to a repair pass. A finding outside the story requires the reviewer to open a gate.
-6. After a repair, the worker commits it and its build handoff on `fleet/<id>`. The orchestrator then creates a dedicated reviewer 2 branch and clean worktree from that commit. Reviewer 2 sees the previous review and the repair build handoff, regenerates the checks, writes its handoff, and commits it in the reviewer 2 worktree. If it has no findings, its handoff commit is the candidate commit and the orchestrator declares the technical story completed. If it finds issues, the reviewer opens a gate. The maintainer can reject the finding and continue to the final review, or accept it and start a new review cycle with a worker repair and a fresh independent first review. A review cycle has at most two reviews.
-7. The candidate commit is the last reviewer handoff commit whose `review.json` contains `[]`. It is the technical approval stamp. On the base branch, the orchestrator runs `git merge --squash <candidate-commit>`. It does not commit the merge result. The candidate product changes remain staged for the maintainer.
+6. After a repair, the worker commits it and its build handoff on `fleet/<id>`. The orchestrator then creates a dedicated reviewer 2 branch and clean worktree from that commit. Reviewer 2 sees the previous review and the repair build handoff, regenerates the checks, writes its handoff, and commits it in the reviewer 2 worktree. If it has no findings, its handoff commit is the candidate commit and the orchestrator declares the technical story completed. If it finds issues, the reviewer opens a gate. If the maintainer rejects the finding, the orchestrator records `finding_rejected` and the reason in the superseded gate. That commit is an exception candidate commit. If the maintainer accepts the finding, the orchestrator records the decision in the superseded gate, fast forward merges the reviewer branch into `fleet/<id>`, then starts a new review cycle with a worker repair and a fresh independent first review. A review cycle has at most two reviews.
+7. The candidate commit is either the last reviewer handoff commit whose `review.json` contains `[]`, or an exception candidate commit with a superseded gate whose `resolution.decision` is `finding_rejected`. It is the technical approval stamp. On the base branch, the orchestrator runs `git merge --squash <candidate-commit>`. It does not commit the merge result. The candidate product changes remain staged for the maintainer.
 8. The maintainer reviews the generated code on the base branch. If satisfied, the maintainer makes the final commit and pushes it.
 9. If the maintainer requests a chore, the orchestrator applies it only when it does not change functional behaviour, acceptance criteria, probes, `red_when` breakages, or tests. The orchestrator runs relevant existing tests as regression checks, stages the chore changes, and returns the staged change to the maintainer for review.
 
@@ -97,7 +99,8 @@ Worker or reviewer gate:
   "blocked": "The story does not define the fallback unit.",
   "options": ["celsius", "fahrenheit"],
   "recommendation": "celsius",
-  "next_steps": { "option": "Continue with the selected unit." }
+  "next_steps": { "option": "Continue with the selected unit." },
+  "resolution": null
 }
 ```
 
@@ -116,7 +119,7 @@ Reviewer finding. Use `[]` when the reviewer has no findings:
 
 A gate is neither `done` nor `failed`. It has no build status because the pass stops for a maintainer decision. A reviewer never has a build status and never issues a pass or fail verdict.
 
-Each role overwrites its active terminal handoff at the fixed story path for every new pass. After the maintainer resolves a gate, the orchestrator renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json` and commits the rename before it launches the resumed pass. The superseded gate records the resolved blocker but is not terminal. A reviewer writes `[]` when it has no findings.
+Each role overwrites its active terminal handoff at the fixed story path for every new pass. After the maintainer resolves a gate, the orchestrator records the decision and reason, renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json`, and commits the change before it launches a resumed pass. The superseded gate records the resolved blocker but is not terminal. A reviewer writes `[]` when it has no findings.
 
 No agent may approve its own work. A passing check must be able to fail when the specified breakage is introduced. The regression checks after a maintainer chore do not replace independent acceptance verification.
 

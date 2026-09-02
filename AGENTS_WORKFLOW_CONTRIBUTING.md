@@ -143,11 +143,11 @@ git worktree add -b fleet/<id>-review-<n> .worktree/<id>-review-<n> fleet/<id>
 
   No findings complete the technical story. If its findings are repairable within the story and its allowed paths, send the worker a repair pass. The worker reads the merged `review.json`, commits the repair and its build handoff, then launch the second review in a clean worktree at the new commit.
 - After a second review with no findings, its reviewer branch tip is the candidate commit. It is the last reviewer handoff commit whose `review.json` contains `[]`. Do not merge it into `fleet/<id>` before the final maintainer review.
-- The reviewer opens a gate after findings from the second review, or when a finding from either review cannot be repaired within the story and its allowed paths. The maintainer decides whether to accept the finding. If the maintainer rejects it, declare the technical story completed. If the maintainer accepts it, fast forward merge the reviewer branch into `fleet/<id>`, send the worker a repair pass, and start a new review cycle with a fresh independent first review after the repair commit.
+- The reviewer opens a gate after findings from the second review, or when a finding from either review cannot be repaired within the story and its allowed paths. The maintainer decides whether to accept the finding. If the maintainer rejects it, record `finding_rejected` and the reason in the superseded gate. That resolved-gate commit is an exception candidate commit and completes the technical story. If the maintainer accepts it, record the decision in the superseded gate, fast forward merge the reviewer branch into `fleet/<id>`, send the worker a repair pass, and start a new review cycle with a fresh independent first review after the repair commit.
 
 ### Final maintainer review
 
-After the reviewer reports no findings, declare the technical story completed. The candidate commit is the last reviewer handoff commit whose `review.json` contains `[]`. On the base branch, run `git merge --squash <candidate-commit>`. Do not commit the merge result. The candidate product changes must remain staged for the maintainer. Keep every worktree until the maintainer makes the final commit.
+After the reviewer reports no findings, or after the maintainer rejects a reviewer finding, declare the technical story completed. A candidate commit is either the last reviewer handoff commit whose `review.json` contains `[]`, or an exception candidate commit with a superseded gate whose `resolution.decision` is `finding_rejected`. On the base branch, run `git merge --squash <candidate-commit>`. Do not commit the merge result. The candidate product changes must remain staged for the maintainer. Keep every worktree until the maintainer makes the final commit.
 
 The maintainer reviews code quality on the base branch. If satisfied, the maintainer commits and pushes the candidate change.
 
@@ -213,13 +213,14 @@ Stop immediately when a maintainer decision is required. Write `.fleet/handoffs/
   "blocked": "...",
   "options": ["..."],
   "recommendation": "...",
-  "next_steps": { "option": "..." }
+  "next_steps": { "option": "..." },
+  "resolution": null
 }
 ```
 
-The gate must let the maintainer decide without reopening the work. Do not wait in process after writing it.
+The gate must let the maintainer decide without reopening the work. Do not wait in process after writing it. An active gate has `"resolution": null`.
 
-When the maintainer resolves a gate, the orchestrator renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json` in the worktree that holds the active gate. Replace an older superseded gate when necessary. Git preserves every earlier version. The orchestrator commits the rename before it launches a resumed pass.
+When the maintainer resolves a gate, the orchestrator records the decision and reason in `resolution`, then renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json` in the worktree that holds the active gate. Use `finding_rejected` as `resolution.decision` when the maintainer rejects a reviewer finding. Replace an older superseded gate when necessary. Git preserves every earlier version. The orchestrator commits the change before it launches a resumed pass or declares an exception candidate commit.
 
 ## Helpers
 
