@@ -116,7 +116,7 @@ Reviewer finding. Use `[]` when the reviewer has no findings:
 
 A gate is neither `done` nor `failed`. It has no build status because the pass stops for a maintainer decision. A reviewer never has a build status and never issues a pass or fail verdict.
 
-Each role overwrites its terminal handoff at the fixed story path for every new pass. A reviewer writes `[]` when it has no findings.
+Each role overwrites its active terminal handoff at the fixed story path for every new pass. After the maintainer resolves a gate, the orchestrator renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json` and commits the rename before it launches the resumed pass. The superseded gate records the resolved blocker but is not terminal. A reviewer writes `[]` when it has no findings.
 
 No agent may approve its own work. A passing check must be able to fail when the specified breakage is introduced. The regression checks after a maintainer chore do not replace independent acceptance verification.
 

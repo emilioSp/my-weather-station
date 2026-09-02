@@ -23,7 +23,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - The maintainer commits the initial story and workflow files before a worker starts.
 - Workers commit their changes and terminal handoffs in their assigned worktrees.
 - Reviewers commit their terminal handoffs in their assigned worktrees.
-- The orchestrator commits only its own incident handoffs.
+- The orchestrator commits its own incident handoffs and resolved-gate state changes.
 - The maintainer makes the final commit.
 
 ## Files and scope
@@ -40,6 +40,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
   - `.fleet/handoffs/<id>.build.json`
   - `.fleet/handoffs/<id>.review.json`
   - `.fleet/handoffs/<id>.gate.json`
+  - `.fleet/handoffs/<id>.gate.superseded.json`
   - `.fleet/handoffs/<id>.orchestrator-incident.json`
 - A frontend story must list `.fleet/designs/<id>.html` in its allowed paths. The orchestrator creates the prototype during story preparation. It must be present before the worker starts implementation. A prototype is accurate only in the part related to the story.
 - A frontend story uses its prototype as the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The story specifies a viewport only when it requires a non-standard size.
@@ -108,7 +109,7 @@ Everything else the worker needs is already in `.codex/agents/worker.toml`. Do n
 - Wait on the subagent. The runtime reports its completion. There is no exit file, no process check, and no polling loop.
 - The worker is `running` until the runtime returns it. A quiet subagent, a long pause, or no intermediate message all mean `running with no new observation`. None of them means `dead`.
 - Do not spawn a second agent to ask about the first one.
-- When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. The worker must overwrite its terminal handoff for the current pass. The handoff is the report. The subagent's closing message is not.
+- When the subagent returns, inspect the assigned worktree for exactly one active terminal handoff: `.fleet/handoffs/<id>.build.json` or `.fleet/handoffs/<id>.gate.json`. Ignore `.fleet/handoffs/<id>.gate.superseded.json`. The worker must overwrite its terminal handoff for the current pass. The handoff is the report. The subagent's closing message is not.
 - The worker commits its changes and terminal handoff before it ends. After a `done` build handoff, confirm that the worker worktree is clean and its handoff is committed before launching a reviewer. The reviewer requires a clean worktree at that commit.
 - After a `failed` build handoff, confirm that the worker worktree is clean and its handoff is committed. Do not launch a reviewer or relaunch the worker automatically, and report the failure to the maintainer.
 - If the subagent returns and neither terminal handoff exists, write and commit `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. This is an orchestrator observation, not a simulated worker report. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs.
@@ -130,7 +131,7 @@ git worktree add -b fleet/<id>-review-<n> .worktree/<id>-review-<n> fleet/<id>
 ### Supervise a reviewer
 
 - Wait on the subagent. The runtime reports its completion.
-- When the subagent returns, inspect the assigned worktree for exactly one terminal handoff: `.fleet/handoffs/<id>.review.json` or `.fleet/handoffs/<id>.gate.json`. The reviewer must overwrite its terminal handoff for the current pass and write `[]` when it has no findings. The handoff is the report. The subagent's closing message is not.
+- When the subagent returns, inspect the assigned worktree for exactly one active terminal handoff: `.fleet/handoffs/<id>.review.json` or `.fleet/handoffs/<id>.gate.json`. Ignore `.fleet/handoffs/<id>.gate.superseded.json`. The reviewer must overwrite its terminal handoff for the current pass and write `[]` when it has no findings. The handoff is the report. The subagent's closing message is not.
 - If the subagent returns and neither terminal handoff exists, write and commit `.fleet/handoffs/<id>.orchestrator-incident.json` in the assigned worktree. Include the story id, role, the spawn instruction, how the subagent ended, its last observed step, and the missing handoffs. Never write an incident handoff while the subagent is still running.
 - The reviewer commits its terminal handoff before it ends. Confirm that the reviewer worktree is clean and its handoff is committed. A review-record commit contains no product changes and does not need another review.
 - A review cycle has at most two reviews. When a review reports findings, do not run another review against the same commit.
@@ -217,6 +218,8 @@ Stop immediately when a maintainer decision is required. Write `.fleet/handoffs/
 ```
 
 The gate must let the maintainer decide without reopening the work. Do not wait in process after writing it.
+
+When the maintainer resolves a gate, the orchestrator renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json` in the worktree that holds the active gate. Replace an older superseded gate when necessary. Git preserves every earlier version. The orchestrator commits the rename before it launches a resumed pass.
 
 ## Helpers
 
