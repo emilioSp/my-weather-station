@@ -17,7 +17,7 @@ My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, an
 
 - Ask for confirmation on design decisions.
 - Ask for clarification when requirements are unclear.
-- Do not install packages without confirmation.
+- Do not add or update dependencies without confirmation.
 
 ## Workspaces
 
@@ -87,5 +87,7 @@ The root `README.md` must describe:
 4. Local testing instructions.
 5. Deployment instructions when deployment exists.
 
+Bear in mind: the root `README.md` is not a changelog. Document stable user and operator workflows, not every feature.
+
 ## Workflow
-IMPORTANT: you work stricly following this [workflow](AGENTS_WORKFLOW_CONTRIBUTING.md)
+IMPORTANT: you work strictly following this [workflow](AGENTS_CONTRIBUTING.md)

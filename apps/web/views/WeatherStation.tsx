@@ -18,9 +18,7 @@ const temperatureUnitStorageKey = 'temperature-unit';
 const getSavedTemperatureUnit = (): TemperatureUnit => {
   try {
     const savedUnit = window.localStorage.getItem(temperatureUnitStorageKey);
-    return isTemperatureUnit(savedUnit)
-      ? savedUnit
-      : TEMPERATURE_UNITS.CELSIUS;
+    return isTemperatureUnit(savedUnit) ? savedUnit : TEMPERATURE_UNITS.CELSIUS;
   } catch {
     return TEMPERATURE_UNITS.CELSIUS;
   }

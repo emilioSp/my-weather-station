@@ -1,144 +1,106 @@
 # Contributing workflow
 
-This workflow keeps task instructions, agent handoffs, and review separate.
+This file explains how work moves through the repository. It does not define the rules.
+[AGENTS_CONTRIBUTING.md](AGENTS_CONTRIBUTING.md) defines them. If the two disagree, that file wins.
+
+## The idea
+
+One story describes one small reversible change. An agent builds it. A second, independent agent
+regenerates every proof from scratch. The maintainer makes every commit on the base branch.
+
+Three principles hold the workflow together:
+
+- No agent approves its own work.
+- A check that passes must be able to fail. Each acceptance criterion states the breakage that must break it.
+- An agent never decides for the maintainer, and never guesses.
+
+The maintainer talks to the orchestrator. The orchestrator talks to the workers and the reviewers.
+
+## The roles
+
+- **Maintainer** — You. You bring the problem, decide every gate and every finding, review the final code, and make every commit on the base branch. You never talk to a worker or a reviewer.
+- **Orchestrator** — The agent you talk to. It writes the story with you, creates the branches and the worktrees, spawns and supervises the other agents, and records your decisions. It writes no product code.
+- **Worker** — The agent that implements one story in its own worktree and records its evidence. It never verifies its own work, and never touches a path the story does not list.
+- **Reviewer** — The agent that regenerates every probe and every breakage from scratch, in a clean worktree at the commit under review. It reports findings and repairs nothing. It never gives a verdict.
+
+## The flow
 
 ```mermaid
 flowchart TD
-    request[Maintainer explains the problem] --> orchestrator[Orchestrator and maintainer create one small story]
-    orchestrator --> story[.fleet/stories/id.md]
-    story --> setupCommit[Maintainer commits story and workflow files]
-    setupCommit --> worker[Worker implements the story]
-    worker --> build[.fleet/handoffs/id.build.json]
-    worker --> workerGate[Worker writes .fleet/handoffs/id.gate.json]
-    workerGate --> workerDecision{Maintainer selects an option}
-    workerDecision --> resolvedWorkerGate[Orchestrator records decision and archives gate]
-    resolvedWorkerGate --> workerResumed[Worker resumed pass]
-    workerResumed --> worker
-    build --> workerCommit[Worker commits changes and build handoff]
-    workerCommit --> reviewerOneSetup[Orchestrator creates reviewer 1 branch and worktree]
-    reviewerOneSetup --> reviewOne[Independent reviewer runs every probe]
-    reviewOne --> reviewRecordOne[.fleet/handoffs/id.review.json]
-    reviewRecordOne --> reviewCommitOne[Reviewer 1 commits its handoff]
-    reviewCommitOne --> firstResult{Findings?}
-    firstResult -->|No| reviewerOneNoFindingMerge[Orchestrator fast forward merges reviewer 1 branch into worker branch]
-    reviewerOneNoFindingMerge --> complete[Orchestrator declares technical story complete]
-    firstResult -->|Yes| firstFinding{Repairable within story?}
-    firstFinding -->|Yes| reviewerOneRepairMerge[Orchestrator fast forward merges reviewer 1 branch into worker branch]
-    reviewerOneRepairMerge --> fix[Worker resolves the findings]
-    firstFinding -->|No| gate[Reviewer writes .fleet/handoffs/id.gate.json]
-    fix --> fixCommit[Worker commits the repair and build handoff]
-    fixCommit --> reviewerTwoSetup[Orchestrator creates reviewer 2 branch and worktree]
-    reviewerTwoSetup --> reviewTwo[Second independent, informed review]
-    reviewTwo --> reviewRecordTwo[.fleet/handoffs/id.review.json]
-    reviewRecordTwo --> reviewCommitTwo[Reviewer 2 commits its handoff]
-    reviewCommitTwo --> secondResult{Findings?}
-    secondResult -->|No| complete
-    secondResult -->|Yes| gate
-    gate --> decision{Maintainer accepts the finding?}
-    decision -->|No| exceptionCandidate[Orchestrator records rejected finding in superseded gate, which becomes the candidate commit]
-    exceptionCandidate --> complete
-    decision -->|Yes| resolvedGate[Orchestrator records decision and archives gate]
-    resolvedGate --> resolvedReviewerMerge[Orchestrator fast forward merges the resolved reviewer branch into worker branch]
-    resolvedReviewerMerge --> newCycle[Worker resumed pass and new review cycle]
-    newCycle --> reviewerOneSetup
-    complete --> toBase[Orchestrator squash-merges candidate commit to base]
-    toBase --> inspect[Maintainer reviews code quality]
-    inspect -->|Satisfied| finalCommit[Maintainer commits and pushes]
-    inspect -->|Chore requested| chore[Orchestrator applies non-functional chore]
-    chore --> regression[Orchestrator runs existing regression tests]
-    regression --> inspect
+    story[Maintainer and orchestrator write one story] --> base[Maintainer commits the story and the workflow files]
+    base --> work[Worker writes the code in its own worktree]
+    work --> workGate{Does the worker need a maintainer decision?}
+    workGate -->|Yes| workerGate[Worker writes a gate and stops]
+    workerGate --> workAnswer[Maintainer decides. The orchestrator writes the answer into the gate]
+    workAnswer --> work
+    workGate -->|No| review[Independent reviewer regenerates every proof in a clean worktree]
+    review --> findings{Findings?}
+    findings -->|None| candidate[Technical story complete]
+    findings -->|One or more| ball[The workflow stops. The maintainer reads the findings]
+    ball -->|Nothing must change| candidate
+    ball -->|The code must change| merge[Orchestrator brings the findings to the worker branch]
+    merge --> work
+    ball -->|The story must change| rewrite[Maintainer rewrites the story]
+    rewrite --> base
+    candidate --> staged[Orchestrator squash-merges to the base branch and leaves the change staged]
+    staged --> human[Maintainer reviews the code]
+    human -->|Chore requested| chore[Orchestrator applies the chore and runs the existing tests]
+    chore --> human
+    human -->|Satisfied| push[Maintainer commits and pushes]
 ```
 
-## Workflow usage
+## Step by step
 
-1. The maintainer explains the problem to the orchestrator. They can discuss options and constraints. The outcome is one small story with allowed paths and acceptance criteria. Every story must explicitly include its evidence and handoff paths in the allowed paths.
-2. For a frontend story, include `.fleet/designs/<id>.html` in the allowed paths and add it as the Design prototype. The orchestrator creates the standalone HTML prototype for each frontend story. It shows the intended visual result and does not need to be functional.
-3. The maintainer commits the story, the frontend prototype when required, and the workflow files. Workers start from the committed `HEAD`; uncommitted files are not included in their worktree. The worker branch is `worker/<id>`. Each reviewer branch is `reviewer/<id>/<n>`, where `<n>` is its review sequence number.
-4. A worker implements the story, records the build handoff, and commits its changes and handoff in its dedicated worktree.
-5. If a worker opens a gate, the orchestrator reports it to the maintainer. After the maintainer selects an option, the orchestrator records the decision and reason, renames the active gate to `.fleet/handoffs/<id>.gate.superseded.json`, and commits that state on `worker/<id>`. The orchestrator then launches a resumed worker pass in the same worktree. It does not launch a reviewer until the worker commits a `done` build handoff.
-6. The orchestrator creates a dedicated reviewer 1 branch and clean worktree from the worker commit. Reviewer 1 regenerates the checks and writes `review.json`. When a maintainer decision is required, it also writes `gate.json`; the gate is then the terminal handoff. It commits the handoff files in the reviewer worktree. If there is no active gate, the orchestrator fast forward merges the reviewer branch into `worker/<id>`. No findings complete the technical story. A repairable finding sends the worker to a repair pass. A finding outside the story requires the reviewer to open a gate. A reviewer branch with an active gate is not merged.
-7. After a repair, the worker commits it and its build handoff on `worker/<id>`. The orchestrator then creates a dedicated reviewer 2 branch and clean worktree from that commit. Reviewer 2 sees the previous review and the repair build handoff, regenerates the checks, and writes `review.json`. If a maintainer decision is required, it also writes `gate.json`; the gate is then the terminal handoff. It commits the handoff files in the reviewer 2 worktree. If it has no findings, its handoff commit is the candidate commit and the orchestrator declares the technical story completed. If it finds issues, the reviewer opens a gate. If the maintainer rejects the finding, the orchestrator records `finding_rejected` and the reason in the superseded gate. That commit is an exception candidate commit. If the maintainer accepts the finding, the orchestrator records the decision in the superseded gate, fast forward merges the resolved reviewer branch into `worker/<id>`, then starts a new review cycle with a worker repair and a fresh independent, informed first review. A review cycle has at most two reviews.
-8. The candidate commit is either the last reviewer handoff commit whose `review.json` contains `[]`, or an exception candidate commit with a superseded gate whose `resolution.decision` is `finding_rejected`. It is the technical approval stamp. On the base branch, the orchestrator runs `git merge --squash <candidate-commit>`. It does not commit the merge result. The candidate product changes remain staged for the maintainer.
-9. The maintainer reviews the generated code on the base branch. If satisfied, the maintainer makes the final commit and pushes it.
-10. If the maintainer requests a chore, the orchestrator applies it only when it does not change functional behaviour, acceptance criteria, probes, `red_when` breakages, or tests. The orchestrator runs the complete existing test suite for each affected workspace as a regression check, stages the chore changes, and returns the staged change to the maintainer for review.
+The steps below follow the diagram, one for each box and each decision.
 
-## Outcomes between agents
+1. **The maintainer and the orchestrator write one story.** They agree on the problem, the options, and the constraints. The story lists the allowed paths and the acceptance criteria. A story that introduces a new visual surface also gets a standalone HTML prototype in `.fleet/designs/`. The orchestrator could also make it before the work starts. It shows the intended visual result and does not operate. A story that only changes existing UI covers the visual result with an acceptance criterion instead.
+2. **The maintainer commits the story and the workflow files.** The agents start from the committed state.
+3. **The worker writes the code in its own worktree.** The worker records its evidence and its build, and commits them in its worktree.
+4. **Does the worker need a maintainer decision?**
+   - Yes. The worker writes a gate and stops. The maintainer decides. The orchestrator writes the answer into the gate. The work continues at step 3.
+   - No. Continue at step 5.
+5. **An independent reviewer regenerates every proof in a clean worktree.** The reviewer does each probe again. It also does each breakage again. Then it commits its findings.
+6. **Are there findings?**
+   - None. The technical story is complete. Continue at step 8.
+   - One finding or more. The workflow stops. Continue at step 7.
+7. **The maintainer reads the findings.** There are three ways out.
+   - Nothing must change. The orchestrator writes the reason into each finding that the maintainer rejects. The technical story is complete. Continue at step 8.
+   - The code must change. The orchestrator brings the findings to the worker branch. The work continues at step 3.
+   - The story must change. The maintainer rewrites the story. The work continues at step 2.
+8. **The orchestrator squash-merges the candidate commit into the base branch.** The changes stay in the staging area. The orchestrator does not commit them.
+9. **The maintainer reviews the code.** There are two ways out.
+   - The maintainer asks for a chore. A chore does not change the behaviour. The orchestrator does it, runs the existing tests as a regression check, and puts the result in the staging area. The review starts again at step 9.
+   - The maintainer is satisfied. Continue at step 10.
+10. **The maintainer commits the change and pushes it.**
 
+## Glossary
 
-| Role     | Situation                                                                                | Handoff files                 | Build status   |
-| -------- | ---------------------------------------------------------------------------------------- | ----------------------------- | -------------- |
-| Worker   | Implementation is ready for independent review                                           | `build.json`                  | `done`         |
-| Worker   | The story cannot produce a reviewable candidate because of a technical execution problem | `build.json`                  | `failed`       |
-| Worker   | A maintainer decision is required                                                        | `gate.json`                   | None           |
-| Reviewer | The review is complete, with findings or an empty findings array                         | `review.json`                 | Not applicable |
-| Reviewer | A maintainer decision is required                                                        | `review.json` and `gate.json` | Not applicable |
+### The files
 
+- **Handoff** — The file an agent writes to end its pass, in `.fleet/handoffs/`. It is the report.
+- **Build** — `build.json`. What the worker did in one pass, `done` or `failed`, with the red and the green result of every probe.
+- **Review** — `review.json`. What the reviewer found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
+- **Finding** — One entry in `review.json`. Technical evidence that an acceptance criterion or a constraint does not hold. It is never a question: you decide what to do about it.
+  - **`maintainer_rejected`** — The field inside a finding. The orchestrator writes your reason there when you reject the finding. It stays null while the finding stands.
+- **Gate** — A question about the story, delegated to you. Only a worker opens one, when it cannot finish the pass without your answer. Read in order, the gates explain why a story went the way it went.
+  - **`resolution`** — The field inside a gate. The orchestrator writes your answer and your reason there. It stays null while the gate is open, and an open gate blocks the story.
 
-### Handoff examples
+### The Git objects
 
-Worker `done`:
+- **Base branch** — The branch the work lands on. Only you commit here.
+- **Worker branch** — `worker/<id>` in `.worktree/<id>`. Where one story is implemented and repaired.
+- **Reviewer branch** — `reviewer/<id>/<n>` in `.worktree/<id>-review-<n>`. A clean copy at the commit under review, one for each review pass. A reviewer never sees the worker worktree.
+- **Candidate commit** — The commit the agents are finished with: the last reviewer commit with no findings, or with every finding rejected. It is the one squash-merged onto the base branch for your final review.
 
-```json
-{
-  "id": "temperature-units",
-  "branch": "worker/temperature-units",
-  "status": "done",
-  "acs": [{ "ac": "AC1", "probe": "npm test", "red_ok": true, "green_ok": true }],
-  "notes": ""
-}
-```
+## Where everything lives
 
-Worker `failed`:
-
-```json
-{
-  "id": "temperature-units",
-  "branch": "worker/temperature-units",
-  "status": "failed",
-  "acs": [{ "ac": "AC1", "probe": "npm test", "red_ok": true, "green_ok": false }],
-  "notes": "AC1: npm test exited 1 because the required service was unavailable."
-}
-```
-
-Worker or reviewer gate:
-
-```json
-{
-  "id": "temperature-units",
-  "decision_so_far": "No implementation started.",
-  "blocked": "The story does not define the fallback unit.",
-  "options": ["celsius", "fahrenheit"],
-  "recommendation": "celsius",
-  "next_steps": { "option": "Continue with the selected unit." },
-  "resolution": null
-}
-```
-
-Reviewer finding. Use `[]` when the reviewer has no findings:
-
-```json
-[
-  {
-    "ac": "AC1",
-    "severity": "medium",
-    "confidence": 0.9,
-    "evidence": "npm test passed, but the red_when breakage also passed."
-  }
-]
-```
-
-A gate is neither `done` nor `failed`. It has no build status because the pass stops for a maintainer decision. A reviewer never has a build status and never issues a pass or fail verdict. A reviewer always writes `review.json`; when a maintainer decision is required, it writes `gate.json` after the review record. The gate is the terminal handoff.
-
-Each role overwrites the handoff for its current pass at the fixed story path. Historical handoffs from earlier roles or passes remain in Git history and are not active. After the maintainer resolves a gate, the orchestrator records the decision and reason, renames `.fleet/handoffs/<id>.gate.json` to `.fleet/handoffs/<id>.gate.superseded.json`, and commits the change before it launches a resumed pass. The superseded gate records the resolved blocker but is not terminal. A reviewer writes `[]` when it has no findings.
-
-No agent may approve its own work. A passing check must be able to fail when the specified breakage is introduced. The regression checks after a maintainer chore do not replace independent acceptance verification.
-
-## The folders
-
-
-| Location            | Purpose                                          | Created by                            |
-| ------------------- | ------------------------------------------------ | ------------------------------------- |
-| `.fleet/stories/`   | A clear work order with direct acceptance probes | Orchestrator + Maintainer             |
-| `.fleet/handoffs/`  | Build records, reviewer findings, and blockers   | Worker, reviewer, or orchestrator     |
-| `.fleet/designs/`   | Standalone HTML prototypes for frontend stories  | Orchestrator during story preparation |
-| `.fleet/templates/` | Starting files for stories and handoffs          | Repository                            |
+| Path                     | Holds                                                             |
+| ------------------------ | ----------------------------------------------------------------- |
+| `.fleet/stories/`        | The work orders, and the builder evidence recorded for each one   |
+| `.fleet/handoffs/`       | Builds, reviews, and gates                                        |
+| `.fleet/designs/`        | One standalone HTML prototype, when a story has one                |
+| `.fleet/templates/`      | The exact shape of a story, a build, a review, and a gate         |
+| `.pi/agents/`            | The worker and reviewer roles, and the model each one runs        |
+| `scripts/fleet/`         | Helpers that write the standard files                             |
+| `AGENTS_CONTRIBUTING.md` | The rules every agent follows                                     |
+| `AGENTS.md`              | Code conventions, with one more in each workspace                 |

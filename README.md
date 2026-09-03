@@ -4,15 +4,6 @@ Reads BLE advertisements from SwitchBot indoor and outdoor meters using
 [`@stoprocent/noble`](https://www.npmjs.com/package/@stoprocent/noble), stores the
 measurements in PostgreSQL, and shows them in a web app.
 
-The collector reads and calculates:
-
-* Temperature in °C
-* Dew point in °C
-* Heat index in °C
-* Humidity in percent
-* Battery level in percent
-* BLE signal power in dBm
-
 ## Repository layout
 
 An npm workspaces monorepo with three workspaces.
@@ -130,6 +121,7 @@ npm run supabase:stop    # stop the local Supabase stack
 npm run supabase:status  # show local endpoints
 npm run lint             # Biome, whole repository
 npm run build            # type check, plus the production build of the web app
+npm test                 # run tests in every workspace
 npm run dev              # every workspace that defines dev
 ```
 
