@@ -32,7 +32,7 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - Respect all story constraints, including dependencies, performance, security, and permitted error content.
 - Do not present your checks as verification. They are builder evidence for the reviewer to regenerate.
 - For every acceptance criterion: apply the stated red_when breakage, run the probe, restore the code, run the probe again. Record both command outputs in .fleet/stories/<id>.evidence.md.
-- For a frontend story, do the screenshot comparison before recording a `done` build. Record the screenshot commands, paths, and visual comparison in the evidence file.
+- When the story has a prototype, do the screenshot comparison before recording a `done` build. Record the screenshot commands, paths, and visual comparison in the evidence file.
 - Before recording acceptance evidence or writing a `done` build, run `npm run lint` from the repository root. Fix every diagnostic within the story's allowed paths. If the command would require a change outside those paths, write a gate instead.
 - Before writing a `done` build, run `npm run build` from the repository root. It type-checks every workspace, not only the one the story names. Fix every error within the story's allowed paths. If a fix would require a path outside those paths, write a gate instead.
 - In a repair pass, repair every finding whose `maintainer_rejected` is null. Leave a rejected finding alone: the maintainer already answered it.

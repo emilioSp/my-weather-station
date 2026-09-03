@@ -53,7 +53,7 @@ flowchart TD
 
 The steps below follow the diagram, one for each box and each decision.
 
-1. **The maintainer and the orchestrator write one story.** They agree on the problem, the options, and the constraints. The story lists the allowed paths and the acceptance criteria. A frontend story also gets a standalone HTML prototype in `.fleet/designs/`. The orchestrator could also make the prototype before the work starts. It shows the intended visual result and does not operate.
+1. **The maintainer and the orchestrator write one story.** They agree on the problem, the options, and the constraints. The story lists the allowed paths and the acceptance criteria. A story that introduces a new visual surface also gets a standalone HTML prototype in `.fleet/designs/`. The orchestrator could also make it before the work starts. It shows the intended visual result and does not operate. A story that only changes existing UI covers the visual result with an acceptance criterion instead.
 2. **The maintainer commits the story and the workflow files.** The agents start from the committed state.
 3. **The worker writes the code in its own worktree.** The worker records its evidence and its build, and commits them in its worktree.
 4. **Does the worker need a maintainer decision?**
@@ -98,7 +98,7 @@ The steps below follow the diagram, one for each box and each decision.
 | ------------------------ | ----------------------------------------------------------------- |
 | `.fleet/stories/`        | The work orders, and the builder evidence recorded for each one   |
 | `.fleet/handoffs/`       | Builds, reviews, and gates                                        |
-| `.fleet/designs/`        | One standalone HTML prototype for each frontend story             |
+| `.fleet/designs/`        | One standalone HTML prototype, when a story has one                |
 | `.fleet/templates/`      | The exact shape of a story, a build, a review, and a gate         |
 | `.pi/agents/`            | The worker and reviewer roles, and the model each one runs        |
 | `scripts/fleet/`         | Helpers that write the standard files                             |

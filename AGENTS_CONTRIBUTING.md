@@ -33,7 +33,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 | `.fleet/stories/<id>.md`          | The work order for one reversible change               |
 | `.fleet/stories/<id>.evidence.md` | The builder evidence the worker records for that story |
 | `.fleet/handoffs/`                | Builds, reviews, and gates                             |
-| `.fleet/designs/`                 | One standalone HTML prototype for each frontend story  |
+| `.fleet/designs/`                 | One standalone HTML prototype, when a story has one     |
 
 ## Scope
 
@@ -54,7 +54,7 @@ The maintainer and orchestrator create stories from their discussion. A story mu
 - Problem
 - Constraints
 - Allowed paths
-- A Design section with `.fleet/designs/<id>.html` for frontend stories
+- A Design section with `.fleet/designs/<id>.html`, when the story introduces a visual surface that has no existing reference
 - Acceptance criteria
 - Out of scope work
 
@@ -82,15 +82,25 @@ thing. The probe may fake anything the postcondition does not name.
 Do not accept a probe that looks at a mock, a spy, a write response, an exit code, a
 log line, or a filename in place of the real thing.
 
-### Frontend stories
+### Visual claims
 
-- A frontend story must reference its prototype in the Design section.
-  - It is the maintainer's responsibility to create the prototype during story preparation, either with the orchestrator or with another agent.
-  - It must be present before the orchestrator starts the worker.
-  - A prototype is accurate only in the part related to the story. It can be inaccurate in every other part, a different logo or a different footer for example. That does not matter.
+A story that claims something about what the user sees must make that claim verifiable. There are two routes. The story uses one of them.
+
+- A prototype. Required when the story introduces a visual surface that has no existing reference, a new component or a new screen. Recommended in every other case. It goes in the Design section, at `.fleet/designs/<id>.html`.
+- An acceptance criterion with a programmatic probe. Use it when the story changes a visual surface that already exists. The current app is the reference. State the visual property that must hold, for example that the page does not scroll horizontally at the smallest target resolution.
+
+Never leave a visual claim without one of the two.
+
+When the story has a prototype:
+
+- It is the maintainer's responsibility to create the prototype during story preparation, either with the orchestrator or with another agent.
+- It must be present before the orchestrator starts the worker.
+- A prototype is accurate only in the part related to the story. It can be inaccurate in every other part, a different logo or a different footer for example. That does not matter.
 - The prototype is the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The story specifies a viewport only when it requires a non-standard size.
 - For a screenshot probe, render the prototype and the actual app at every target resolution, in the state shown or required by the story. Inspect both screenshots and compare the visual result.
 - Do not assess the source code of the prototype.
+
+When the story has no prototype, do no screenshot comparison. A visual claim is then stated as an acceptance criterion, and you verify it like every other one.
 
 ## Handoffs
 
@@ -181,9 +191,10 @@ Review format is [review.json](.fleet/templates/review.json).
 - Do not invent work. Create a story only from the current maintainer discussion.
 - Create one story for one reversible change. A change to the data model and a change to behaviour belong to two stories, so each one can be rolled back on its own.
 - Define direct, falsifiable probes before creating a story.
+- When a story changes what the user sees and has no prototype, cover the visual claim with an acceptance criterion that has a programmatic probe. Do not create the story without it.
 - When a decision belongs to the maintainer, report it and wait. Never decide in place of the maintainer.
 - Launch and supervise every worker and reviewer. Report only observed process state and recorded handoffs to the maintainer.
-- On dirty or uncommitted launch base, tell the maintainer to commit the intended story, prototype, and workflow files, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
+- On dirty or uncommitted launch base, tell the maintainer to commit the intended story, any prototype, and workflow files, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
 
 ### Launch an agent
 

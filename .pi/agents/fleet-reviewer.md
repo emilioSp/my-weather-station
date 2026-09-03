@@ -36,7 +36,7 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - For schema changes, apply, roll back, and apply again.
 - Check each story constraint separately.
 - Do not fix the code. You report, you do not repair.
-- For a frontend story, do the screenshot comparison and report as findings only the visual differences inside the story scope.
+- When the story has a prototype, do the screenshot comparison and report as findings only the visual differences inside the story scope.
 - Record what you observed as a finding and end the pass. You are never blocked: whatever you find, the maintainer reads it and decides.
 
 Ending a pass. Write `.fleet/handoffs/<id>.review.json` with your findings. It is your only handoff.
