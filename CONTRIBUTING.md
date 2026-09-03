@@ -19,7 +19,7 @@ The maintainer talks to the orchestrator. The orchestrator talks to the workers 
 ## The roles
 
 - **Maintainer** — You. You bring the problem, decide every gate and every finding, review the final code, and make every commit on the base branch. You never talk to a worker or a reviewer.
-- **Orchestrator** — The agent you talk to. It writes the story with you, creates the branches and the worktrees, spawns and supervises the other agents, and records your decisions. It writes no product code and never opens a gate.
+- **Orchestrator** — The agent you talk to. It writes the story with you, creates the branches and the worktrees, spawns and supervises the other agents, and records your decisions. It writes no product code.
 - **Worker** — The agent that implements one story in its own worktree and records its evidence. It never verifies its own work, and never touches a path the story does not list.
 - **Reviewer** — The agent that regenerates every probe and every breakage from scratch, in a clean worktree at the commit under review. It reports findings and repairs nothing. It never gives a verdict.
 
@@ -34,12 +34,9 @@ flowchart TD
     workerGate --> workAnswer[Maintainer decides. The orchestrator writes the answer into the gate]
     workAnswer --> work
     workGate -->|No| review[Independent reviewer regenerates every proof in a clean worktree]
-    review --> revGate{Does the reviewer need a maintainer decision?}
-    revGate -->|Yes| reviewerGate[Reviewer writes its findings, then a gate, and stops]
-    reviewerGate --> ball
-    revGate -->|No| findings{Findings?}
+    review --> findings{Findings?}
     findings -->|None| candidate[Technical story complete]
-    findings -->|One or more| ball[The workflow stops. The maintainer reads the findings and answers any gate]
+    findings -->|One or more| ball[The workflow stops. The maintainer reads the findings]
     ball -->|Nothing must change| candidate
     ball -->|The code must change| merge[Orchestrator brings the findings to the worker branch]
     merge --> work
@@ -63,21 +60,18 @@ The steps below follow the diagram, one for each box and each decision.
    - Yes. The worker writes a gate and stops. The maintainer decides. The orchestrator writes the answer into the gate. The work continues at step 3.
    - No. Continue at step 5.
 5. **An independent reviewer regenerates every proof in a clean worktree.** The reviewer does each probe again. It also does each breakage again. Then it commits its findings.
-6. **Does the reviewer need a maintainer decision?**
-   - Yes. The reviewer writes its findings, then a gate, and stops. Continue at step 8.
-   - No. Continue at step 7.
-7. **Are there findings?**
-   - None. The technical story is complete. Continue at step 9.
-   - One finding or more. The workflow stops. Continue at step 8.
-8. **The maintainer reads the findings and answers any gate.** There are three ways out.
-   - Nothing must change. The orchestrator writes the reason into each finding that the maintainer rejects. The technical story is complete. Continue at step 9.
+6. **Are there findings?**
+   - None. The technical story is complete. Continue at step 8.
+   - One finding or more. The workflow stops. Continue at step 7.
+7. **The maintainer reads the findings.** There are three ways out.
+   - Nothing must change. The orchestrator writes the reason into each finding that the maintainer rejects. The technical story is complete. Continue at step 8.
    - The code must change. The orchestrator brings the findings to the worker branch. The work continues at step 3.
    - The story must change. The maintainer rewrites the story. The work continues at step 2.
-9. **The orchestrator squash-merges the candidate commit into the base branch.** The changes stay in the staging area. The orchestrator does not commit them.
-10. **The maintainer reviews the code.** There are two ways out.
-    - The maintainer asks for a chore. A chore does not change the behaviour. The orchestrator does it, runs the existing tests as a regression check, and puts the result in the staging area. The review starts again at step 10.
-    - The maintainer is satisfied. Continue at step 11.
-11. **The maintainer commits the change and pushes it.**
+8. **The orchestrator squash-merges the candidate commit into the base branch.** The changes stay in the staging area. The orchestrator does not commit them.
+9. **The maintainer reviews the code.** There are two ways out.
+   - The maintainer asks for a chore. A chore does not change the behaviour. The orchestrator does it, runs the existing tests as a regression check, and puts the result in the staging area. The review starts again at step 9.
+   - The maintainer is satisfied. Continue at step 10.
+10. **The maintainer commits the change and pushes it.**
 
 ## Glossary
 
@@ -88,7 +82,7 @@ The steps below follow the diagram, one for each box and each decision.
 - **Review** — `review.json`. What the reviewer found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
 - **Finding** — One entry in `review.json`. Technical evidence that an acceptance criterion or a constraint does not hold. It is never a question: you decide what to do about it.
   - **`maintainer_rejected`** — The field inside a finding. The orchestrator writes your reason there when you reject the finding. It stays null while the finding stands.
-- **Gate** — A question about the story, delegated to you. A worker or a reviewer opens one when the story, not the code, needs a decision. Gates are numbered and never overwritten. Read in order, they explain why a story went the way it went.
+- **Gate** — A question about the story, delegated to you. Only a worker opens one, when it cannot finish the pass without your answer. Gates are numbered and never overwritten. Read in order, they explain why a story went the way it went.
   - **`resolution`** — The field inside a gate. The orchestrator writes your answer and your reason there. It stays null while the gate is open, and an open gate blocks the story.
 
 ### The Git objects
