@@ -82,7 +82,7 @@ The steps below follow the diagram, one for each box and each decision.
 - **Verifier handoff** — `verifier.json`. What the verifier found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
 - **Finding** — One entry in `verifier.json`. A technical observation that an acceptance criterion or a constraint does not hold. It is never a question: you decide what to do about it.
   - **`rejection`** — The field inside a finding. The maestro writes your reason there when you reject the finding. It stays null while the finding stands.
-- **Escalation** — A question about the spec, delegated to you. Only a builder opens one, when it cannot finish the pass without your answer. Read in order, the escalations explain why a spec went the way it went.
+- **Escalation** — A question about the spec, delegated to the owner. Only a builder opens one, when it cannot finish the pass without your answer. Read in order, the escalations explain why a spec went the way it went.
   - **`resolution`** — The field inside an escalation. The maestro writes your answer and your reason there. It stays null while the escalation is open, and an open escalation blocks the spec.
 
 ### The Git objects
