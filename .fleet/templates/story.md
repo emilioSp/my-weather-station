@@ -13,9 +13,9 @@ Describe the requested change.
 - `path/allowed-by-this-story`
 - `.fleet/**` (required workflow artefacts)
 
-## Frontend prototype design
+## Design
 
-For a frontend story, add the required standalone HTML prototype at `.fleet/designs/<id>.html`. It shows the intended visual result and does not need to be functional.
+For a frontend story, add the required standalone HTML prototype at `.fleet/designs/<id>.html`. It shows the intended visual result and does not need to be functional. Remove this section for a story with no frontend change.
 
 ## Technical details
 
@@ -31,4 +31,4 @@ Describe the agreed implementation approach.
 
 ## Out of scope
 
-- &lt; work that must not be done&gt;
+- `<work that must not be done>`

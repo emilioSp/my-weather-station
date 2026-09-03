@@ -88,4 +88,4 @@ The root `README.md` must describe:
 5. Deployment instructions when deployment exists.
 
 ## Workflow
-IMPORTANT: you work stricly following this [workflow](AGENTS_CONTRIBUTING.md)
+IMPORTANT: you work strictly following this [workflow](AGENTS_CONTRIBUTING.md)
