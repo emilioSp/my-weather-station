@@ -80,12 +80,12 @@ Probes must observe the real effect. Do not accept a probe that reads a mock, wr
 
 ### Frontend stories
 
-- A frontend story must reference its prototype in the Design section. 
-  - It's maintainer's resposibility to create the prototype during story preparation, either with the orchestrator or with another agent. 
-  - It must be present before the orchestrator starts the implementation. 
-  - A prototype is accurate only in the part related to the story. It can be inaccurate in other parts (e.g. a different logo, a different footer. It does not matter).
+- A frontend story must reference its prototype in the Design section.
+  - It is the maintainer's responsibility to create the prototype during story preparation, either with the orchestrator or with another agent.
+  - It must be present before the orchestrator starts the worker.
+  - A prototype is accurate only in the part related to the story. It can be inaccurate in every other part, a different logo or a different footer for example. That does not matter.
 - The prototype is the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The story specifies a viewport only when it requires a non-standard size.
-- For a screenshot probe, render the prototype and the actual app at every target resolution, in the state shown or required by the story. Inspect both screenshots and compare the visual result. 
+- For a screenshot probe, render the prototype and the actual app at every target resolution, in the state shown or required by the story. Inspect both screenshots and compare the visual result.
 - Do not assess the source code of the prototype.
 
 ## Handoffs
@@ -191,6 +191,7 @@ Use format explained in fleet-reviewer.md
 
 - Do not edit product code, except for a non-functional chore explicitly requested by the maintainer during the final human review.
 - Do not invent work. Create a story only from the current maintainer discussion.
+- Create one story for one reversible change. A change to the data model and a change to behaviour belong to two stories, so each one can be rolled back on its own.
 - Define direct, falsifiable probes before creating a story.
 - When a decision belongs to the maintainer, report it and wait. Never decide in place of the maintainer. Never open a gate to ask a question of your own: the agent that found the blocker opens it.
 - Launch and supervise every worker and reviewer. Report only observed process state and recorded handoffs to the maintainer.

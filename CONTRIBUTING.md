@@ -14,7 +14,7 @@ Three principles hold the workflow together:
 - A check that passes must be able to fail. Each acceptance criterion states the breakage that must break it.
 - An agent never decides for the maintainer, and never guesses.
 
-The maintainer talks the orchestrator, the orchestrator talks to the workers and the reviewers.
+The maintainer talks to the orchestrator. The orchestrator talks to the workers and the reviewers.
 
 ## The roles
 
@@ -75,7 +75,7 @@ The steps below follow the diagram, one for each box and each decision.
    - The story must change. The maintainer rewrites the story. The work continues at step 2.
 9. **The orchestrator squash-merges the candidate commit into the base branch.** The changes stay in the staging area. The orchestrator does not commit them.
 10. **The maintainer reviews the code.** There are two ways out.
-    - The maintainer asks for a chore. A chore does not change the behaviour. The orchestrator does it, runs the existing tests as a regression check, and puts the result in the staging area. The maintainer review starts again at step 10.
+    - The maintainer asks for a chore. A chore does not change the behaviour. The orchestrator does it, runs the existing tests as a regression check, and puts the result in the staging area. The review starts again at step 10.
     - The maintainer is satisfied. Continue at step 11.
 11. **The maintainer commits the change and pushes it.**
 
