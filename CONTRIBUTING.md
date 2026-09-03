@@ -82,7 +82,7 @@ The steps below follow the diagram, one for each box and each decision.
 - **Review** — `review.json`. What the reviewer found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
 - **Finding** — One entry in `review.json`. Technical evidence that an acceptance criterion or a constraint does not hold. It is never a question: you decide what to do about it.
   - **`maintainer_rejected`** — The field inside a finding. The orchestrator writes your reason there when you reject the finding. It stays null while the finding stands.
-- **Gate** — A question about the story, delegated to you. Only a worker opens one, when it cannot finish the pass without your answer. Gates are numbered and never overwritten. Read in order, they explain why a story went the way it went.
+- **Gate** — A question about the story, delegated to you. Only a worker opens one, when it cannot finish the pass without your answer. Read in order, the gates explain why a story went the way it went.
   - **`resolution`** — The field inside a gate. The orchestrator writes your answer and your reason there. It stays null while the gate is open, and an open gate blocks the story.
 
 ### The Git objects
@@ -94,9 +94,6 @@ The steps below follow the diagram, one for each box and each decision.
 
 ## Where everything lives
 
-This file describes. These files define. Change them, not this one.
-
-
 | Path                     | Holds                                                             |
 | ------------------------ | ----------------------------------------------------------------- |
 | `.fleet/stories/`        | The work orders, and the builder evidence recorded for each one   |
@@ -107,5 +104,3 @@ This file describes. These files define. Change them, not this one.
 | `scripts/fleet/`         | Helpers that write the standard files                             |
 | `AGENTS_CONTRIBUTING.md` | The rules every agent follows                                     |
 | `AGENTS.md`              | Code conventions, with one more in each workspace                 |
-
-

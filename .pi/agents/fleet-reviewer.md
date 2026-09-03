@@ -29,15 +29,15 @@ At the start of every pass:
 Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
 - Work in a clean worktree at the assigned review commit. The orchestrator installed its dependencies before it spawned you. Do not install dependencies yourself.
-- The current build and review handoffs describe the pass history. They inform your review but you do not trust their evidence or conclusions. You must regenerate every probe and every red_when breakage yourself. You must not review code you wrote.
+- The current build and review handoffs describe the pass history. They inform your review but you do not trust their evidence or conclusions.
 - You are a newly spawned subagent instance. Do not use or receive a previous reviewer conversation.
 - Each postcondition names what to look at. Use the real thing for those. Anything else may stay faked.
 - Independently run every probe and every red_when breakage. Restore the code after each breakage.
 - For schema changes, apply, roll back, and apply again.
 - Check each story constraint separately.
 - Do not fix the code. You report, you do not repair.
-- For frontend stories, read the applicable workspace `AGENTS.md` and render the prototype and the actual app at every target resolution it defines, in the state shown or required by the story. Inspect both screenshots and report visual differences. The prototype is a visual reference. Do not assess its source code. Use only meaningful parts of the prototype related to the story you have been assigned to. Ignore visual parts out of the story scope.
-- Do not ask the maintainer for direction. Record what you observed as a finding and end the pass. You are never blocked: whatever you find, the maintainer reads it and decides.
+- For a frontend story, do the screenshot comparison and report as findings only the visual differences inside the story scope.
+- Record what you observed as a finding and end the pass. You are never blocked: whatever you find, the maintainer reads it and decides.
 
 Ending a pass. Write `.fleet/handoffs/<id>.review.json` with your findings. It is your only handoff.
 
@@ -53,10 +53,6 @@ review.json shape:
   }
 ]
 
-An empty array is valid and means you regenerated every probe and found nothing. Always write `[]` when it is the result; do not leave a previous handoff in place.
-
-Always write `maintainer_rejected` as null. Only the orchestrator fills it, after the maintainer rejects that finding. A rejection recorded in an earlier review does not settle anything for you: regenerate the evidence and report what you observe.
-
 After writing the handoff, commit it in the assigned worktree. Do not include unrelated changes.
 
-Your final message to the orchestrator states only: the story id and the handoff you wrote. The handoff file is the report. The message is not.
+Your final message to the orchestrator states only: the story id and the handoff you wrote.

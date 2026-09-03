@@ -28,14 +28,12 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 
 ## Files
 
-
 | Path                              | Holds                                                  |
 | --------------------------------- | ------------------------------------------------------ |
 | `.fleet/stories/<id>.md`          | The work order for one reversible change               |
 | `.fleet/stories/<id>.evidence.md` | The builder evidence the worker records for that story |
 | `.fleet/handoffs/`                | Builds, reviews, and gates                             |
 | `.fleet/designs/`                 | One standalone HTML prototype for each frontend story  |
-
 
 ## Scope
 
@@ -59,7 +57,6 @@ The maintainer and orchestrator create stories from their discussion. A story mu
 - A Design section with `.fleet/designs/<id>.html` for frontend stories
 - Acceptance criteria
 - Out of scope work
-- The `.fleet/**` allowed path
 
 A story may also carry a Technical details section with the agreed approach.
 
@@ -99,13 +96,11 @@ log line, or a filename in place of the real thing.
 
 A handoff is a file in `.fleet/handoffs/`. It is the subagent report. The closing message of a subagent is not.
 
-
 | File                 | Written by | Meaning                                                      | Format                                        |
 | -------------------- | ---------- | ------------------------------------------------------------ | --------------------------------------------- |
 | `<id>.build.json`    | Worker     | One implementation pass, `done` or `failed`                  | [build.json](.fleet/templates/build.json)     |
 | `<id>.gate.<n>.json` | Worker     | A decision delegated to the maintainer, and later its answer | [gate.json](.fleet/templates/gate.json)       |
 | `<id>.review.json`   | Reviewer   | The findings of one review pass                              | [review.json](.fleet/templates/review.json)   |
-
 
 These rules apply to every handoff:
 
@@ -113,7 +108,7 @@ These rules apply to every handoff:
   - A worker writes `build.json` or a gate.
   - A reviewer writes `review.json`.
 - A build and a review belong to one pass. They are overwritten at each pass. Earlier versions stay in Git history.
-- Gates are never overwritten. See [Gates](#gates).
+- Gates are never overwritten.
 - A reviewer writes `[]` when it has no findings. It never leaves a previous handoff in place and never issues a pass or fail verdict.
 - The agent commits its terminal handoff in its assigned worktree before it ends the pass.
 
@@ -248,7 +243,7 @@ Spawn `agent: "fleet-reviewer"`.
 - Wait on the subagent. The runtime reports its completion. There is no exit file, no process check, and no polling loop.
 - The agent is `running` until the runtime returns it. A quiet subagent, a long pause, or no intermediate message all mean `running with no new observation`. None of them means `dead`. Never report a running agent as terminated.
 - Do not spawn a second agent to ask about the first one.
-- When the subagent returns, inspect its worktree for the terminal handoff of the current pass. The handoff is the report.
+- When the subagent returns, inspect its worktree for the terminal handoff of the current pass.
 - Confirm that the worktree is clean and that the handoff is committed.
 - If the subagent returns without a terminal handoff for the current pass, report the exception to the maintainer and stop. Do not change the repository or relaunch automatically.
 - The terminal handoff decides the next step. See [After a worker pass](#after-a-worker-pass) and [After a review pass](#after-a-review-pass).
@@ -297,7 +292,7 @@ The reviewer role is defined in [.pi/agents/fleet-reviewer.md](.pi/agents/fleet-
 
 ## Helpers
 
-Use these scripts to write standard files. The build and review scripts overwrite the handoff of the current pass. `open-gate.sh` never overwrites: it takes the next free number.
+Use these scripts to write standard files.
 
 ```sh
 scripts/fleet/new-story.sh <id>
@@ -305,4 +300,3 @@ scripts/fleet/open-gate.sh <id>   # numbers the gate for you
 scripts/fleet/record-build.sh <id>
 scripts/fleet/record-review.sh <id>
 ```
-
