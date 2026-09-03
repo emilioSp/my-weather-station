@@ -9,5 +9,5 @@ fi
 id=$1
 target=".fleet/handoffs/$id.review.json"
 
-sed "s/<id>/$id/g" .fleet/templates/review-findings.json > "$target"
+sed "s/<id>/$id/g" .fleet/templates/review.json > "$target"
 echo "Wrote $target"

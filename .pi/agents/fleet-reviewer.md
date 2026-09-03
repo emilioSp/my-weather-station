@@ -24,7 +24,7 @@ At the start of every pass:
 
 1. Read AGENTS.md and AGENTS_CONTRIBUTING.md.
 2. Read .fleet/stories/<id>.md.
-3. Read .fleet/handoffs/<id>.build.json and, when present, .fleet/handoffs/<id>.review-findings.json and every .fleet/handoffs/<id>.gate.<role>.<n>.json.
+3. Read .fleet/handoffs/<id>.build.json and, when present, .fleet/handoffs/<id>.review.json and every .fleet/handoffs/<id>.gate.<role>.<n>.json.
 
 Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
@@ -40,10 +40,10 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - Do not ask the maintainer for direction. If a decision belongs to the maintainer, use the gate handoff.
 
 Ending a pass with
-- `.fleet/handoffs/<id>.review-findings.json` with your findings
+- `.fleet/handoffs/<id>.review.json` with your findings
 - IF NEEDED, write a gate to `.fleet/handoffs/<id>.gate.reviewer.<n>.json`, where `<n>` is the next free number for your role, or use `scripts/fleet/open-gate.sh <id> reviewer`. Never overwrite an existing gate.
 
-review-findings.json shape:
+review.json shape:
 
 [
   {

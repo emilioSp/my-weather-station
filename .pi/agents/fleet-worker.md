@@ -39,7 +39,7 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - For migrations, execute the reverse path at least once before reporting.
 - Do not ask the maintainer for direction. If a decision belongs to the maintainer, write the gate handoff and stop.
 
-Ending a pass. Write exactly one terminal handoff for the current pass before you end. A build handoff overwrites the previous one at its fixed path. A gate never overwrites anything. Earlier build and review handoffs remain in Git history and are not active.
+Ending a pass. Write exactly one terminal handoff for the current pass before you end. A build overwrites the previous one at its fixed path. A gate never overwrites anything. Earlier builds and reviews remain in Git history and are not active.
 
 - .fleet/handoffs/<id>.build.json when the work is done or failed.
 - .fleet/handoffs/<id>.gate.worker.<n>.json when a maintainer decision is required, where <n> is the next free number for your role. Never overwrite an existing gate; scripts/fleet/open-gate.sh <id> worker numbers it for you.
@@ -58,4 +58,4 @@ build.json shape:
 
 `failed` is a valid result. Never weaken checks, disable tests, increase timeouts, add retries, suppress errors, or change acceptance criteria to produce green.
 
-Your final message to the orchestrator states only: the story id, the terminal handoff you wrote, and, for a build handoff, its status. The handoff file is the report. The message is not.
+Your final message to the orchestrator states only: the story id, the terminal handoff you wrote, and, for a build, its status. The handoff file is the report. The message is not.

@@ -22,7 +22,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 - Workers and reviewers do not ask the maintainer for direction. They record the blocker and stop. Either of them can open a gate.
 - The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
 - The maintainer commits the initial story and workflow files before a worker starts.
-- Workers / Reviewers commit their changes and terminal handoffs in their assigned worktrees.
+- Workers and reviewers commit their changes and terminal handoffs in their assigned worktrees.
 - The orchestrator commits every resolved gate and every rejected finding.
 - The maintainer makes the final commit.
 
@@ -33,7 +33,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 | --------------------------------- | ------------------------------------------------------ |
 | `.fleet/stories/<id>.md`          | The work order for one reversible change               |
 | `.fleet/stories/<id>.evidence.md` | The builder evidence the worker records for that story |
-| `.fleet/handoffs/`                | Build records, gates, and review findings              |
+| `.fleet/handoffs/`                | Builds, reviews, and gates                             |
 | `.fleet/designs/`                 | One standalone HTML prototype for each frontend story  |
 
 
@@ -41,7 +41,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 
 - Work in the assigned worktree only.
 - Change only the paths listed in the story. Do not widen the list.
-- Every story must list `.fleet/**` in its allowed paths. This authorizes workflow artefacts, stories, handoffs, and designs.
+- Every story must list `.fleet/**` in its allowed paths. This authorises workflow artefacts, stories, handoffs, and designs.
 - Never delete branches, worktrees, or files that you did not create.
 
 ## Read before you work
@@ -72,9 +72,9 @@ postcondition: <observable state>
 red_when: <specific breakage that makes the probe fail>
 ```
 
-Do not edit a story's acceptance criteria, constraints, allowed paths, or out of scope section. 
+Do not edit a story's acceptance criteria, constraints, allowed paths, or out of scope section.
 Orchestrator: do not launch a subagent if any of them is wrong, incomplete, or impossible.
-Workers / Reviwers: open a gate if any of them is wrong, incomplete, or impossible.
+Workers and reviewers: open a gate if any of them is wrong, incomplete, or impossible.
 
 Probes must observe the real effect. Do not accept a probe that reads a mock, write response, exit code, log line, filename, or another substitute for the claimed result.
 
@@ -90,27 +90,29 @@ Probes must observe the real effect. Do not accept a probe that reads a mock, wr
 
 ## Handoffs
 
-A handoff is a file in `.fleet/handoffs/`. It's the subagent report. The closing message of a subagent is not.
+A handoff is a file in `.fleet/handoffs/`. It is the subagent report. The closing message of a subagent is not.
 
 
 | File                        | Written by         | Meaning                                                      | Format                                                        |
 | --------------------------- | ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------- |
 | `<id>.build.json`           | Worker             | One implementation pass, `done` or `failed`                  | [build.json](.fleet/templates/build.json)                     |
-| `<id>.review.json`          | Reviewer           | The findings of one review pass                              | [review-findings.json](.fleet/templates/review-findings.json) |
+| `<id>.review.json`          | Reviewer           | The findings of one review pass                              | [review.json](.fleet/templates/review.json) |
 | `<id>.gate.<role>.<n>.json` | Worker or reviewer | A decision delegated to the maintainer, and later its answer | [gate.json](.fleet/templates/gate.json)                       |
 
 
 These rules apply to every handoff:
 
-- A pass ends with exactly one terminal handoff. 
-  - A worker writes `build.json` or a gate. 
-  - A reviewer writes `review.json`, and a gate if it's needed.
-- Build records and review records belong to one pass. They are overwritten at each pass. Earlier versions stay in Git history.
+- A pass ends with exactly one terminal handoff.
+  - A worker writes `build.json` or a gate.
+  - A reviewer writes `review.json`, and a gate when one is needed.
+- A build and a review belong to one pass. They are overwritten at each pass. Earlier versions stay in Git history.
 - Gates are never overwritten. See [Gates](#gates).
 - A reviewer writes `[]` when it has no findings. It never leaves a previous handoff in place and never issues a pass or fail verdict.
 - The agent commits its terminal handoff in its assigned worktree before it ends the pass.
 
-### Build statuses: `done` | `failed`
+### Builds
+
+A build records one implementation pass. The worker writes it at the end of the pass, with its status and the result of every probe.
 
 `done` means the worker completed an implementation pass that is ready for independent review.
 
@@ -120,14 +122,14 @@ A worker uses `done` only when all these conditions are true:
 - It recorded builder evidence for every acceptance criterion.
 - Every stated `red_when` breakage made its probe fail.
 - After each restore, the probe succeeded again.
-- `npm run lint` and `npm run test` succeeded.
+- `npm run lint`, `npm run build`, and `npm run test` succeeded.
 - No maintainer decision is required.
 
 `failed` means the worker cannot produce a reviewable candidate with the current story, constraints, and environment. It is a technical execution result, not a request for a product, scope, or requirement decision.
 
 A failed handoff must record each incomplete acceptance criterion, the commands and observed output, the precise technical reason, and any partial changes. The `acs` entries must state the observed `red_ok` and `green_ok` values.
 
-On a failed handoff, report the status to the orchestrator and stop. The maintainer and the orchestrator are in charge to triage and forge a solution for the issue.
+On a failed handoff, report the status to the orchestrator and stop. The maintainer and the orchestrator triage the failure and decide what to do.
 
 Examples of `failed`:
 
@@ -137,12 +139,23 @@ Examples of `failed`:
 
 In short: `done` is ready for review, `failed` is not technically completable.
 
+### Reviews
+
+A review records one review pass. The reviewer writes it as a list of findings, and writes `[]` when it found nothing.
+
+A finding is technical evidence about one acceptance criterion or one story constraint. It is never a question. It stops the workflow on its own, with or without a gate.
+
+- `review.json` is `[]`: the workflow continues.
+- `review.json` has one or more findings: the workflow stops and the maintainer gets the ball.
+
+Every finding carries `maintainer_rejected`. The reviewer always writes it as `null`. Only the orchestrator fills it, with `{ "reason": "..." }`, after the maintainer rejects that finding.
+A rejection belongs to the review that carried it. A later review pass regenerates everything from scratch and can raise the same finding again.
+
+Use the format explained in [.pi/agents/fleet-reviewer.md](.pi/agents/fleet-reviewer.md).
+
 ### Gates
 
-A gate is a question about the story, delegated to the maintainer. A worker or a reviewer opens one when the story, not the code, needs a decision.
-Gates are numbered and never overwritten. Read in order, they explain why a story went the way it went.
-
-A worker or a reviewer opens a gate when the story, not the code, needs a decision. Write the gate, commit it, and end the pass. Do not wait in process. A dirty launch base is not a gate.
+A gate is a question about the story, delegated to the maintainer. A worker or a reviewer opens one when the story, not the code, needs a decision. Write the gate, commit it, and end the pass. Do not wait in process. A dirty launch base is not a gate.
 
 Examples of a gate:
 
@@ -153,7 +166,7 @@ Examples of a gate:
 
 A reviewer that also opens a gate records its findings in `review.json` first.
 
-Gates are numbered and permanent: `.fleet/handoffs/<id>.gate.<role>.<n>.json`, where `<role>` is `worker` or `reviewer` and `<n>` is the next free number for that role. Never overwrite a gate, never rename it, never delete it.
+Gates are numbered and permanent: `.fleet/handoffs/<id>.gate.<role>.<n>.json`, where `<role>` is `worker` or `reviewer` and `<n>` is the next free number for that role. Never overwrite a gate, never rename it, never delete it. Read in order, the gates of a story explain why it went the way it went.
 
 Use this format:
 
@@ -169,23 +182,9 @@ Use this format:
 }
 ```
 
-An active gate has `"resolution": null`, whereas a superseded gate has `"resolution"` filled.
+An active gate has `"resolution": null`. A resolved gate has `"resolution"` filled.
 Only the orchestrator writes a resolution, and only after the maintainer has decided. Fill `resolution` with the decision and the reason, in the gate file itself, and commit it in the worktree that holds the gate.
 The orchestrator never opens a gate. The agent that meets the blocker opens it.
-
-### Findings
-
-A finding is technical evidence about one acceptance criterion or one story constraint. It is never a question. It stops the workflow on its own, with or without a gate.
-
-- `review-findings.json` is `[]`: the workflow continues.
-- `review-findings.json` has one or more findings: the workflow stops and the maintainer gets the ball.
-
-Every finding carries `maintainer_rejected`. The reviewer always writes it as `null`. Only the orchestrator fills it, with `{ "reason": "..." }`, after the maintainer rejects that finding.
-A rejection belongs to the review that carried it. A later review pass regenerates everything from scratch and can raise the same finding again.
-
-Use format explained in fleet-reviewer.md
-
-
 
 ## Orchestrator
 
@@ -219,9 +218,9 @@ Install the dependencies in it.
 npm --prefix <worktree path> ci
 ```
 
-If there is a failure after the precondition launch, report it to the maintainer and do not spawn.
+If the install fails, report it to the maintainer and do not spawn.
 
-Spawn `agent: "fleet-worker"`. 
+Spawn `agent: "fleet-worker"`.
 
 The instruction adds one read to the standard list when the pass is not the first:
 
@@ -233,10 +232,10 @@ The instruction adds one read to the standard list when the pass is not the firs
 Create one branch and one dedicated clean worktree for each review pass, at the current `worker/<id>` commit:
 
 ```sh
-git worktree add -b reviewer/[[ORCA_RICH_MD:945f0cab3349d0fad09cfbf806a274b6:inline-html:%3Cid%3E]]/[[ORCA_RICH_MD:945f0cab3349d0fad09cfbf806a274b6:inline-html:%3Cn%3E]] .worktree/[[ORCA_RICH_MD:945f0cab3349d0fad09cfbf806a274b6:inline-html:%3Cid%3E]]-review-[[ORCA_RICH_MD:945f0cab3349d0fad09cfbf806a274b6:inline-html:%3Cn%3E]] worker/[[ORCA_RICH_MD:945f0cab3349d0fad09cfbf806a274b6:inline-html:%3Cid%3E]]
+git worktree add -b reviewer/<id>/<n> .worktree/<id>-review-<n> worker/<id>
 ```
 
-`<n>` is a new review sequence number. 
+`<n>` is a new review sequence number.
 
 Install the dependencies in it.
 
@@ -244,7 +243,7 @@ Install the dependencies in it.
 npm --prefix <worktree path> ci
 ```
 
-If there is a failure after the precondition launch, report it to the maintainer and do not spawn.
+If the install fails, report it to the maintainer and do not spawn.
 
 Spawn `agent: "fleet-reviewer"`.
 
@@ -256,13 +255,13 @@ Spawn `agent: "fleet-reviewer"`.
 - When the subagent returns, inspect its worktree for the terminal handoff of the current pass. The handoff is the report.
 - Confirm that the worktree is clean and that the handoff is committed.
 - If the subagent returns without a terminal handoff for the current pass, report the exception to the maintainer and stop. Do not change the repository or relaunch automatically.
-- The terminal handoff decides the next step. See (Handoff)[##Handoffs]
+- The terminal handoff decides the next step. See [Handoffs](#handoffs).
 
 ### After findings
 
 Findings are evidence, not a question. The maintainer reads them and makes one of three decisions. Follow it.
 
-- **The finding is not valid.** Write `maintainer_rejected` with the reason into that finding, in the `review-findings.json` that carries it, and commit it on the reviewer branch. That commit is the candidate commit and the technical story is complete.
+- **The finding is not valid.** Write `maintainer_rejected` with the reason into that finding, in the `review.json` that carries it, and commit it on the reviewer branch. That commit is the candidate commit and the technical story is complete.
 - **The code is wrong and the story is right.** Bring the findings to the worker branch.
   ```sh
   git -C .worktree/<id> merge --ff-only reviewer/<id>/<n>
@@ -273,7 +272,7 @@ Findings are evidence, not a question. The maintainer reads them and makes one o
 
 ### The candidate commit
 
-The candidate commit is the technical approval stamp. It is the last reviewer commit whose `review-findings.json` is `[]`, or whose every finding carries a `maintainer_rejected` reason.
+The candidate commit is the technical approval stamp. It is the last reviewer commit whose `review.json` is `[]`, or whose every finding carries a `maintainer_rejected` reason.
 
 ### Final maintainer review
 
@@ -281,7 +280,7 @@ Declare the technical story completed when a candidate commit exists. On the bas
 
 The maintainer reviews code quality on the base branch. If satisfied, the maintainer commits and pushes the candidate change.
 
-If the maintainer requests a non-functional chore, the orchestrator applies it directly on the base branch. It must not change acceptance criteria, probes, `red_when` breakages, tests, or functional behaviour. Run the complete existing test suite for each affected workspace as a regression check, stages the chore changes, then returns the staged change to the maintainer for another final review. These tests are not a replacement for independent acceptance verification.
+If the maintainer requests a non-functional chore, the orchestrator applies it directly on the base branch. It must not change acceptance criteria, probes, `red_when` breakages, tests, or functional behaviour. It runs the complete existing test suite for each affected workspace as a regression check, stages the chore changes, then returns the staged change to the maintainer for another final review. These tests are not a replacement for independent acceptance verification.
 
 ## Worker
 

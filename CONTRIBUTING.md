@@ -58,7 +58,7 @@ The steps below follow the diagram, one for each box and each decision.
 
 1. **The maintainer and the orchestrator write one story.** They agree on the problem, the options, and the constraints. The story lists the allowed paths and the acceptance criteria. A frontend story also gets a standalone HTML prototype in `.fleet/designs/`. The orchestrator could also make the prototype before the work starts. It shows the intended visual result and does not operate.
 2. **The maintainer commits the story and the workflow files.** The agents start from the committed state.
-3. **The worker writes the code in its own worktree.** The worker records its evidence and its build handoff, and commits them in its worktree.
+3. **The worker writes the code in its own worktree.** The worker records its evidence and its build, and commits them in its worktree.
 4. **Does the worker need a maintainer decision?**
    - Yes. The worker writes a gate and stops. The maintainer decides. The orchestrator writes the answer into the gate. The work continues at step 3.
    - No. Continue at step 5.
@@ -84,7 +84,8 @@ The steps below follow the diagram, one for each box and each decision.
 ### The files
 
 - **Handoff** — The file an agent writes to end its pass, in `.fleet/handoffs/`. It is the report.
-- **Build record** — `build.json`. What the worker did in one pass, `done` or `failed`, with the red and the green result of every probe.
+- **Build** — `build.json`. What the worker did in one pass, `done` or `failed`, with the red and the green result of every probe.
+- **Review** — `review.json`. What the reviewer found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
 - **Finding** — One entry in `review.json`. Technical evidence that an acceptance criterion or a constraint does not hold. It is never a question: you decide what to do about it.
   - **`maintainer_rejected`** — The field inside a finding. The orchestrator writes your reason there when you reject the finding. It stays null while the finding stands.
 - **Gate** — A question about the story, delegated to you. A worker or a reviewer opens one when the story, not the code, needs a decision. Gates are numbered and never overwritten. Read in order, they explain why a story went the way it went.
@@ -105,9 +106,9 @@ This file describes. These files define. Change them, not this one.
 | Path                     | Holds                                                             |
 | ------------------------ | ----------------------------------------------------------------- |
 | `.fleet/stories/`        | The work orders, and the builder evidence recorded for each one   |
-| `.fleet/handoffs/`       | Build records, review findings, and gates                         |
+| `.fleet/handoffs/`       | Builds, reviews, and gates                                        |
 | `.fleet/designs/`        | One standalone HTML prototype for each frontend story             |
-| `.fleet/templates/`      | The exact shape of a story, a build record, a finding, and a gate |
+| `.fleet/templates/`      | The exact shape of a story, a build, a review, and a gate         |
 | `.pi/agents/`            | The worker and reviewer roles, and the model each one runs        |
 | `scripts/fleet/`         | Helpers that write the standard files                             |
 | `AGENTS_CONTRIBUTING.md` | The rules every agent follows                                     |
