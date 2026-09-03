@@ -34,7 +34,6 @@ Owner <-> Maestro <-> Builder or verifier
 | `.workflow/specs/<id>.observations.md` | The observations the builder records for that spec                                                |
 | `.workflow/handoffs/`                  | Builder and verifier handoffs, and escalations                                                    |
 | `.workflow/prototypes/`                | One standalone HTML prototype, when a spec has one                                                |
-| `.pi/agents/`                          | The role definitions. They belong to the agent runtime, not to workflow state. `.pi` is that runtime, not the Raspberry Pi this project deploys to |
 
 ## Scope
 
