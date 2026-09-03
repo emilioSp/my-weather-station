@@ -142,4 +142,3 @@ No agent may approve its own work. A passing check must be able to fail when the
 | `.fleet/handoffs/`  | Build records, reviewer findings, and blockers   | Worker, reviewer, or orchestrator     |
 | `.fleet/designs/`   | Standalone HTML prototypes for frontend stories  | Orchestrator during story preparation |
 | `.fleet/templates/` | Starting files for stories and handoffs          | Repository                            |
-| `.fleet/examples/`  | A small reference story                          | Repository                            |
