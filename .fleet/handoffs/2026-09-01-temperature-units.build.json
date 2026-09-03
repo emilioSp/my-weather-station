@@ -1,0 +1,32 @@
+{
+  "id": "2026-09-01-temperature-units",
+  "branch": "worker/2026-09-01-temperature-units",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "npm run test -w @wx/web -- e2e/temperature-units.spec.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "npm run test -w @wx/web -- e2e/temperature-units.spec.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC3",
+      "probe": "npm run test -w @wx/web -- e2e/temperature-units.spec.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC4",
+      "probe": "npm run build -w @wx/web",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "The persisted localStorage key is temperature-unit. Screenshot fixtures intercept the existing Supabase browser requests and use Celsius API-shaped rows."
+}

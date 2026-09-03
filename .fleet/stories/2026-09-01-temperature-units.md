@@ -42,7 +42,7 @@ Prototype: [`2026-09-01-temperature-units.html`](../designs/2026-09-01-temperatu
 - `WeatherStation` passes the selected unit to current-reading and history components so every temperature display uses one value.
 - Initialize the state from browser `localStorage`. Accept only `celsius` and `fahrenheit`. Use Celsius when storage is unavailable or contains another value.
 - Write the selected valid unit to `localStorage` after it changes.
-- Keep Celsius to Fahrenheit conversion and temperature formatting as pure functions in `apps/web/temperature-unit.util.ts`.
+- Keep Celsius to Fahrenheit conversion and temperature formatting as pure functions in `apps/web/utils/temperature-unit.util.ts`.
 - Keep stored measurements and API values in Celsius. Do not add backend state.
 
 ## Acceptance criteria

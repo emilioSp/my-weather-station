@@ -1,18 +1,25 @@
 import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
 import { ProgressBar } from '#components/primitives/ProgressBar.tsx';
+import {
+  convertTemperature,
+  formatTemperature,
+  type TemperatureUnit,
+} from '#utils/temperature-unit.util.ts';
 import { getSignalPercentage } from '#weather-dashboard.util.ts';
 
 type WeatherCardProps = {
   label: 'Indoor' | 'Outdoor';
   icon: IconType;
   measure: Measure | null;
+  temperatureUnit: TemperatureUnit;
 };
 
 export const WeatherCard = ({
   label,
   icon: Icon,
   measure,
+  temperatureUnit,
 }: WeatherCardProps) => {
   const isIndoor = label === 'Indoor';
   const cardColor = isIndoor
@@ -44,18 +51,29 @@ export const WeatherCard = ({
         {label}
       </div>
       <div className="mt-7 text-[clamp(58px,7vw,82px)] leading-[0.85] font-semibold tracking-[-0.09em]">
-        {measure.temperature.toFixed(1)}
-        <small className="ml-2 text-[22px] tracking-[-0.04em]">°C</small>
+        {convertTemperature({
+          celsius: measure.temperature,
+          unit: temperatureUnit,
+        }).toFixed(1)}
+        <small className="ml-2 text-[22px] tracking-[-0.04em]">
+          °{temperatureUnit === 'celsius' ? 'C' : 'F'}
+        </small>
       </div>
       <div className="mt-[26px] grid grid-cols-2 gap-x-3 gap-y-5">
         <WeatherCardMetric label="Humidity" value={`${measure.humidity}%`} />
         <WeatherCardMetric
           label="Dew point"
-          value={`${measure.dewPoint.toFixed(1)}°`}
+          value={formatTemperature({
+            celsius: measure.dewPoint,
+            unit: temperatureUnit,
+          })}
         />
         <WeatherCardMetric
           label="Heat index"
-          value={`${measure.heatIndex.toFixed(1)}°`}
+          value={formatTemperature({
+            celsius: measure.heatIndex,
+            unit: temperatureUnit,
+          })}
         />
       </div>
       <div className="mt-5 border-t border-[#2b3a38] pt-4">
