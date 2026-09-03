@@ -87,5 +87,7 @@ The root `README.md` must describe:
 4. Local testing instructions.
 5. Deployment instructions when deployment exists.
 
+Bear in mind: the root `README.md` is not a changelog. Document stable user and operator workflows, not every feature.
+
 ## Workflow
 IMPORTANT: you work strictly following this [workflow](AGENTS_CONTRIBUTING.md)

@@ -130,6 +130,7 @@ npm run supabase:stop    # stop the local Supabase stack
 npm run supabase:status  # show local endpoints
 npm run lint             # Biome, whole repository
 npm run build            # type check, plus the production build of the web app
+npm test                 # run tests in every workspace
 npm run dev              # every workspace that defines dev
 ```
 
