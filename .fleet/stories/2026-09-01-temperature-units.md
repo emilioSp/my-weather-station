@@ -15,7 +15,7 @@ Allow web app users to switch all displayed temperature values between Celsius a
 - The selected unit applies to temperature, dew point, and heat index in current reading cards, chart axes, chart tooltips, and chart extrema.
 - Humidity and all non-temperature displays must remain unchanged.
 
-## Paths
+## Allowed paths
 
 - `apps/web/package.json`
 - `apps/web/playwright.config.ts`
@@ -28,7 +28,7 @@ Allow web app users to switch all displayed temperature values between Celsius a
 - `apps/web/components/weather-station/MeterAccordion.tsx`
 - `apps/web/components/weather-station/LinearChart.tsx`
 - `apps/web/weather-dashboard.util.ts`
-- `apps/web/temperature-unit.util.ts`
+- `apps/web/utils/temperature-unit.util.ts`
 - `.fleet/**`
 
 ## Design
@@ -50,8 +50,8 @@ Prototype: [`2026-09-01-temperature-units.html`](../designs/2026-09-01-temperatu
 ### AC1: The web app switches every temperature display to Fahrenheit
 
 - probe: `npm run test -w @wx/web -- e2e/temperature-units.spec.ts`
-- postcondition: A Chromium browser loads the web app, selects the Fahrenheit radio button in the header, and observes Fahrenheit temperature, dew point, and heat index values in current-reading cards and the chart UI, with no Celsius unit shown for these values.
-- red_when: Remove the Fahrenheit conversion from the heat-index chart tooltip and rerun the probe.
+- postcondition: A Chromium browser loads the web app, selects the Fahrenheit radio button in the header, and observes Fahrenheit temperature, dew point, and heat index values in current-reading cards, chart axes, chart tooltips, and chart extrema, with no Celsius unit shown for these values.
+- red_when: Stop applying the selected unit to the heat-index chart tooltip and rerun the probe.
 
 ### AC2: The selected unit survives a browser reload
 
@@ -62,8 +62,8 @@ Prototype: [`2026-09-01-temperature-units.html`](../designs/2026-09-01-temperatu
 ### AC3: Celsius remains the safe default
 
 - probe: `npm run test -w @wx/web -- e2e/temperature-units.spec.ts`
-- postcondition: A Chromium browser with no saved unit and with an invalid saved unit both load the web app with the Celsius radio button selected and Celsius values displayed.
-- red_when: Change the invalid stored-value fallback from `celsius` to `fahrenheit` and rerun the probe.
+- postcondition: A Chromium browser with no saved unit, an invalid saved unit, and unavailable localStorage each loads the web app with the Celsius radio button selected and Celsius values displayed. The unavailable-storage case makes localStorage access throw before the app loads.
+- red_when: Return `fahrenheit` for invalid or unavailable stored values and rerun the probe.
 
 ### AC4: The web workspace builds
 
