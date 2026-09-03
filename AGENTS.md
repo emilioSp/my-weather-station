@@ -17,7 +17,7 @@ My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, an
 
 - Ask for confirmation on design decisions.
 - Ask for clarification when requirements are unclear.
-- Do not install packages without confirmation.
+- Do not add or update dependencies without confirmation.
 
 ## Workspaces
 
