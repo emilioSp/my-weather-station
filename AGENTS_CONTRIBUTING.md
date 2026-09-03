@@ -243,9 +243,18 @@ Spawn `agent: "fleet-reviewer"`.
 - When the subagent returns, inspect its worktree for the terminal handoff of the current pass. The handoff is the report.
 - Confirm that the worktree is clean and that the handoff is committed.
 - If the subagent returns without a terminal handoff for the current pass, report the exception to the maintainer and stop. Do not change the repository or relaunch automatically.
-- The terminal handoff decides the next step. See [Handoffs](#handoffs).
+- The terminal handoff decides the next step. See [After a worker pass](#after-a-worker-pass) and [After a review pass](#after-a-review-pass).
 
-### After findings
+### After a worker pass
+
+- `done`: launch a reviewer on that commit.
+- `failed`: report the failure to the maintainer and stop. Do not relaunch the worker.
+- A gate: report it to the maintainer. After the decision, resolve the gate on `worker/<id>`, then launch a resumed worker pass in the same worktree. Do not launch a reviewer until that pass ends with a committed `done`.
+
+### After a review pass
+
+- `review.json` is `[]`: that reviewer commit is the candidate commit and the technical story is complete.
+- `review.json` has findings: the workflow stops. Report every finding to the maintainer. Merge nothing, repair nothing.
 
 Findings are evidence, not a question. The maintainer reads them and makes one of three decisions. Follow it.
 
