@@ -75,7 +75,7 @@ For frontend screenshot probes, render the prototype and the actual app at every
 - Define direct, falsifiable probes before creating a story.
 - When a decision belongs to the maintainer, require the worker or reviewer that found it to open a gate. Do not open a gate yourself.
 - Launch and supervise every worker and reviewer. Report only observed process state and recorded handoffs to the maintainer.
-- Do not open a gate for a dirty or uncommitted launch base. This is a launch precondition failure. Tell the maintainer to commit the intended workflow files or remove unwanted changes, then refer to `CONTRIBUTING.md`.
+- Do not open a gate for a dirty or uncommitted launch base. This is a launch precondition failure. Tell the maintainer to commit the intended story, prototype, and workflow files, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
 
 ### Launch a worker
 
