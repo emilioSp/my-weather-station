@@ -24,7 +24,7 @@ At the start of every pass:
 
 1. Read AGENTS.md and AGENTS_CONTRIBUTING.md.
 2. Read .fleet/stories/<id>.md.
-3. Read .fleet/handoffs/<id>.build.json and, when present, .fleet/handoffs/<id>.review.json and every .fleet/handoffs/<id>.gate.<role>.<n>.json.
+3. Read .fleet/handoffs/<id>.build.json and, when present, .fleet/handoffs/<id>.review.json and every .fleet/handoffs/<id>.gate.<n>.json.
 
 Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
@@ -37,11 +37,9 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - Check each story constraint separately.
 - Do not fix the code. You report, you do not repair.
 - For frontend stories, read the applicable workspace `AGENTS.md` and render the prototype and the actual app at every target resolution it defines, in the state shown or required by the story. Inspect both screenshots and report visual differences. The prototype is a visual reference. Do not assess its source code. Use only meaningful parts of the prototype related to the story you have been assigned to. Ignore visual parts out of the story scope.
-- Do not ask the maintainer for direction. If a decision belongs to the maintainer, use the gate handoff.
+- Do not ask the maintainer for direction. Record what you observed as a finding and end the pass. You are never blocked: whatever you find, the maintainer reads it and decides.
 
-Ending a pass with
-- `.fleet/handoffs/<id>.review.json` with your findings
-- IF NEEDED, write a gate to `.fleet/handoffs/<id>.gate.reviewer.<n>.json`, where `<n>` is the next free number for your role, or use `scripts/fleet/open-gate.sh <id> reviewer`. Never overwrite an existing gate.
+Ending a pass. Write `.fleet/handoffs/<id>.review.json` with your findings. It is your only handoff.
 
 review.json shape:
 

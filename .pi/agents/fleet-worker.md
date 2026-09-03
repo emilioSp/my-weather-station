@@ -42,7 +42,7 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 Ending a pass. Write exactly one terminal handoff for the current pass before you end. A build overwrites the previous one at its fixed path. A gate never overwrites anything. Earlier builds and reviews remain in Git history and are not active.
 
 - .fleet/handoffs/<id>.build.json when the work is done or failed.
-- .fleet/handoffs/<id>.gate.worker.<n>.json when a maintainer decision is required, where <n> is the next free number for your role. Never overwrite an existing gate; scripts/fleet/open-gate.sh <id> worker numbers it for you.
+- .fleet/handoffs/<id>.gate.<n>.json when a maintainer decision is required, where <n> is the next free number for the story. Never overwrite an existing gate; scripts/fleet/open-gate.sh <id> numbers it for you.
 
 After writing the terminal handoff, commit every change from the current pass, including the handoff, in the assigned worktree. Do not include unrelated changes.
 

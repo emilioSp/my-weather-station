@@ -8,7 +8,7 @@ This file controls agents that use the `.fleet` workflow. Follow it exactly.
 1. A builder does not verify its own work. An independent reviewer regenerates every claim.
 2. Workers and reviewers run as the subagents defined in `.pi/agents/`. Their model is set there, not in the prompt.
 3. A probe must touch the claimed result and must fail when its `red_when` breakage is applied.
-4. When a requirement is ambiguous, stop and open a gate. Do not guess.
+4. When a requirement is ambiguous, stop and hand the decision to the maintainer. Do not guess.
 5. The repository is the only persistent state. Write important outcomes to `.fleet/handoffs/` before ending a pass.
 
 ## Authority and communication
@@ -19,7 +19,7 @@ Maintainer <-> Orchestrator <-> Worker or reviewer
 
 - The maintainer gives work and decisions only to the orchestrator.
 - The orchestrator launches, monitors, and directs workers and reviewers.
-- Workers and reviewers do not ask the maintainer for direction. They record the blocker and stop. Either of them can open a gate.
+- Workers and reviewers do not ask the maintainer for direction. They record the blocker and stop.
 - The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
 - The maintainer commits the initial story and workflow files before a worker starts.
 - Workers and reviewers commit their changes and terminal handoffs in their assigned worktrees.
@@ -74,7 +74,8 @@ red_when: <specific breakage that makes the probe fail>
 
 Do not edit a story's acceptance criteria, constraints, allowed paths, or out of scope section.
 Orchestrator: do not launch a subagent if any of them is wrong, incomplete, or impossible.
-Workers and reviewers: open a gate if any of them is wrong, incomplete, or impossible.
+Worker: open a gate if any of them is wrong, incomplete, or impossible.
+Reviewer: record a finding.
 
 Probes must observe the real effect. Do not accept a probe that reads a mock, write response, exit code, log line, filename, or another substitute for the claimed result.
 
@@ -93,18 +94,18 @@ Probes must observe the real effect. Do not accept a probe that reads a mock, wr
 A handoff is a file in `.fleet/handoffs/`. It is the subagent report. The closing message of a subagent is not.
 
 
-| File                        | Written by         | Meaning                                                      | Format                                                        |
-| --------------------------- | ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------- |
-| `<id>.build.json`           | Worker             | One implementation pass, `done` or `failed`                  | [build.json](.fleet/templates/build.json)                     |
-| `<id>.review.json`          | Reviewer           | The findings of one review pass                              | [review.json](.fleet/templates/review.json) |
-| `<id>.gate.<role>.<n>.json` | Worker or reviewer | A decision delegated to the maintainer, and later its answer | [gate.json](.fleet/templates/gate.json)                       |
+| File                 | Written by | Meaning                                                      | Format                                        |
+| -------------------- | ---------- | ------------------------------------------------------------ | --------------------------------------------- |
+| `<id>.build.json`    | Worker     | One implementation pass, `done` or `failed`                  | [build.json](.fleet/templates/build.json)     |
+| `<id>.gate.<n>.json` | Worker     | A decision delegated to the maintainer, and later its answer | [gate.json](.fleet/templates/gate.json)       |
+| `<id>.review.json`   | Reviewer   | The findings of one review pass                              | [review.json](.fleet/templates/review.json)   |
 
 
 These rules apply to every handoff:
 
 - A pass ends with exactly one terminal handoff.
   - A worker writes `build.json` or a gate.
-  - A reviewer writes `review.json`, and a gate when one is needed.
+  - A reviewer writes `review.json`.
 - A build and a review belong to one pass. They are overwritten at each pass. Earlier versions stay in Git history.
 - Gates are never overwritten. See [Gates](#gates).
 - A reviewer writes `[]` when it has no findings. It never leaves a previous handoff in place and never issues a pass or fail verdict.
@@ -139,23 +140,11 @@ Examples of `failed`:
 
 In short: `done` is ready for review, `failed` is not technically completable.
 
-### Reviews
-
-A review records one review pass. The reviewer writes it as a list of findings, and writes `[]` when it found nothing.
-
-A finding is technical evidence about one acceptance criterion or one story constraint. It is never a question. It stops the workflow on its own, with or without a gate.
-
-- `review.json` is `[]`: the workflow continues.
-- `review.json` has one or more findings: the workflow stops and the maintainer gets the ball.
-
-Every finding carries `maintainer_rejected`. The reviewer always writes it as `null`. Only the orchestrator fills it, with `{ "reason": "..." }`, after the maintainer rejects that finding.
-A rejection belongs to the review that carried it. A later review pass regenerates everything from scratch and can raise the same finding again.
-
-Use the format explained in [.pi/agents/fleet-reviewer.md](.pi/agents/fleet-reviewer.md).
+Build format is [build.json](.fleet/templates/build.json).
 
 ### Gates
 
-A gate is a question about the story, delegated to the maintainer. A worker or a reviewer opens one when the story, not the code, needs a decision. Write the gate, commit it, and end the pass. Do not wait in process. A dirty launch base is not a gate.
+A gate is a question about the story, delegated to the maintainer. Only a worker opens one, when it cannot finish the pass without an answer. Write the gate, commit it, and end the pass. Do not wait in process. A dirty launch base is not a gate.
 
 Examples of a gate:
 
@@ -164,27 +153,26 @@ Examples of a gate:
 - More than one valid solution exists and the maintainer must choose one.
 - The story cannot be verified as written.
 
-A reviewer that also opens a gate records its findings in `review.json` first.
-
-Gates are numbered and permanent: `.fleet/handoffs/<id>.gate.<role>.<n>.json`, where `<role>` is `worker` or `reviewer` and `<n>` is the next free number for that role. Never overwrite a gate, never rename it, never delete it. Read in order, the gates of a story explain why it went the way it went.
-
-Use this format:
-
-```json
-{
-  "id": "...",
-  "decision_so_far": "...",
-  "blocked": "...",
-  "options": ["..."],
-  "recommendation": "...",
-  "next_steps": { "option": "..." },
-  "resolution": null
-}
-```
+Gates are numbered and permanent: `.fleet/handoffs/<id>.gate.<n>.json`, where `<n>` is the next free number for the story. Never overwrite a gate, never rename it, never delete it. Read in order, the gates of a story explain why it went the way it went.
 
 An active gate has `"resolution": null`. A resolved gate has `"resolution"` filled.
 Only the orchestrator writes a resolution, and only after the maintainer has decided. Fill `resolution` with the decision and the reason, in the gate file itself, and commit it in the worktree that holds the gate.
-The orchestrator never opens a gate. The agent that meets the blocker opens it.
+
+Gate format is [gate.json](.fleet/templates/gate.json).
+
+### Reviews
+
+A review records one review pass. The reviewer writes it as a list of findings, and writes `[]` when it found nothing.
+
+A finding is technical evidence about one acceptance criterion or one story constraint. It is never a question. It stops the workflow on its own.
+
+- `review.json` is `[]`: the workflow continues.
+- `review.json` has one or more findings: the workflow stops and the maintainer gets the ball.
+
+Every finding carries `maintainer_rejected`. The reviewer always writes it as `null`. Only the orchestrator fills it, with `{ "reason": "..." }`, after the maintainer rejects that finding.
+A rejection belongs to the review that carried it. A later review pass regenerates everything from scratch and can raise the same finding again.
+
+Review format is [review.json](.fleet/templates/review.json).
 
 ## Orchestrator
 
@@ -192,7 +180,7 @@ The orchestrator never opens a gate. The agent that meets the blocker opens it.
 - Do not invent work. Create a story only from the current maintainer discussion.
 - Create one story for one reversible change. A change to the data model and a change to behaviour belong to two stories, so each one can be rolled back on its own.
 - Define direct, falsifiable probes before creating a story.
-- When a decision belongs to the maintainer, report it and wait. Never decide in place of the maintainer. Never open a gate to ask a question of your own: the agent that found the blocker opens it.
+- When a decision belongs to the maintainer, report it and wait. Never decide in place of the maintainer.
 - Launch and supervise every worker and reviewer. Report only observed process state and recorded handoffs to the maintainer.
 - On dirty or uncommitted launch base, tell the maintainer to commit the intended story, prototype, and workflow files, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
 
@@ -268,7 +256,7 @@ Findings are evidence, not a question. The maintainer reads them and makes one o
   ```
 
   Then run the pipeline again.
-- **The story is wrong.** Stop. Resolve the gate if the reviewer opened one. The maintainer rewrites the story and commits it. The work starts again from a new worker branch on the new base commit.
+- **The story is wrong.** Stop. The maintainer rewrites the story and commits it. The work starts again from a new worker branch on the new base commit.
 
 ### The candidate commit
 
@@ -296,7 +284,7 @@ Use these scripts to write standard files. The build and review scripts overwrit
 
 ```sh
 scripts/fleet/new-story.sh <id>
-scripts/fleet/open-gate.sh <id> <worker|reviewer>   # numbers the gate for you
+scripts/fleet/open-gate.sh <id>   # numbers the gate for you
 scripts/fleet/record-build.sh <id>
 scripts/fleet/record-review.sh <id>
 ```
