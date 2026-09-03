@@ -1,4 +1,8 @@
 import type { Measure } from '@wx/shared';
+import {
+  formatTemperature,
+  type TemperatureUnit,
+} from '#utils/temperature-unit.util.ts';
 
 export const CHART_RANGES = {
   LAST_MONTH: 'LAST_MONTH',
@@ -69,12 +73,21 @@ export const formatChartTime = (measuredAt: number): [string, string] => {
 export const formatMeasureValue = ({
   value,
   metric,
+  temperatureUnit = 'celsius',
 }: {
   value: number;
   metric: WeatherMetric;
+  temperatureUnit?: TemperatureUnit;
 }): string => {
   const { decimalPlaces, unit } = chartMetricDetails[metric];
-  return `${value.toFixed(decimalPlaces)}${unit}`;
+
+  return metric === 'humidity'
+    ? `${value.toFixed(decimalPlaces)}${unit}`
+    : formatTemperature({
+        celsius: value,
+        unit: temperatureUnit,
+        decimalPlaces,
+      });
 };
 
 export const filterMeasuresForRange = ({

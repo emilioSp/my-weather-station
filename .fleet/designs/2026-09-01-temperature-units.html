@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Temperature unit selector</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+      :root { color: #eaf0e9; background: #10191b; font-family: Manrope, sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; background: radial-gradient(circle at 86% 0%, #294033 0, transparent 26rem), #10191b; }
+      .page { max-width: 1440px; margin: auto; padding: 22px clamp(20px, 4vw, 64px) 48px; }
+      .header { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; border-bottom: 1px solid #2b3a38; padding-bottom: 18px; }
+      .brand { display: flex; gap: 13px; align-items: center; font-size: 17px; font-weight: 800; letter-spacing: -.035em; }
+      .thermometer { color: #b9e53b; font-size: 30px; }
+      .actions { display: grid; grid-auto-flow: column; gap: 12px; align-items: center; }
+      .latest { text-align: right; }
+      .eyebrow { color: #9bad9e; font: 13px 'DM Mono', monospace; letter-spacing: .1em; text-transform: uppercase; }
+      .latest strong { display: block; margin-top: 4px; font-size: 13px; }
+      .unit-selector { display: flex; gap: 3px; padding: 3px; border: 1px solid #2b3a38; border-radius: 8px; background: #15201f; }
+      .unit-selector label { cursor: pointer; }
+      .unit-selector input { position: absolute; opacity: 0; pointer-events: none; }
+      .unit-selector span { display: block; padding: 8px 11px; border-radius: 5px; color: #9bad9e; font: 500 13px 'DM Mono', monospace; transition: .15s ease; }
+      .unit-selector input:checked + span { color: #10191b; background: #b9e53b; box-shadow: 0 1px 4px #0005; }
+      .unit-selector input:focus-visible + span { outline: 2px solid #eaf0e9; outline-offset: 2px; }
+      .refresh { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #2b3a38; border-radius: 6px; color: #eaf0e9; background: #15201f; font-size: 18px; }
+      .content { padding-top: 16px; }
+      .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .card { min-height: 315px; padding: 22px; border: 1px solid #2b3a38; border-radius: 16px; background: linear-gradient(135deg, #343223, #1d2822); }
+      .card.indoor { background: linear-gradient(135deg, #203638, #182525); }
+      .card-title { font-size: 14px; font-weight: 800; }
+      .temperature { margin-top: 32px; font-size: clamp(58px, 7vw, 82px); font-weight: 600; letter-spacing: -.09em; line-height: .85; }
+      .temperature small { margin-left: 8px; font-size: 22px; letter-spacing: -.04em; }
+      .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 12px; margin-top: 30px; }
+      .metric { padding-top: 12px; border-top: 1px solid #2b3a38; }
+      .metric b { display: block; margin-top: 6px; font-size: 23px; letter-spacing: -.05em; }
+      .history { margin-top: 16px; padding: 23px; border: 1px solid #2b3a38; border-radius: 16px; background: #192524d1; }
+      .chart-head { display: flex; justify-content: space-between; gap: 16px; align-items: end; }
+      .legend { margin-top: 5px; font-size: 14px; font-weight: 800; }
+      .legend::before { content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 7px 2px 0; border-radius: 50%; background: #b9e53b; }
+      .extrema { display: flex; gap: 20px; }
+      .extrema b { margin-left: 6px; font-size: 15px; }
+      .chart { width: 100%; height: 225px; margin-top: 18px; overflow: visible; }
+      .chart text { fill: #82948a; font: 12px 'DM Mono', monospace; }
+      .chart .line { fill: none; stroke: #b9e53b; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .chart .grid { stroke: #2b3a38; stroke-width: 1; }
+      .fahrenheit { display: none; }
+      #fahrenheit:checked ~ .content .celsius { display: none; }
+      #fahrenheit:checked ~ .content .fahrenheit { display: initial; }
+      @media (max-width: 700px) { .page { padding: 18px 14px 36px; } .header { grid-template-columns: 1fr; } .actions { grid-auto-flow: row; grid-template-columns: 1fr auto; } .latest { text-align: left; } .unit-selector { justify-self: start; } .cards { grid-template-columns: 1fr; } .chart-head { align-items: start; flex-direction: column; } }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <div class="brand"><span class="thermometer">♨</span> Weather station</div>
+        <div class="actions">
+          <div class="latest"><div class="eyebrow">Latest available measurement</div><strong>Today, 14:32</strong></div>
+          <div class="unit-selector" role="radiogroup" aria-label="Temperature unit">
+            <label><input id="celsius" type="radio" name="unit" checked /><span>°C</span></label>
+            <label><input id="fahrenheit" type="radio" name="unit" /><span>°F</span></label>
+          </div>
+          <button class="refresh" aria-label="Refresh readings">↻</button>
+        </div>
+      </header>
+      <section class="content" aria-label="Prototype readings">
+        <div class="cards">
+          <article class="card"><div class="card-title">♧ &nbsp;Outdoor</div><div class="temperature"><span class="celsius">18.4<small>°C</small></span><span class="fahrenheit">65.1<small>°F</small></span></div><div class="metrics"><div class="metric"><div class="eyebrow">Humidity</div><b>67%</b></div><div class="metric"><div class="eyebrow">Dew point</div><b><span class="celsius">12.1°</span><span class="fahrenheit">53.8°</span></b></div><div class="metric"><div class="eyebrow">Heat index</div><b><span class="celsius">18.4°</span><span class="fahrenheit">65.1°</span></b></div></div></article>
+          <article class="card indoor"><div class="card-title">⌂ &nbsp;Indoor</div><div class="temperature"><span class="celsius">21.6<small>°C</small></span><span class="fahrenheit">70.9<small>°F</small></span></div><div class="metrics"><div class="metric"><div class="eyebrow">Humidity</div><b>49%</b></div><div class="metric"><div class="eyebrow">Dew point</div><b><span class="celsius">10.5°</span><span class="fahrenheit">50.9°</span></b></div><div class="metric"><div class="eyebrow">Heat index</div><b><span class="celsius">21.4°</span><span class="fahrenheit">70.5°</span></b></div></div></article>
+        </div>
+        <section class="history"><div class="chart-head"><div><div class="eyebrow">Temperature</div><div class="legend">Outdoor</div></div><div class="extrema"><div><span class="eyebrow">Low</span><b><span class="celsius">14.8°C</span><span class="fahrenheit">58.6°F</span></b></div><div><span class="eyebrow">High</span><b><span class="celsius">20.2°C</span><span class="fahrenheit">68.4°F</span></b></div></div></div><svg class="chart" viewBox="0 0 900 225" role="img" aria-label="Outdoor temperature chart"><path class="grid" d="M65 20H880M65 75H880M65 130H880M65 185H880M65 20V185M270 20V185M475 20V185M680 20V185M880 20V185" /><text x="8" y="25"><tspan class="celsius">21°C</tspan><tspan class="fahrenheit">70°F</tspan></text><text x="8" y="80"><tspan class="celsius">19°C</tspan><tspan class="fahrenheit">66°F</tspan></text><text x="8" y="135"><tspan class="celsius">17°C</tspan><tspan class="fahrenheit">63°F</tspan></text><text x="8" y="190"><tspan class="celsius">15°C</tspan><tspan class="fahrenheit">59°F</tspan></text><path class="line" d="M65 156 C120 145 150 160 205 133 S310 92 360 112 S465 56 525 76 S625 43 690 74 S790 28 880 46" /><text x="65" y="215">08:00</text><text x="440" y="215">11:00</text><text x="810" y="215">14:00</text></svg></section>
+      </section>
+    </main>
+  </body>
+</html>

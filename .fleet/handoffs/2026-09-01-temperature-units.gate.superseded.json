@@ -1,0 +1,17 @@
+{
+  "id": "2026-09-01-temperature-units",
+  "decision_so_far": "No implementation changes made.",
+  "blocked": "The Technical details require the pure temperature utility at apps/web/temperature-unit.util.ts, but that path is not in the Allowed paths. The only allowed utility path is apps/web/utils/temperature-unit.util.ts.",
+  "options": [
+    "Authorize apps/web/temperature-unit.util.ts and use that required path.",
+    "Confirm that apps/web/utils/temperature-unit.util.ts is the intended utility path and that it satisfies the Technical details."
+  ],
+  "recommendation": "Confirm apps/web/utils/temperature-unit.util.ts, because it is already the allowed path and follows the workspace utility-folder convention.",
+  "next_steps": {
+    "option": "After a resolution, resume the worker pass and implement the selected path."
+  },
+  "resolution": {
+    "decision": "apps/web/utils/temperature-unit.util.ts",
+    "reason": "Maintainer selected option 2 to follow the web workspace utility-folder convention."
+  }
+}

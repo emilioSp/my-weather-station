@@ -11,6 +11,7 @@ My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, an
 - Do not add future features, abstractions, or dependencies without a need.
 - Avoid comments unless they add necessary clarity.
 - Use descriptive names.
+- Remove every temporary file you create.
 
 ## Communication
 
@@ -23,7 +24,7 @@ My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, an
 This repository is an npm workspaces monorepo:
 
 - `apps/collector` (`@wx/collector`) reads meters and stores measurements. Specific instructions [collector AGENTS.md](./apps/collector/AGENTS.md)
-- `apps/web` (`@wx/web`) is the React and Vite web app. Specific instructions [webui AGENTS.md](./apps/webui/AGENTS.md)
+- `apps/web` (`@wx/web`) is the React and Vite web app. Specific instructions [web AGENTS.md](./apps/web/AGENTS.md)
 - `packages/shared` (`@wx/shared`) contains code used by both apps.
 
 The root `package.json` contains workspace globs, root scripts, development tools, and the install-script policy. Add runtime dependencies to the workspace that uses them. Keep `allowScripts` in the root `package.json`.
@@ -41,6 +42,7 @@ npm run <script> -w <workspace-name>
 - `packages/shared` owns stored-row domain schemas, case mapping, and UUID normalization.
 - Shared code must not contain browser or Node platform types and APIs.
 - Types that describe stored rows belong in `packages/shared/types.ts`. Types used by one workspace stay in that workspace.
+- Keep utility modules under a `utils` folder.
 
 ## TypeScript conventions
 
@@ -54,6 +56,8 @@ npm run <script> -w <workspace-name>
 - Use `async` and `await`. Do not introduce callback APIs.
 - Use named parameters for functions with multiple inputs. Define the input type close to the function.
 - Use explicit methods. Do not use property accessors.
+- Do not use `--experimental-strip-types`. We run on node version that support TypeScript stripping by default.
+- Use named domain constants instead of repeated string literals.
 
 ## Testing and checks
 
@@ -73,8 +77,6 @@ npm run build
 npm test
 ```
 
-`npm test` currently fails because no test runner is configured. Record this result when relevant.
-
 ## Documentation
 
 The root `README.md` must describe:
@@ -85,3 +87,5 @@ The root `README.md` must describe:
 4. Local testing instructions.
 5. Deployment instructions when deployment exists.
 
+## Workflow
+IMPORTANT: you work stricly following this [workflow](AGENTS_WORKFLOW_CONTRIBUTING.md)

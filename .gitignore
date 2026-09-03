@@ -4,4 +4,13 @@
 .idea
 node_modules
 dist
-.codex
+.worktree/*
+!.worktree/.gitkeep
+
+# Playwright
+/test-results/
+/apps/web/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
