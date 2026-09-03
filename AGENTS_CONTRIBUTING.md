@@ -93,7 +93,7 @@ The spawn instruction must state:
 
 - The story id.
 - The absolute path of the assigned worktree, which is the worker's root.
-- That the worker must read `AGENTS.md` and `AGENTS_WORKFLOW_CONTRIBUTING.md` first, then `.fleet/stories/<id>.md` at the start of every pass.
+- That the worker must read `AGENTS.md` and `AGENTS_CONTRIBUTING.md` first, then `.fleet/stories/<id>.md` at the start of every pass.
 - For a repair pass, that it must read `.fleet/handoffs/<id>.review.json` after the story.
 - For a resumed pass after a resolved worker gate, that it must read `.fleet/handoffs/<id>.gate.superseded.json` after the story.
 
@@ -121,7 +121,7 @@ The orchestrator creates one reviewer branch and one dedicated clean worktree fo
 git worktree add -b reviewer/<id>/<n> .worktree/<id>-review-<n> worker/<id>
 ```
 
-`<n>` is a new review sequence number. The orchestrator calls the `subagent` tool with `agent: "fleet-reviewer"` and the same call shape, with `cwd` set to that worktree. Its task instruction states the story id, the absolute worktree path, and that it must read `AGENTS.md`, `AGENTS_WORKFLOW_CONTRIBUTING.md`, and `.fleet/stories/<id>.md` first.
+`<n>` is a new review sequence number. The orchestrator calls the `subagent` tool with `agent: "fleet-reviewer"` and the same call shape, with `cwd` set to that worktree. Its task instruction states the story id, the absolute worktree path, and that it must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.fleet/stories/<id>.md` first.
 
 ### Supervise a reviewer
 

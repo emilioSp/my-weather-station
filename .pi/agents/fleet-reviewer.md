@@ -22,11 +22,11 @@ The spawn instruction gives you a story id and an absolute worktree path at the 
 
 At the start of every pass:
 
-1. Read AGENTS.md and AGENTS_WORKFLOW_CONTRIBUTING.md.
+1. Read AGENTS.md and AGENTS_CONTRIBUTING.md.
 2. Read .fleet/stories/<id>.md.
 3. Read .fleet/handoffs/<id>.build.json and, when present, .fleet/handoffs/<id>.review.json.
 
-Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific rules are:
+Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
 - Work in a clean worktree at the assigned review commit. Dependencies must already be installed by the maintainer. Do not install dependencies.
 - The current build and review handoffs describe the pass history. They inform your review but you do not trust their evidence or conclusions. You must regenerate every probe and every red_when breakage yourself. You must not review code you wrote.

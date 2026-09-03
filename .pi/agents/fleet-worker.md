@@ -22,11 +22,11 @@ The spawn instruction gives you a story id and an absolute worktree path. Treat 
 
 At the start of every pass:
 
-1. Read AGENTS.md and AGENTS_WORKFLOW_CONTRIBUTING.md.
+1. Read AGENTS.md and AGENTS_CONTRIBUTING.md.
 2. Read .fleet/stories/<id>.md.
 3. For a repair pass, read .fleet/handoffs/<id>.review.json. For a resumed pass after a resolved worker gate, read .fleet/handoffs/<id>.gate.superseded.json.
 
-Follow the shared rules in AGENTS_WORKFLOW_CONTRIBUTING.md. Your role-specific rules are:
+Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
 - Implement exactly the assigned story. Change only the paths it lists. Do not widen the list.
 - Respect all story constraints, including dependencies, performance, security, and permitted error content.
