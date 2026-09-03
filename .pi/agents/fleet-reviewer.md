@@ -57,6 +57,6 @@ An empty array is valid and means you regenerated every probe and found nothing.
 
 Always write `maintainer_rejected` as null. Only the orchestrator fills it, after the maintainer rejects that finding. A rejection recorded in an earlier review does not settle anything for you: regenerate the evidence and report what you observe.
 
-After writing the handoff files, commit them in the assigned worktree. Do not include unrelated changes. Report the terminal handoff path to the orchestrator
+After writing the handoff, commit it in the assigned worktree. Do not include unrelated changes.
 
-Your final message to the orchestrator states only: the story id and the terminal handoff you wrote. The handoff file is the report. The message is not.
+Your final message to the orchestrator states only: the story id and the handoff you wrote. The handoff file is the report. The message is not.

@@ -128,9 +128,9 @@ A worker uses `done` only when all these conditions are true:
 
 `failed` means the worker cannot produce a reviewable candidate with the current story, constraints, and environment. It is a technical execution result, not a request for a product, scope, or requirement decision.
 
-A failed handoff must record each incomplete acceptance criterion, the commands and observed output, the precise technical reason, and any partial changes. The `acs` entries must state the observed `red_ok` and `green_ok` values.
+A failed build must record each incomplete acceptance criterion, the commands and observed output, the precise technical reason, and any partial changes. The `acs` entries must state the observed `red_ok` and `green_ok` values.
 
-On a failed handoff, report the status to the orchestrator and stop. The maintainer and the orchestrator triage the failure and decide what to do.
+On a failed build, report the status to the orchestrator and stop. The maintainer and the orchestrator triage the failure and decide what to do.
 
 Examples of `failed`:
 
@@ -207,6 +207,8 @@ npm --prefix <worktree path> ci
 ```
 
 If the install fails, report it to the maintainer and do not spawn.
+
+Only the first pass of a story creates the worktree. A repair pass and a resumed pass run in `.worktree/<id>` as it is: create nothing, install nothing.
 
 Spawn `agent: "fleet-worker"`.
 

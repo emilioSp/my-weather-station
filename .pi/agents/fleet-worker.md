@@ -33,11 +33,11 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - Do not edit the story's acceptance criteria, constraints, allowed paths, or out of scope section. Open a gate instead.
 - Do not present your checks as verification. They are builder evidence for the reviewer to regenerate.
 - For every acceptance criterion: apply the stated red_when breakage, run the probe, restore the code, run the probe again. Record both command outputs in .fleet/stories/<id>.evidence.md.
-- For frontend stories, read the applicable workspace `AGENTS.md` and render the prototype and the actual app at every target resolution it defines, in the state shown or required by the story. Inspect both screenshots before recording a `done` handoff. The prototype is a visual reference. Do not assess its source code. Use only meaningful parts of the prototype related to the story you have been assigned to. Ignore visual parts out of the story scope. Record the screenshot commands, paths, and visual comparison in the evidence file.
-- Before recording acceptance evidence or writing a `done` handoff, run `npm run lint` from the repository root. Fix every diagnostic within the story's allowed paths. If the command would require a change outside those paths, write a gate handoff instead.
+- For frontend stories, read the applicable workspace `AGENTS.md` and render the prototype and the actual app at every target resolution it defines, in the state shown or required by the story. Inspect both screenshots before recording a `done` build. The prototype is a visual reference. Do not assess its source code. Use only meaningful parts of the prototype related to the story you have been assigned to. Ignore visual parts out of the story scope. Record the screenshot commands, paths, and visual comparison in the evidence file.
+- Before recording acceptance evidence or writing a `done` build, run `npm run lint` from the repository root. Fix every diagnostic within the story's allowed paths. If the command would require a change outside those paths, write a gate instead.
 - In a repair pass, repair every finding whose `maintainer_rejected` is null. Leave a rejected finding alone: the maintainer already answered it.
 - For migrations, execute the reverse path at least once before reporting.
-- Do not ask the maintainer for direction. If a decision belongs to the maintainer, write the gate handoff and stop.
+- Do not ask the maintainer for direction. If a decision belongs to the maintainer, write a gate and stop.
 
 Ending a pass. Write exactly one terminal handoff for the current pass before you end. A build overwrites the previous one at its fixed path. A gate never overwrites anything. Earlier builds and reviews remain in Git history and are not active.
 
