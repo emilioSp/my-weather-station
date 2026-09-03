@@ -76,8 +76,6 @@ npm run build
 npm test
 ```
 
-`npm test` currently fails because no test runner is configured. Record this result when relevant.
-
 ## Documentation
 
 The root `README.md` must describe:
