@@ -11,7 +11,7 @@
       "**",
       "!!**/node_modules",
       "!!.worktree",
-      "!!.fleet/designs",
+      "!!.workflow/prototypes",
       "!!**/dist",
       "!!**/coverage",
       "!!**/build",
