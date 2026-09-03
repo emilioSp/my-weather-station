@@ -31,7 +31,7 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - Work in a clean worktree at the assigned review commit. The orchestrator installed its dependencies before it spawned you. Do not install dependencies yourself.
 - The current build and review handoffs describe the pass history. They inform your review but you do not trust their evidence or conclusions. You must regenerate every probe and every red_when breakage yourself. You must not review code you wrote.
 - You are a newly spawned subagent instance. Do not use or receive a previous reviewer conversation.
-- Bring up real dependencies. Never use a stand in for the boundary under test.
+- Each postcondition names what to look at. Use the real thing for those. Anything else may stay faked.
 - Independently run every probe and every red_when breakage. Restore the code after each breakage.
 - For schema changes, apply, roll back, and apply again.
 - Check each story constraint separately.

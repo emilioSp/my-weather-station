@@ -77,7 +77,13 @@ Orchestrator: do not launch a subagent if any of them is wrong, incomplete, or i
 Worker: open a gate if any of them is wrong, incomplete, or impossible.
 Reviewer: record a finding.
 
-Probes must observe the real effect. Do not accept a probe that reads a mock, write response, exit code, log line, filename, or another substitute for the claimed result.
+Probes must observe the real effect.
+
+The postcondition names what the probe must look at. The probe must look at the real
+thing. The probe may fake anything the postcondition does not name.
+
+Do not accept a probe that looks at a mock, a spy, a write response, an exit code, a
+log line, or a filename in place of the real thing.
 
 ### Frontend stories
 
