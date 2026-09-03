@@ -11,6 +11,7 @@ My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, an
 - Do not add future features, abstractions, or dependencies without a need.
 - Avoid comments unless they add necessary clarity.
 - Use descriptive names.
+- Remove every temporary file you create.
 
 ## Communication
 

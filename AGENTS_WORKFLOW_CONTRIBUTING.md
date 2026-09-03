@@ -5,7 +5,7 @@ This file controls agents that use the `.fleet` workflow. Follow it exactly.
 ## Non negotiable rules
 
 1. A builder does not verify its own work. An independent reviewer regenerates every claim.
-2. Workers and reviewers run as the subagents defined in `.codex/agents/`. Their model is set there, not in the prompt.
+2. Workers and reviewers run as the subagents defined in `.pi/agents/`. Their model is set there, not in the prompt.
 3. A probe must touch the claimed result and must fail when its `red_when` breakage is applied.
 4. When a requirement is ambiguous, stop and open a gate. Do not guess.
 5. The repository is the only persistent state. Write important outcomes to `.fleet/handoffs/` before ending a pass.
@@ -79,7 +79,7 @@ For frontend screenshot probes, render the prototype and the actual app at every
 
 ### Launch a worker
 
-After creating a story, the maintainer must commit the story, its frontend prototype when required, and all workflow files that the worker must read, including `.codex/agents/`. The orchestrator creates `.worktree/<id>` from the current committed `HEAD`; uncommitted files are not copied.
+After creating a story, the maintainer must commit the story, its frontend prototype when required, and all workflow files that the worker must read, including `.pi/agents/`. The orchestrator creates `.worktree/<id>` from the current committed `HEAD`; uncommitted files are not copied.
 
 The orchestrator checks that the base is clean, then creates the worktree directly:
 
@@ -87,7 +87,7 @@ The orchestrator checks that the base is clean, then creates the worktree direct
 git worktree add -b worker/<id> .worktree/<id> HEAD
 ```
 
-The orchestrator then spawns the `fleet-worker` subagent defined in `.codex/agents/worker.toml`. Do not shell out to `codex exec`. The runtime owns the child's lifecycle, so its completion is a first class result instead of a string parsed from terminal output.
+The orchestrator then calls the `subagent` tool with `agent: "fleet-worker"`, `cwd` set to the absolute worktree path, `isolation: "none"`, `context: "fresh"`, and `async: false`. The call blocks until the child ends, so its completion is a first class result instead of a string parsed from terminal output. Do not run `pi` from the shell.
 
 The spawn instruction must state:
 
@@ -97,7 +97,7 @@ The spawn instruction must state:
 - For a repair pass, that it must read `.fleet/handoffs/<id>.review.json` after the story.
 - For a resumed pass after a resolved worker gate, that it must read `.fleet/handoffs/<id>.gate.superseded.json` after the story.
 
-Everything else the worker needs is already in `.codex/agents/worker.toml`. Do not restate the role in the prompt and do not weaken it.
+Everything else the worker needs is already in `.pi/agents/fleet-worker.md`. Do not restate the role in the prompt and do not weaken it.
 
 ### Supervise a worker
 
@@ -121,7 +121,7 @@ The orchestrator creates one reviewer branch and one dedicated clean worktree fo
 git worktree add -b reviewer/<id>/<n> .worktree/<id>-review-<n> worker/<id>
 ```
 
-`<n>` is a new review sequence number. The orchestrator spawns `fleet-reviewer` in that worktree. Its spawn instruction states the story id, the absolute worktree path, and that it must read `AGENTS.md`, `AGENTS_WORKFLOW_CONTRIBUTING.md`, and `.fleet/stories/<id>.md` first.
+`<n>` is a new review sequence number. The orchestrator calls the `subagent` tool with `agent: "fleet-reviewer"` and the same call shape, with `cwd` set to that worktree. Its task instruction states the story id, the absolute worktree path, and that it must read `AGENTS.md`, `AGENTS_WORKFLOW_CONTRIBUTING.md`, and `.fleet/stories/<id>.md` first.
 
 ### Supervise a reviewer
 
@@ -191,11 +191,11 @@ In short: `done` is ready for review, `failed` is not technically completable, a
 
 ## Worker
 
-The worker role and its terminal handoff format are defined in `.codex/agents/worker.toml`. A worker follows the shared rules in this file and the role instructions in that definition.
+The worker role and its terminal handoff format are defined in `.pi/agents/fleet-worker.md`. A worker follows the shared rules in this file and the role instructions in that definition.
 
 ## Reviewer
 
-The reviewer role and its finding format are defined in `.codex/agents/reviewer.toml`. A reviewer follows the shared rules in this file and the role instructions in that definition. Reviewers are independent in their evidence generation and code ownership, but informed by the build and earlier review handoffs for the current story. The orchestrator creates a dedicated reviewer worktree at the current `worker/<id>` commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision rules.
+The reviewer role and its finding format are defined in `.pi/agents/fleet-reviewer.md`. A reviewer follows the shared rules in this file and the role instructions in that definition. Reviewers are independent in their evidence generation and code ownership, but informed by the build and earlier review handoffs for the current story. The orchestrator creates a dedicated reviewer worktree at the current `worker/<id>` commit and spawns a newly created `fleet-reviewer` subagent. It follows the reviewer supervision rules.
 
 ## Gates
 
