@@ -3,7 +3,7 @@
     "ac": "AC1",
     "severity": "high | medium | low",
     "confidence": 0.0,
-    "evidence": "<executed command and observed output>",
-    "maintainer_rejected": null
+    "observations": "<executed command and observed output>",
+    "rejection": null
   }
 ]

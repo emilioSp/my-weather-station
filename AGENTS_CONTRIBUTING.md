@@ -1,64 +1,64 @@
 # Agent workflow
 
-This file controls agents that use the `.fleet` workflow. Follow it exactly.
+This file controls agents that use the workflow in `.workflow/`. Follow it exactly.
 [CONTRIBUTING.md](CONTRIBUTING.md) explains the same workflow to human readers. It defines nothing.
 
 ## Non negotiable rules
 
-1. A builder does not verify its own work. An independent reviewer regenerates every claim.
-2. Workers and reviewers run as the subagents defined in `.pi/agents/`. Their model is set there, not in the prompt.
-3. A probe must touch the claimed result and must fail when its `red_when` breakage is applied.
-4. When a requirement is ambiguous, stop and hand the decision to the maintainer. Do not guess.
-5. The repository is the only persistent state. Write important outcomes to `.fleet/handoffs/` before ending a pass.
+1. A builder does not verify its own work. An independent verifier regenerates every claim.
+2. Builders and verifiers run as the subagents defined in `.pi/agents/`. Their model is set there, not in the prompt.
+3. A probe must touch the claimed result and must fail when its `breakage` is applied.
+4. When a requirement is ambiguous, stop and hand the decision to the owner. Do not guess.
+5. The repository is the only persistent state. Write important outcomes to `.workflow/handoffs/` before ending a pass.
 
 ## Authority and communication
 
 ```text
-Maintainer <-> Orchestrator <-> Worker or reviewer
+Owner <-> Maestro <-> Builder or verifier
 ```
 
-- The maintainer gives work and decisions only to the orchestrator.
-- The orchestrator launches, monitors, and directs workers and reviewers.
-- Workers and reviewers do not ask the maintainer for direction. They record the blocker and stop.
-- The maintainer receives status only from the orchestrator. A missing worker report is not a worker status.
-- The maintainer commits the initial story and workflow files before a worker starts.
-- Workers and reviewers commit their changes and terminal handoffs in their assigned worktrees.
-- The orchestrator commits every resolved gate and every rejected finding.
-- The maintainer makes the final commit.
+- The owner gives work and decisions only to the maestro.
+- The maestro launches, monitors, and directs builders and verifiers.
+- Builders and verifiers do not ask the owner for direction. They record the blocker and stop.
+- The owner receives status only from the maestro. A missing builder report is not a builder status.
+- The owner commits the initial spec and workflow files before a builder starts.
+- Builders and verifiers commit their changes and terminal handoffs in their assigned worktrees.
+- The maestro commits every resolved escalation and every rejected finding.
+- The owner makes the final commit.
 
 ## Files
 
-| Path                              | Holds                                                  |
-| --------------------------------- | ------------------------------------------------------ |
-| `.fleet/stories/<id>.md`          | The work order for one reversible change               |
-| `.fleet/stories/<id>.evidence.md` | The builder evidence the worker records for that story |
-| `.fleet/handoffs/`                | Builds, reviews, and gates                             |
-| `.fleet/designs/`                 | One standalone HTML prototype, when a story has one     |
+| Path                                   | Holds                                                                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `.workflow/specs/<id>.md`              | The work order for one reversible change                                                          |
+| `.workflow/specs/<id>.observations.md` | The observations the builder records for that spec                                                |
+| `.workflow/handoffs/`                  | Builder and verifier handoffs, and escalations                                                    |
+| `.workflow/prototypes/`                | One standalone HTML prototype, when a spec has one                                                |
 
 ## Scope
 
 - Work in the assigned worktree only.
-- Change only the paths listed in the story. Do not widen the list.
-- Every story must list `.fleet/**` in its allowed paths. This authorises workflow artefacts, stories, handoffs, and designs.
+- Change only the paths listed in the spec. Do not widen the list.
+- Every spec must list `.workflow/**` in its allowed paths. This authorises workflow artefacts, specs, handoffs, and prototypes.
 - Never delete branches, worktrees, or files that you did not create.
 
 ## Read before you work
 
-- Read the assigned story at the start of every pass.
+- Read the assigned spec at the start of every pass.
 - IMPORTANT: before working in a workspace, read the applicable `AGENTS.md` for that workspace.
 
-## Stories
+## Specs
 
-The maintainer and orchestrator create stories from their discussion. A story must contain:
+The owner and maestro create specs from their discussion. A spec must contain:
 
 - Problem
 - Constraints
 - Allowed paths
-- A Design section with `.fleet/designs/<id>.html`, when the story introduces a visual surface that has no existing reference
+- A Prototype section with `.workflow/prototypes/<id>.html`, when the spec introduces a visual surface that has no existing reference
 - Acceptance criteria
 - Out of scope work
 
-A story may also carry a Technical details section with the agreed approach.
+A spec may also carry a Technical details section with the agreed approach.
 
 Each acceptance criterion must use this form:
 
@@ -66,13 +66,13 @@ Each acceptance criterion must use this form:
 AC<n>: <claim>
 probe: <exact command>
 postcondition: <observable state>
-red_when: <specific breakage that makes the probe fail>
+breakage: <specific change that makes the probe fail>
 ```
 
-Do not edit a story's acceptance criteria, constraints, allowed paths, or out of scope section.
-Orchestrator: do not launch a subagent if any of them is wrong, incomplete, or impossible.
-Worker: open a gate if any of them is wrong, incomplete, or impossible.
-Reviewer: record a finding.
+Do not edit a spec's acceptance criteria, constraints, allowed paths, or out of scope section.
+Maestro: do not launch a subagent if any of them is wrong, incomplete, or impossible.
+Builder: open an escalation if any of them is wrong, incomplete, or impossible.
+Verifier: record a finding.
 
 Probes must observe the real effect.
 
@@ -84,117 +84,117 @@ log line, or a filename in place of the real thing.
 
 ### Visual claims
 
-A story that claims something about what the user sees must make that claim verifiable. There are two routes. The story uses one of them.
+A spec that claims something about what the user sees must make that claim verifiable. There are two routes. The spec uses one of them.
 
-- A prototype. Required when the story introduces a visual surface that has no existing reference, a new component or a new screen. Recommended in every other case. It goes in the Design section, at `.fleet/designs/<id>.html`.
-- An acceptance criterion with a programmatic probe. Use it when the story changes a visual surface that already exists. The current app is the reference. State the visual property that must hold, for example that the page does not scroll horizontally at the smallest target resolution.
+- A prototype. Required when the spec introduces a visual surface that has no existing reference, a new component or a new screen. Recommended in every other case. It goes in the Prototype section, at `.workflow/prototypes/<id>.html`.
+- An acceptance criterion with a programmatic probe. Use it when the spec changes a visual surface that already exists. The current app is the reference. State the visual property that must hold, for example that the page does not scroll horizontally at the smallest target resolution.
 
 Never leave a visual claim without one of the two.
 
-When the story has a prototype:
+When the spec has a prototype:
 
-- It is the maintainer's responsibility to create the prototype during story preparation, either with the orchestrator or with another agent.
-- It must be present before the orchestrator starts the worker.
-- A prototype is accurate only in the part related to the story. It can be inaccurate in every other part, a different logo or a different footer for example. That does not matter.
-- The prototype is the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The story specifies a viewport only when it requires a non-standard size.
-- For a screenshot probe, render the prototype and the actual app at every target resolution, in the state shown or required by the story. Inspect both screenshots and compare the visual result.
+- It is the owner's responsibility to create the prototype during spec preparation, either with the maestro or with another agent.
+- It must be present before the maestro starts the builder.
+- A prototype is accurate only in the part related to the spec. It can be inaccurate in every other part, a different logo or a different footer for example. That does not matter.
+- The prototype is the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The spec specifies a viewport only when it requires a non-standard size.
+- For a screenshot probe, render the prototype and the actual app at every target resolution, in the state shown or required by the spec. Inspect both screenshots and compare the visual result.
 - Do not assess the source code of the prototype.
 
-When the story has no prototype, do no screenshot comparison. A visual claim is then stated as an acceptance criterion, and you verify it like every other one.
+When the spec has no prototype, do no screenshot comparison. A visual claim is then stated as an acceptance criterion, and you verify it like every other one.
 
 ## Handoffs
 
-A handoff is a file in `.fleet/handoffs/`. It is the subagent report. The closing message of a subagent is not.
+A handoff is a file in `.workflow/handoffs/`. It is the subagent report. The closing message of a subagent is not.
 
-| File                 | Written by | Meaning                                                      | Format                                        |
-| -------------------- | ---------- | ------------------------------------------------------------ | --------------------------------------------- |
-| `<id>.build.json`    | Worker     | One implementation pass, `done` or `failed`                  | [build.json](.fleet/templates/build.json)     |
-| `<id>.gate.<n>.json` | Worker     | A decision delegated to the maintainer, and later its answer | [gate.json](.fleet/templates/gate.json)       |
-| `<id>.review.json`   | Reviewer   | The findings of one review pass                              | [review.json](.fleet/templates/review.json)   |
+| File                       | Written by | Meaning                                                  | Format                                                    |
+| -------------------------- | ---------- | -------------------------------------------------------- | ---------------------------------------------------------- |
+| `<id>.builder.json`        | Builder    | One implementation pass, `done` or `failed`              | [builder.json](.workflow/templates/builder.json)          |
+| `<id>.escalation.<n>.json` | Builder    | A decision delegated to the owner, and later its answer  | [escalation.json](.workflow/templates/escalation.json)    |
+| `<id>.verifier.json`       | Verifier   | The findings of one verifier pass                        | [verifier.json](.workflow/templates/verifier.json)        |
 
 These rules apply to every handoff:
 
 - A pass ends with exactly one terminal handoff.
-  - A worker writes `build.json` or a gate.
-  - A reviewer writes `review.json`.
-- A build and a review belong to one pass. They are overwritten at each pass. Earlier versions stay in Git history.
-- Gates are never overwritten.
-- A reviewer writes `[]` when it has no findings. It never leaves a previous handoff in place and never issues a pass or fail verdict.
+  - A builder writes `builder.json` or an escalation.
+  - A verifier writes `verifier.json`.
+- A builder pass overwrites `builder.json`, a verifier pass overwrites `verifier.json`. Earlier versions stay in Git history.
+- Escalations are never overwritten.
+- A verifier writes `[]` when it has no findings. It never leaves a previous handoff in place and never issues a verdict.
 - The agent commits its terminal handoff in its assigned worktree before it ends the pass.
 
-### Builds
+### Builder handoffs
 
-A build records one implementation pass. The worker writes it at the end of the pass, with its status and the result of every probe.
+A builder handoff records one implementation pass. The builder writes it at the end of the pass, with its status and the result of every probe.
 
-`done` means the worker completed an implementation pass that is ready for independent review.
+`done` means the builder completed an implementation pass that is ready for independent verification.
 
-A worker uses `done` only when all these conditions are true:
+A builder uses `done` only when all these conditions are true:
 
 - It changed only allowed paths.
-- It recorded builder evidence for every acceptance criterion.
-- Every stated `red_when` breakage made its probe fail.
+- It recorded observations for every acceptance criterion.
+- Every stated breakage made its probe fail.
 - After each restore, the probe succeeded again.
 - `npm run lint`, `npm run build`, and `npm run test` succeeded.
-- No maintainer decision is required.
+- No owner decision is required.
 
-`failed` means the worker cannot produce a reviewable candidate with the current story, constraints, and environment. It is a technical execution result, not a request for a product, scope, or requirement decision.
+`failed` means the builder cannot produce a verifiable candidate with the current spec, constraints, and environment. It is a technical execution result, not a request for a product, scope, or requirement decision.
 
-A failed build must record each incomplete acceptance criterion, the commands and observed output, the precise technical reason, and any partial changes. The `acs` entries must state the observed `red_ok` and `green_ok` values.
+A failed builder handoff must record each incomplete acceptance criterion, the commands and observed output, the precise technical reason, and any partial changes. The `acs` entries must state the observed `red_ok` and `green_ok` values.
 
-On a failed build, report the status to the orchestrator and stop. The maintainer and the orchestrator triage the failure and decide what to do.
+On a failed builder handoff, report the status to the maestro and stop. The owner and the maestro triage the failure and decide what to do.
 
 Examples of `failed`:
 
 - A required external service is unavailable.
 - A required tool does not work in the assigned environment.
-- A probe remains unsuccessful after corrections that stay within the story constraints.
+- A probe remains unsuccessful after corrections that stay within the spec constraints.
 
-In short: `done` is ready for review, `failed` is not technically completable.
+In short: `done` is ready for verification, `failed` is not technically completable.
 
-Build format is [build.json](.fleet/templates/build.json).
+Builder handoff format is [builder.json](.workflow/templates/builder.json).
 
-### Gates
+### Escalations
 
-A gate is a question about the story, delegated to the maintainer. Only a worker opens one, when it cannot finish the pass without an answer. Write the gate, commit it, and end the pass. Do not wait in process. A dirty launch base is not a gate.
+An escalation is a question about the spec, delegated to the owner. Only a builder opens one, when it cannot finish the pass without an answer. Write the escalation, commit it, and end the pass. Do not wait in process. A dirty launch base is not an escalation.
 
-Examples of a gate:
+Examples of an escalation:
 
-- The story does not define the required behaviour.
+- The spec does not define the required behaviour.
 - A correction requires a path outside the allowed paths.
-- More than one valid solution exists and the maintainer must choose one.
-- The story cannot be verified as written.
+- More than one valid solution exists and the owner must choose one.
+- The spec cannot be verified as written.
 
-Gates are numbered and permanent: `.fleet/handoffs/<id>.gate.<n>.json`, where `<n>` is the next free number for the story. Never overwrite a gate, never rename it, never delete it. Read in order, the gates of a story explain why it went the way it went.
+Escalations are numbered and permanent: `.workflow/handoffs/<id>.escalation.<n>.json`, where `<n>` is the next free number for the spec. Never overwrite an escalation, never rename it, never delete it. Read in order, the escalations of a spec explain why it went the way it went.
 
-An active gate has `"resolution": null`. A resolved gate has `"resolution"` filled.
-Only the orchestrator writes a resolution, and only after the maintainer has decided. Fill `resolution` with the decision and the reason, in the gate file itself, and commit it in the worktree that holds the gate.
+An active escalation has `"resolution": null`. A resolved escalation has `"resolution"` filled.
+Only the maestro writes a resolution, and only after the owner has decided. Fill `resolution` with the decision and the reason, in the escalation file itself, and commit it in the worktree that holds the escalation.
 
-Gate format is [gate.json](.fleet/templates/gate.json).
+Escalation format is [escalation.json](.workflow/templates/escalation.json).
 
-### Reviews
+### Verifier handoffs
 
-A review records one review pass. The reviewer writes it as a list of findings, and writes `[]` when it found nothing.
+A verifier handoff records one verifier pass. The verifier writes it as a list of findings, and writes `[]` when it found nothing.
 
-A finding is technical evidence about one acceptance criterion or one story constraint. It is never a question. It stops the workflow on its own.
+A finding is a technical observation about one acceptance criterion or one spec constraint. It is never a question. It stops the workflow on its own.
 
-- `review.json` is `[]`: the workflow continues.
-- `review.json` has one or more findings: the workflow stops and the maintainer gets the ball.
+- `verifier.json` is `[]`: the workflow continues.
+- `verifier.json` has one or more findings: the workflow stops and the owner gets the ball.
 
-Every finding carries `maintainer_rejected`. The reviewer always writes it as `null`. Only the orchestrator fills it, with `{ "reason": "..." }`, after the maintainer rejects that finding.
-A rejection belongs to the review that carried it. A later review pass regenerates everything from scratch and can raise the same finding again.
+Every finding carries `rejection`. The verifier always writes it as `null`. Only the maestro fills it, with `{ "reason": "..." }`, after the owner rejects that finding.
+A rejection belongs to the verifier handoff that carried it. A later verifier pass regenerates everything from scratch and can raise the same finding again.
 
-Review format is [review.json](.fleet/templates/review.json).
+Verifier handoff format is [verifier.json](.workflow/templates/verifier.json).
 
-## Orchestrator
+## Maestro
 
-- Do not edit product code, except for a non-functional chore explicitly requested by the maintainer during the final human review.
-- Do not invent work. Create a story only from the current maintainer discussion.
-- Create one story for one reversible change. A change to the data model and a change to behaviour belong to two stories, so each one can be rolled back on its own.
-- Define direct, falsifiable probes before creating a story.
-- When a story changes what the user sees and has no prototype, cover the visual claim with an acceptance criterion that has a programmatic probe. Do not create the story without it.
-- When a decision belongs to the maintainer, report it and wait. Never decide in place of the maintainer.
-- Launch and supervise every worker and reviewer. Report only observed process state and recorded handoffs to the maintainer.
-- On dirty or uncommitted launch base, tell the maintainer to commit the intended story, any prototype, and workflow files, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
+- Do not edit product code, except for a non-functional chore explicitly requested by the owner during the final human review.
+- Do not invent work. Create a spec only from the current owner discussion.
+- Create one spec for one reversible change. A change to the data model and a change to behaviour belong to two specs, so each one can be rolled back on its own.
+- Define direct, falsifiable probes before creating a spec.
+- When a spec changes what the user sees and has no prototype, cover the visual claim with an acceptance criterion that has a programmatic probe. Do not create the spec without it.
+- When a decision belongs to the owner, report it and wait. Never decide in place of the owner.
+- Launch and supervise every builder and verifier. Report only observed process state and recorded handoffs to the owner.
+- On dirty or uncommitted launch base, tell the owner to commit the intended spec, any prototype, and workflow files, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
 
 ### Launch an agent
 
@@ -202,14 +202,14 @@ Every agent runs in its own branch and worktree, and starts from committed state
 
 Call the `subagent` tool with `cwd` set to the absolute worktree path, `isolation: "none"`, `context: "fresh"`, and `async: false`. The call blocks until the child ends, so its completion is a first class result instead of a string parsed from terminal output. Do not run `pi` from the shell.
 
-Every spawn instruction states the story id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.fleet/stories/<id>.md` at the start of every pass. Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
+Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.workflow/specs/<id>.md` at the start of every pass. Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
 
-### Launch a worker
+### Launch a builder
 
 Check that the base is clean, then create the worktree from `HEAD`:
 
 ```sh
-git worktree add -b worker/<id> .worktree/<id> HEAD
+git worktree add -b builder/<id> .worktree/<id> HEAD
 ```
 
 Install the dependencies in it.
@@ -218,26 +218,26 @@ Install the dependencies in it.
 npm --prefix <worktree path> ci
 ```
 
-If the install fails, report it to the maintainer and do not spawn.
+If the install fails, report it to the owner and do not spawn.
 
-Only the first pass of a story creates the worktree. A repair pass and a resumed pass run in `.worktree/<id>` as it is: create nothing, install nothing.
+Only the first pass of a spec creates the worktree. A repair pass and a resumed pass run in `.worktree/<id>` as it is: create nothing, install nothing.
 
-Spawn `agent: "fleet-worker"`.
+Spawn `agent: "builder"`.
 
 The instruction adds one read to the standard list when the pass is not the first:
 
-- A repair pass reads `.fleet/handoffs/<id>.review.json` after the story.
-- A pass resumed after a gate reads the resolved gate named in the instruction, after the story.
+- A repair pass reads `.workflow/handoffs/<id>.verifier.json` after the spec.
+- A pass resumed after an escalation reads the resolved escalation named in the instruction, after the spec.
 
-### Launch a reviewer
+### Launch a verifier
 
-Create one branch and one dedicated clean worktree for each review pass, at the current `worker/<id>` commit:
+Create one branch and one dedicated clean worktree for each verifier pass, at the current `builder/<id>` commit:
 
 ```sh
-git worktree add -b reviewer/<id>/<n> .worktree/<id>-review-<n> worker/<id>
+git worktree add -b verifier/<id>/<n> .worktree/<id>-verifier-<n> builder/<id>
 ```
 
-`<n>` is a new review sequence number.
+`<n>` is a new verifier sequence number.
 
 Install the dependencies in it.
 
@@ -245,9 +245,9 @@ Install the dependencies in it.
 npm --prefix <worktree path> ci
 ```
 
-If the install fails, report it to the maintainer and do not spawn.
+If the install fails, report it to the owner and do not spawn.
 
-Spawn `agent: "fleet-reviewer"`.
+Spawn `agent: "verifier"`.
 
 ### Supervise an agent
 
@@ -256,58 +256,58 @@ Spawn `agent: "fleet-reviewer"`.
 - Do not spawn a second agent to ask about the first one.
 - When the subagent returns, inspect its worktree for the terminal handoff of the current pass.
 - Confirm that the worktree is clean and that the handoff is committed.
-- If the subagent returns without a terminal handoff for the current pass, report the exception to the maintainer and stop. Do not change the repository or relaunch automatically.
-- The terminal handoff decides the next step. See [After a worker pass](#after-a-worker-pass) and [After a review pass](#after-a-review-pass).
+- If the subagent returns without a terminal handoff for the current pass, report the exception to the owner and stop. Do not change the repository or relaunch automatically.
+- The terminal handoff decides the next step. See [After a builder pass](#after-a-builder-pass) and [After a verifier pass](#after-a-verifier-pass).
 
-### After a worker pass
+### After a builder pass
 
-- `done`: launch a reviewer on that commit.
-- `failed`: report the failure to the maintainer and stop. Do not relaunch the worker.
-- A gate: report it to the maintainer. After the decision, resolve the gate on `worker/<id>`, then launch a resumed worker pass in the same worktree. Do not launch a reviewer until that pass ends with a committed `done`.
+- `done`: launch a verifier on that commit.
+- `failed`: report the failure to the owner and stop. Do not relaunch the builder.
+- An escalation: report it to the owner. After the decision, resolve the escalation on `builder/<id>`, then launch a resumed builder pass in the same worktree. Do not launch a verifier until that pass ends with a committed `done`.
 
-### After a review pass
+### After a verifier pass
 
-- `review.json` is `[]`: that reviewer commit is the candidate commit and the technical story is complete.
-- `review.json` has findings: the workflow stops. Report every finding to the maintainer. Merge nothing, repair nothing.
+- `verifier.json` is `[]`: that verifier commit is the candidate commit and the technical spec is complete.
+- `verifier.json` has findings: the workflow stops. Report every finding to the owner. Merge nothing, repair nothing.
 
-Findings are evidence, not a question. The maintainer reads them and makes one of three decisions. Follow it.
+Findings are observations, not a question. The owner reads them and makes one of three decisions. Follow it.
 
-- **The finding is not valid.** Write `maintainer_rejected` with the reason into that finding, in the `review.json` that carries it, and commit it on the reviewer branch. That commit is the candidate commit and the technical story is complete.
-- **The code is wrong and the story is right.** Bring the findings to the worker branch.
+- **The finding is not valid.** Write `rejection` with the reason into that finding, in the `verifier.json` that carries it, and commit it on the verifier branch. That commit is the candidate commit and the technical spec is complete.
+- **The code is wrong and the spec is right.** Bring the findings to the builder branch.
   ```sh
-  git -C .worktree/<id> merge --ff-only reviewer/<id>/<n>
+  git -C .worktree/<id> merge --ff-only verifier/<id>/<n>
   ```
 
   Then run the pipeline again.
-- **The story is wrong.** Stop. The maintainer rewrites the story and commits it. The work starts again from a new worker branch on the new base commit.
+- **The spec is wrong.** Stop. The owner rewrites the spec and commits it. The work starts again from a new builder branch on the new base commit.
 
 ### The candidate commit
 
-The candidate commit is the technical approval stamp. It is the last reviewer commit whose `review.json` is `[]`, or whose every finding carries a `maintainer_rejected` reason.
+The candidate commit is the technical approval stamp. It is the last verifier commit whose `verifier.json` is `[]`, or whose every finding carries a `rejection` reason.
 
-### Final maintainer review
+### Final owner review
 
-Declare the technical story completed when a candidate commit exists. On the base branch, run `git merge --squash <candidate-commit>`. Do not commit the merge result. The candidate product changes must remain staged for the maintainer. Keep every worktree until the maintainer makes the final commit.
+Declare the technical spec completed when a candidate commit exists. On the base branch, run `git merge --squash <candidate-commit>`. Do not commit the merge result. The candidate product changes must remain staged for the owner. Keep every worktree until the owner makes the final commit.
 
-The maintainer reviews code quality on the base branch. If satisfied, the maintainer commits and pushes the candidate change.
+The owner reviews code quality on the base branch. If satisfied, the owner commits and pushes the candidate change.
 
-If the maintainer requests a non-functional chore, the orchestrator applies it directly on the base branch. It must not change acceptance criteria, probes, `red_when` breakages, tests, or functional behaviour. It runs the complete existing test suite for each affected workspace as a regression check, stages the chore changes, then returns the staged change to the maintainer for another final review. These tests are not a replacement for independent acceptance verification.
+If the owner requests a non-functional chore, the maestro applies it directly on the base branch. It must not change acceptance criteria, probes, breakages, tests, or functional behaviour. It runs the complete existing test suite for each affected workspace as a regression check, stages the chore changes, then returns the staged change to the owner for another final review. These tests are not a replacement for independent acceptance verification.
 
-## Worker
+## Builder
 
-The worker role is defined in [.pi/agents/fleet-worker.md](.pi/agents/fleet-worker.md). A worker follows the shared rules in this file and the role instructions in that definition.
+The builder role is defined in [builder.md](.pi/agents/builder.md). A builder follows the shared rules in this file and the role instructions in that definition.
 
-## Reviewer
+## Verifier
 
-The reviewer role is defined in [.pi/agents/fleet-reviewer.md](.pi/agents/fleet-reviewer.md). A reviewer follows the shared rules in this file and the role instructions in that definition. Reviewers are independent in their evidence generation and code ownership, but informed by the build and earlier review handoffs for the current story.
+The verifier role is defined in [verifier.md](.pi/agents/verifier.md). A verifier follows the shared rules in this file and the role instructions in that definition. Verifiers are independent in how they generate their observations and in code ownership, but informed by the builder handoff and the earlier verifier handoffs for the current spec.
 
 ## Helpers
 
 Use these scripts to write standard files.
 
 ```sh
-scripts/fleet/new-story.sh <id>
-scripts/fleet/open-gate.sh <id>   # numbers the gate for you
-scripts/fleet/record-build.sh <id>
-scripts/fleet/record-review.sh <id>
+scripts/workflow/new-spec.sh <id>
+scripts/workflow/open-escalation.sh <id>   # numbers the escalation for you
+scripts/workflow/record-builder.sh <id>
+scripts/workflow/record-verifier.sh <id>
 ```
