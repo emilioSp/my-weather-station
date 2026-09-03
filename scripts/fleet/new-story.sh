@@ -2,11 +2,11 @@
 set -eu
 
 if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <story-id>" >&2
+  echo "Usage: $0 <story-slug>" >&2
   exit 1
 fi
 
-id=$1
+id="$(date +%F)-$1"
 target=".fleet/stories/$id.md"
 
 if [ -e "$target" ]; then
