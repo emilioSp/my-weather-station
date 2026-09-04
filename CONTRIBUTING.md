@@ -80,7 +80,7 @@ The steps below follow the diagram, one for each box and each decision.
 ### The files
 
 - **Spec folder** — `.specs/<id>/`. It holds everything for one spec and nothing else. The maestro makes it with `.specs/scripts/new-spec.js <slug>`. The id is the first 12 hex characters of a UUIDv7, then the slug.
-- **Observations** — `observations.md`. What the builder measured during one pass: the command it ran and the output it saw, for every acceptance criterion. It is not a handoff. The verifier does not rely on it: it regenerates every probe itself.
+- **Observations** — `observations.md`. What the builder measured during one pass: the command it ran and the output it saw, for every acceptance criterion. The verifier does not consider it a probe.
 - **Handoff** — The file an agent writes to end its pass, in `.specs/<id>/handoffs/`. It is the report.
 - **Builder handoff** — `builder.json`. What the builder did in one pass, `done` or `failed`, with the red and the green result of every probe.
 - **Verifier handoff** — `verifier.json`. What the verifier found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
