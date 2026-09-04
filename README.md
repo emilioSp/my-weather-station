@@ -248,3 +248,7 @@ thermometer can take longer or time out.
 Distance, walls, metal objects, battery condition, and radio interference change the value.
 Move the computer or the Bluetooth adapter closer to improve reception. The value is measured
 when the packet is received, so it changes between readings.
+
+## CONTRIBUTING
+
+Contributions are based on spec driven development with AI agents. See [CONTRIBUTING.md](CONTRIBUTING.md)
