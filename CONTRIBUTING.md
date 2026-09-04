@@ -6,7 +6,7 @@ This file explains how work moves through the repository. It does not define the
 ## The idea
 
 One spec describes one small reversible change. An agent builds it. A second, independent agent
-regenerates every proof from scratch. The owner makes every commit on the base branch.
+regenerates every proof from scratch. The owner makes the final review alongside the commit on the base branch.
 
 Three principles hold the workflow together:
 
