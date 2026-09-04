@@ -11,11 +11,11 @@ Describe the requested change.
 ## Allowed paths
 
 - `path/allowed-by-this-spec`
-- `.workflow/**` (required workflow artefacts)
+- `.specs/**` (required workflow artefacts)
 
 ## Prototype
 
-Add a standalone HTML prototype at `.workflow/prototypes/<id>.html` when the spec introduces a visual surface that has no existing reference. It shows the intended visual result and does not need to be functional.
+Add a standalone HTML prototype at `.specs/prototypes/<id>.html` when the spec introduces a visual surface that has no existing reference. It shows the intended visual result and does not need to be functional.
 
 Remove this section when the spec has no prototype. If the spec still changes what the user sees, cover the visual result with an acceptance criterion instead, for example:
 

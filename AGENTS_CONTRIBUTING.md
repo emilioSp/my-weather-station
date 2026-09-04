@@ -1,6 +1,6 @@
 # Agent workflow
 
-This file controls agents that use the workflow in `.workflow/`. Follow it exactly.
+This file controls agents that use the workflow in `.specs/`. Follow it exactly.
 [CONTRIBUTING.md](CONTRIBUTING.md) explains the same workflow to human readers. It defines nothing.
 
 ## Non negotiable rules
@@ -9,7 +9,7 @@ This file controls agents that use the workflow in `.workflow/`. Follow it exact
 2. Builders and verifiers run as the subagents defined in `.pi/agents/`. Their model is set there, not in the prompt.
 3. A probe must touch the claimed result and must fail when its `breakage` is applied.
 4. When a requirement is ambiguous, stop and hand the decision to the owner. Do not guess.
-5. The repository is the only persistent state. Write important outcomes to `.workflow/handoffs/` before ending a pass.
+5. The repository is the only persistent state. Write important outcomes to `.specs/handoffs/` before ending a pass.
 
 ## Authority and communication
 
@@ -28,18 +28,18 @@ Owner <-> Maestro <-> Builder or verifier
 
 ## Files
 
-| Path                                   | Holds                                                                                             |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `.workflow/specs/<id>.md`              | The work order for one reversible change                                                          |
-| `.workflow/specs/<id>.observations.md` | The observations the builder records for that spec                                                |
-| `.workflow/handoffs/`                  | Builder and verifier handoffs, and escalations                                                    |
-| `.workflow/prototypes/`                | One standalone HTML prototype, when a spec has one                                                |
+| Path                                | Holds                                              |
+| ----------------------------------- | -------------------------------------------------- |
+| `.specs/specs/<id>.md`              | The work order for one reversible change           |
+| `.specs/specs/<id>.observations.md` | The observations the builder records for that spec |
+| `.specs/handoffs/`                  | Builder and verifier handoffs, and escalations     |
+| `.specs/prototypes/`                | One standalone HTML prototype, when a spec has one |
 
 ## Scope
 
 - Work in the assigned worktree only.
 - Change only the paths listed in the spec. Do not widen the list.
-- Every spec must list `.workflow/**` in its allowed paths. This authorises workflow artefacts, specs, handoffs, and prototypes.
+- Every spec must list `.specs/**` in its allowed paths. This authorises workflow artefacts, specs, handoffs, and prototypes.
 - Never delete branches, worktrees, or files that you did not create.
 
 ## Read before you work
@@ -54,7 +54,7 @@ The owner and maestro create specs from their discussion. A spec must contain:
 - Problem
 - Constraints
 - Allowed paths
-- A Prototype section with `.workflow/prototypes/<id>.html`, when the spec introduces a visual surface that has no existing reference
+- A Prototype section with `.specs/prototypes/<id>.html`, when the spec introduces a visual surface that has no existing reference
 - Acceptance criteria
 - Out of scope work
 
@@ -86,7 +86,7 @@ log line, or a filename in place of the real thing.
 
 A spec that claims something about what the user sees must make that claim verifiable. There are two routes. The spec uses one of them.
 
-- A prototype. Required when the spec introduces a visual surface that has no existing reference, a new component or a new screen. Recommended in every other case. It goes in the Prototype section, at `.workflow/prototypes/<id>.html`.
+- A prototype. Required when the spec introduces a visual surface that has no existing reference, a new component or a new screen. Recommended in every other case. It goes in the Prototype section, at `.specs/prototypes/<id>.html`.
 - An acceptance criterion with a programmatic probe. Use it when the spec changes a visual surface that already exists. The current app is the reference. State the visual property that must hold, for example that the page does not scroll horizontally at the smallest target resolution.
 
 Never leave a visual claim without one of the two.
@@ -104,13 +104,13 @@ When the spec has no prototype, do no screenshot comparison. A visual claim is t
 
 ## Handoffs
 
-A handoff is a file in `.workflow/handoffs/`. It is the subagent report. The closing message of a subagent is not.
+A handoff is a file in `.specs/handoffs/`. It is the subagent report. The closing message of a subagent is not.
 
-| File                       | Written by | Meaning                                                  | Format                                                    |
-| -------------------------- | ---------- | -------------------------------------------------------- | ---------------------------------------------------------- |
-| `<id>.builder.json`        | Builder    | One implementation pass, `done` or `failed`              | [builder.json](.workflow/templates/builder.json)          |
-| `<id>.escalation.<n>.json` | Builder    | A decision delegated to the owner, and later its answer  | [escalation.json](.workflow/templates/escalation.json)    |
-| `<id>.verifier.json`       | Verifier   | The findings of one verifier pass                        | [verifier.json](.workflow/templates/verifier.json)        |
+| File                       | Written by | Meaning                                                 | Format                                              |
+| -------------------------- | ---------- | ------------------------------------------------------- | --------------------------------------------------- |
+| `<id>.builder.json`        | Builder    | One implementation pass, `done` or `failed`             | [builder.json](.specs/templates/builder.json)       |
+| `<id>.escalation.<n>.json` | Builder    | A decision delegated to the owner, and later its answer | [escalation.json](.specs/templates/escalation.json) |
+| `<id>.verifier.json`       | Verifier   | The findings of one verifier pass                       | [verifier.json](.specs/templates/verifier.json)     |
 
 These rules apply to every handoff:
 
@@ -151,7 +151,7 @@ Examples of `failed`:
 
 In short: `done` is ready for verification, `failed` is not technically completable.
 
-Builder handoff format is [builder.json](.workflow/templates/builder.json).
+Builder handoff format is [builder.json](.specs/templates/builder.json).
 
 ### Escalations
 
@@ -164,12 +164,12 @@ Examples of an escalation:
 - More than one valid solution exists and the owner must choose one.
 - The spec cannot be verified as written.
 
-Escalations are numbered and permanent: `.workflow/handoffs/<id>.escalation.<n>.json`, where `<n>` is the next free number for the spec. Never overwrite an escalation, never rename it, never delete it. Read in order, the escalations of a spec explain why it went the way it went.
+Escalations are numbered and permanent: `.specs/handoffs/<id>.escalation.<n>.json`, where `<n>` is the next free number for the spec. Never overwrite an escalation, never rename it, never delete it. Read in order, the escalations of a spec explain why it went the way it went.
 
 An active escalation has `"resolution": null`. A resolved escalation has `"resolution"` filled.
 Only the maestro writes a resolution, and only after the owner has decided. Fill `resolution` with the decision and the reason, in the escalation file itself, and commit it in the worktree that holds the escalation.
 
-Escalation format is [escalation.json](.workflow/templates/escalation.json).
+Escalation format is [escalation.json](.specs/templates/escalation.json).
 
 ### Verifier handoffs
 
@@ -183,7 +183,7 @@ A finding is a technical observation about one acceptance criterion or one spec 
 Every finding carries `rejection`. The verifier always writes it as `null`. Only the maestro fills it, with `{ "reason": "..." }`, after the owner rejects that finding.
 A rejection belongs to the verifier handoff that carried it. A later verifier pass regenerates everything from scratch and can raise the same finding again.
 
-Verifier handoff format is [verifier.json](.workflow/templates/verifier.json).
+Verifier handoff format is [verifier.json](.specs/templates/verifier.json).
 
 ## Maestro
 
@@ -202,7 +202,7 @@ Every agent runs in its own branch and worktree, and starts from committed state
 
 Call the `subagent` tool with `cwd` set to the absolute worktree path, `isolation: "none"`, `context: "fresh"`, and `async: false`. The call blocks until the child ends, so its completion is a first class result instead of a string parsed from terminal output. Do not run `pi` from the shell.
 
-Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.workflow/specs/<id>.md` at the start of every pass. Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
+Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.specs/specs/<id>.md` at the start of every pass. Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
 
 ### Launch a builder
 
@@ -226,7 +226,7 @@ Spawn `agent: "builder"`.
 
 The instruction adds one read to the standard list when the pass is not the first:
 
-- A repair pass reads `.workflow/handoffs/<id>.verifier.json` after the spec.
+- A repair pass reads `.specs/handoffs/<id>.verifier.json` after the spec.
 - A pass resumed after an escalation reads the resolved escalation named in the instruction, after the spec.
 
 ### Launch a verifier
@@ -306,8 +306,8 @@ The verifier role is defined in [verifier.md](.pi/agents/verifier.md). A verifie
 Use these scripts to write standard files.
 
 ```sh
-scripts/workflow/new-spec.sh <id>
-scripts/workflow/open-escalation.sh <id>   # numbers the escalation for you
-scripts/workflow/record-builder.sh <id>
-scripts/workflow/record-verifier.sh <id>
+.specs/scripts/new-spec.sh <id>
+.specs/scripts/open-escalation.sh <id>   # numbers the escalation for you
+.specs/scripts/record-builder.sh <id>
+.specs/scripts/record-verifier.sh <id>
 ```

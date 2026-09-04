@@ -7,12 +7,12 @@ if [ "$#" -ne 1 ]; then
 fi
 
 id="$(date +%F)-$1"
-target=".workflow/specs/$id.md"
+target=".specs/specs/$id.md"
 
 if [ -e "$target" ]; then
   echo "Spec already exists: $target" >&2
   exit 1
 fi
 
-sed "s/<id>/$id/g" .workflow/templates/spec.md > "$target"
+sed "s/<id>/$id/g" .specs/templates/spec.md > "$target"
 echo "Created $target"

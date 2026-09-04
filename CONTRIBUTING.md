@@ -53,7 +53,7 @@ flowchart TD
 
 The steps below follow the diagram, one for each box and each decision.
 
-1. **The owner and the maestro write one spec.** They agree on the problem, the options, and the constraints. The spec lists the allowed paths and the acceptance criteria. A spec that introduces a new visual surface also gets a standalone HTML prototype in `.workflow/prototypes/`. The maestro could also make it before the work starts. It shows the intended visual result and does not operate. A spec that only changes existing UI covers the visual result with an acceptance criterion instead.
+1. **The owner and the maestro write one spec.** They agree on the problem, the options, and the constraints. The spec lists the allowed paths and the acceptance criteria. A spec that introduces a new visual surface also gets a standalone HTML prototype in `.specs/prototypes/`. The maestro could also make it before the work starts. It shows the intended visual result and does not operate. A spec that only changes existing UI covers the visual result with an acceptance criterion instead.
 2. **The owner commits the spec and the workflow files.** The agents start from the committed state.
 3. **The builder writes the code in its own worktree.** The builder records its observations and its handoff, and commits them in its worktree.
 4. **Does the builder need an owner decision?**
@@ -77,7 +77,7 @@ The steps below follow the diagram, one for each box and each decision.
 
 ### The files
 
-- **Handoff** — The file an agent writes to end its pass, in `.workflow/handoffs/`. It is the report.
+- **Handoff** — The file an agent writes to end its pass, in `.specs/handoffs/`. It is the report.
 - **Builder handoff** — `builder.json`. What the builder did in one pass, `done` or `failed`, with the red and the green result of every probe.
 - **Verifier handoff** — `verifier.json`. What the verifier found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
 - **Finding** — One entry in `verifier.json`. A technical observation that an acceptance criterion or a constraint does not hold. It is never a question: the owner decides what to do about it.
@@ -94,13 +94,13 @@ The steps below follow the diagram, one for each box and each decision.
 
 ## Where everything lives
 
-| Path                     | Holds                                                                            |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| `.workflow/specs/`       | The work orders, and the observations recorded for each one                      |
-| `.workflow/handoffs/`    | Builder and verifier handoffs, and escalations                                   |
-| `.workflow/prototypes/`  | One standalone HTML prototype, when a spec has one                               |
-| `.workflow/templates/`   | The exact shape of a spec, a builder handoff, a verifier handoff, and an escalation |
-| `.pi/agents/`            | The builder and verifier roles, and the model each one runs                      |
-| `scripts/workflow/`      | Helpers that write the standard files                                            |
-| `AGENTS_CONTRIBUTING.md` | The rules every agent follows                                                    |
-| `AGENTS.md`              | Code conventions, with one more in each workspace                                |
+| Path                     | Holds                                                                               |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| `.specs/specs/`          | The work orders, and the observations recorded for each one                         |
+| `.specs/handoffs/`       | Builder and verifier handoffs, and escalations                                      |
+| `.specs/prototypes/`     | One standalone HTML prototype, when a spec has one                                  |
+| `.specs/templates/`      | The exact shape of a spec, a builder handoff, a verifier handoff, and an escalation |
+| `.specs/scripts/`        | Helpers that write the standard files                                               |
+| `.pi/agents/`            | The builder and verifier roles, and the model each one runs                         |
+| `AGENTS_CONTRIBUTING.md` | The rules every agent follows                                                       |
+| `AGENTS.md`              | Code conventions, with one more in each workspace                                   |

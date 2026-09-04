@@ -7,7 +7,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 id=$1
-target=".workflow/handoffs/$id.builder.json"
+target=".specs/handoffs/$id.builder.json"
 
-sed "s/<id>/$id/g" .workflow/templates/builder.json > "$target"
+sed "s/<id>/$id/g" .specs/templates/builder.json > "$target"
 echo "Wrote $target"
