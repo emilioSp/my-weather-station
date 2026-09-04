@@ -75,6 +75,21 @@ The steps below follow the diagram, one for each box and each decision.
    - The owner is satisfied. Continue at step 10.
 10. **The owner commits the change and pushes it.**
 
+## Start to contribute
+
+### Requirements
+
+- **[pi.dev](https://pi.dev)**, with an extension that supports custom subagents defined in markdown. The maestro spawns the builder and the verifier through it.
+- **An OpenAI subscription or API key configured in pi.** The builder and the verifier run on GPT models.
+- **Node.js**, at the version in `.nvmrc`, with the dependencies installed.
+- **Git**, on a clean base branch.
+
+### The first move
+
+1. Start pi.
+2. Tell the agent that it is the maestro. It will read [AGENTS_CONTRIBUTING.md](AGENTS_CONTRIBUTING.md) and take the role.
+3. Bring your problem and start to forge the story with it (step 1).
+
 ## Glossary
 
 ### The files
