@@ -11,7 +11,7 @@
       "**",
       "!!**/node_modules",
       "!!.worktree",
-      "!!.specs/prototypes",
+      "!!.specs/*/prototypes",
       "!!**/dist",
       "!!**/coverage",
       "!!**/build",

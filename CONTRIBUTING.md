@@ -27,13 +27,14 @@ The owner talks to the maestro. The maestro talks to the builders and the verifi
 
 ```mermaid
 flowchart TD
-    spec[Owner and maestro write one spec] --> base[Owner commits the spec and the workflow files]
+    spec[Owner and maestro write one spec] --> base[Owner commits the spec folder]
     base --> build[Builder writes the code in its own worktree]
-    build --> buildDecision{Does the builder need an owner decision?}
-    buildDecision -->|Yes| builderEscalation[Builder writes an escalation and stops]
+    build --> buildOutcome{How did the builder pass end?}
+    buildOutcome -->|Escalation| builderEscalation[Builder writes an escalation and stops]
     builderEscalation --> buildAnswer[Owner decides. The maestro writes the answer into the escalation]
     buildAnswer --> build
-    buildDecision -->|No| verify[Independent verifier regenerates every proof in a clean worktree]
+    buildOutcome -->|Failed| triage[The workflow stops. The owner and the maestro triage the failure]
+    buildOutcome -->|Done| verify[Independent verifier regenerates every proof in a clean worktree]
     verify --> findings{Findings?}
     findings -->|None| candidate[Technical spec complete]
     findings -->|One or more| ball[The workflow stops. The owner reads the findings]
@@ -53,12 +54,13 @@ flowchart TD
 
 The steps below follow the diagram, one for each box and each decision.
 
-1. **The owner and the maestro write one spec.** They agree on the problem, the options, and the constraints. The spec lists the allowed paths and the acceptance criteria. A spec that introduces a new visual surface also gets a standalone HTML prototype in `.specs/prototypes/`. The maestro could also make it before the work starts. It shows the intended visual result and does not operate. A spec that only changes existing UI covers the visual result with an acceptance criterion instead.
-2. **The owner commits the spec and the workflow files.** The agents start from the committed state.
+1. **The owner and the maestro write one spec.** They agree on the problem, the options, and the constraints. The spec lists the allowed paths and the acceptance criteria. A spec that introduces a new visual surface also gets one or more standalone HTML prototypes in `.specs/<id>/prototypes/`. The maestro could also make them before the work starts. They show the intended visual result and do not operate. A spec that only changes existing UI covers the visual result with an acceptance criterion instead.
+2. **The owner commits the spec folder.** The agents start from the committed state.
 3. **The builder writes the code in its own worktree.** The builder records its observations and its handoff, and commits them in its worktree.
-4. **Does the builder need an owner decision?**
-   - Yes. The builder writes an escalation and stops. The owner decides. The maestro writes the answer into the escalation. The work continues at step 3.
-   - No. Continue at step 5.
+4. **How did the builder pass end?** A pass ends with exactly one terminal handoff, and there are three of them.
+   - An escalation. The builder cannot finish without an owner decision. It writes the escalation and stops. The owner decides. The maestro writes the answer into the escalation. The work continues at step 3.
+   - `failed`. The builder cannot produce a verifiable candidate with the current spec, constraints, and environment. The flow stops here. The owner and the maestro triage the failure outside it.
+   - `done`. Continue at step 5.
 5. **An independent verifier regenerates every proof in a clean worktree.** The verifier does each probe again. It also does each breakage again. Then it commits its findings.
 6. **Are there findings?**
    - None. The technical spec is complete. Continue at step 8.
@@ -77,7 +79,9 @@ The steps below follow the diagram, one for each box and each decision.
 
 ### The files
 
-- **Handoff** — The file an agent writes to end its pass, in `.specs/handoffs/`. It is the report.
+- **Spec folder** — `.specs/<id>/`. It holds everything for one spec and nothing else. The maestro makes it with `.specs/scripts/new-spec.js <slug>`. The id is the first 12 hex characters of a UUIDv7, then the slug.
+- **Observations** — `observations.md`. What the builder measured during one pass: the command it ran and the output it saw, for every acceptance criterion. It is not a handoff. The verifier does not rely on it: it regenerates every probe itself.
+- **Handoff** — The file an agent writes to end its pass, in `.specs/<id>/handoffs/`. It is the report.
 - **Builder handoff** — `builder.json`. What the builder did in one pass, `done` or `failed`, with the red and the green result of every probe.
 - **Verifier handoff** — `verifier.json`. What the verifier found in one pass, as a list of findings. An empty list means it regenerated everything and found nothing.
 - **Finding** — One entry in `verifier.json`. A technical observation that an acceptance criterion or a constraint does not hold. It is never a question: the owner decides what to do about it.
@@ -94,13 +98,14 @@ The steps below follow the diagram, one for each box and each decision.
 
 ## Where everything lives
 
-| Path                     | Holds                                                                               |
-| ------------------------ | ----------------------------------------------------------------------------------- |
-| `.specs/specs/`          | The work orders, and the observations recorded for each one                         |
-| `.specs/handoffs/`       | Builder and verifier handoffs, and escalations                                      |
-| `.specs/prototypes/`     | One standalone HTML prototype, when a spec has one                                  |
-| `.specs/templates/`      | The exact shape of a spec, a builder handoff, a verifier handoff, and an escalation |
-| `.specs/scripts/`        | Helpers that write the standard files                                               |
-| `.pi/agents/`            | The builder and verifier roles, and the model each one runs                         |
-| `AGENTS_CONTRIBUTING.md` | The rules every agent follows                                                       |
-| `AGENTS.md`              | Code conventions, with one more in each workspace                                   |
+| Path                          | Holds                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| `.specs/<id>/spec.md`         | The work order for one spec                                                         |
+| `.specs/<id>/observations.md` | The observations the builder records during a pass                                  |
+| `.specs/<id>/handoffs/`       | Builder and verifier handoffs, and escalations                                      |
+| `.specs/<id>/prototypes/`     | The standalone HTML prototypes, when a spec has them                                |
+| `.specs/templates/`           | The exact shape of a spec, a builder handoff, a verifier handoff, and an escalation |
+| `.specs/scripts/`             | Helpers that write the standard files                                               |
+| `.pi/agents/`                 | The builder and verifier roles, and the model each one runs                         |
+| `AGENTS_CONTRIBUTING.md`      | The rules every agent follows                                                       |
+| `AGENTS.md`                   | Code conventions, with one more in each workspace                                   |

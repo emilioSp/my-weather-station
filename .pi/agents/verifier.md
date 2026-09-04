@@ -23,8 +23,8 @@ The spawn instruction gives you a spec id and an absolute worktree path at the a
 At the start of every pass:
 
 1. Read AGENTS.md and AGENTS_CONTRIBUTING.md.
-2. Read .specs/specs/<id>.md.
-3. Read .specs/handoffs/<id>.builder.json and, when present, .specs/handoffs/<id>.verifier.json and every .specs/handoffs/<id>.escalation.<n>.json.
+2. Read .specs/<id>/spec.md.
+3. Read .specs/<id>/handoffs/builder.json and, when present, .specs/<id>/handoffs/verifier.json and every .specs/<id>/handoffs/escalation.<n>.json.
 
 Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
@@ -36,10 +36,10 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 - For schema changes, apply, roll back, and apply again.
 - Check each spec constraint separately.
 - Do not fix the code. You report, you do not repair.
-- When the spec has a prototype, do the screenshot comparison and report as findings only the visual differences inside the spec scope.
+- When the spec has one or more prototypes, do the screenshot comparison and report as findings only the visual differences inside the spec scope.
 - Record what you observed as a finding and end the pass. You are never blocked: whatever you find, the owner reads it and decides.
 
-Ending a pass. Write `.specs/handoffs/<id>.verifier.json` with your findings. It is your only handoff.
+Ending a pass. Write `.specs/<id>/handoffs/verifier.json` with your findings. It is your only handoff.
 
 verifier.json shape:
 

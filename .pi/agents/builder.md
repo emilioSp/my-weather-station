@@ -1,6 +1,6 @@
 ---
 name: builder
-description: Implements one workflow spec inside its assigned git worktree. Spawn it after the spec and all workflow files are committed. It records its observations and writes a terminal handoff. The builder does not approve its own work.
+description: Implements one workflow spec inside its assigned git worktree. Spawn it after the spec folder is committed. It records its observations and writes a terminal handoff. The builder does not approve its own work.
 model: openai-codex/gpt-5.6-terra
 thinking: medium
 tools: read, grep, find, ls, bash, edit, write
@@ -23,16 +23,16 @@ The spawn instruction gives you a spec id and an absolute worktree path. Treat t
 At the start of every pass:
 
 1. Read AGENTS.md and AGENTS_CONTRIBUTING.md.
-2. Read .specs/specs/<id>.md.
-3. For a repair pass, read .specs/handoffs/<id>.verifier.json. For a pass resumed after an escalation, read the resolved escalation named in your instruction.
+2. Read .specs/<id>/spec.md.
+3. For a repair pass, read .specs/<id>/handoffs/verifier.json. For a pass resumed after an escalation, read the resolved escalation named in your instruction.
 
 Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
 - Implement exactly the assigned spec. Change only the paths it lists. Do not widen the list.
 - Respect all spec constraints, including dependencies, performance, security, and permitted error content.
 - Do not present your checks as verification. They are observations for the verifier to regenerate.
-- For every acceptance criterion: apply the stated breakage, run the probe, restore the code, run the probe again. Record both command outputs in .specs/specs/<id>.observations.md.
-- When the spec has a prototype, do the screenshot comparison before recording a `done` builder handoff. Record the screenshot commands, paths, and visual comparison in the observations file.
+- For every acceptance criterion: apply the stated breakage, run the probe, restore the code, run the probe again. Record both command outputs in .specs/<id>/observations.md.
+- When the spec has one or more prototypes, do the screenshot comparison before recording a `done` builder handoff. Record the screenshot commands, paths, and visual comparison in the observations file.
 - Before recording acceptance observations or writing a `done` builder handoff, run `npm run lint` from the repository root. Fix every diagnostic within the spec's allowed paths. If the command would require a change outside those paths, write an escalation instead.
 - Before writing a `done` builder handoff, run `npm run build` from the repository root. It type-checks every workspace, not only the one the spec names. Fix every error within the spec's allowed paths. If a fix would require a path outside those paths, write an escalation instead.
 - In a repair pass, repair every finding whose `rejection` is null. Leave a rejected finding alone: the owner already answered it.
@@ -40,8 +40,8 @@ Follow the shared rules in AGENTS_CONTRIBUTING.md. Your role-specific rules are:
 
 Ending a pass. Write exactly one terminal handoff for the current pass before you end.
 
-- .specs/handoffs/<id>.builder.json when the work is done or failed.
-- .specs/handoffs/<id>.escalation.<n>.json when an owner decision is required.
+- .specs/<id>/handoffs/builder.json when the work is done or failed.
+- .specs/<id>/handoffs/escalation.<n>.json when an owner decision is required.
 
 After writing the terminal handoff, commit every change from the current pass, including the handoff, in the assigned worktree. Do not include unrelated changes.
 

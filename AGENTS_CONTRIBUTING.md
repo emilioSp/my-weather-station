@@ -9,7 +9,7 @@ This file controls agents that use the workflow in `.specs/`. Follow it exactly.
 2. Builders and verifiers run as the subagents defined in `.pi/agents/`. Their model is set there, not in the prompt.
 3. A probe must touch the claimed result and must fail when its `breakage` is applied.
 4. When a requirement is ambiguous, stop and hand the decision to the owner. Do not guess.
-5. The repository is the only persistent state. Write important outcomes to `.specs/handoffs/` before ending a pass.
+5. The repository is the only persistent state. Write important outcomes to `.specs/<id>/handoffs/` before ending a pass.
 
 ## Authority and communication
 
@@ -21,25 +21,26 @@ Owner <-> Maestro <-> Builder or verifier
 - The maestro launches, monitors, and directs builders and verifiers.
 - Builders and verifiers do not ask the owner for direction. They record the blocker and stop.
 - The owner receives status only from the maestro. A missing builder report is not a builder status.
-- The owner commits the initial spec and workflow files before a builder starts.
+- The owner commits the initial spec folder before a builder starts.
 - Builders and verifiers commit their changes and terminal handoffs in their assigned worktrees.
 - The maestro commits every resolved escalation and every rejected finding.
 - The owner makes the final commit.
 
 ## Files
 
-| Path                                | Holds                                              |
-| ----------------------------------- | -------------------------------------------------- |
-| `.specs/specs/<id>.md`              | The work order for one reversible change           |
-| `.specs/specs/<id>.observations.md` | The observations the builder records for that spec |
-| `.specs/handoffs/`                  | Builder and verifier handoffs, and escalations     |
-| `.specs/prototypes/`                | One standalone HTML prototype, when a spec has one |
+| Path                          | Holds                                                |
+| ----------------------------- | ---------------------------------------------------- |
+| `.specs/<id>/`                | Everything for one spec, and nothing else            |
+| `.specs/<id>/spec.md`         | The work order for one reversible change             |
+| `.specs/<id>/observations.md` | The observations the builder records during a pass   |
+| `.specs/<id>/handoffs/`       | Builder and verifier handoffs, and escalations       |
+| `.specs/<id>/prototypes/`     | The standalone HTML prototypes, when a spec has them |
 
 ## Scope
 
 - Work in the assigned worktree only.
 - Change only the paths listed in the spec. Do not widen the list.
-- Every spec must list `.specs/**` in its allowed paths. This authorises workflow artefacts, specs, handoffs, and prototypes.
+- Every spec must list `.specs/<id>/**` in its allowed paths, with its own id. This authorises its spec, its handoffs, and its prototypes.
 - Never delete branches, worktrees, or files that you did not create.
 
 ## Read before you work
@@ -54,7 +55,7 @@ The owner and maestro create specs from their discussion. A spec must contain:
 - Problem
 - Constraints
 - Allowed paths
-- A Prototype section with `.specs/prototypes/<id>.html`, when the spec introduces a visual surface that has no existing reference
+- A Prototype section with `.specs/<id>/prototypes/`, when the spec introduces a visual surface that has no existing reference
 - Acceptance criteria
 - Out of scope work
 
@@ -86,31 +87,32 @@ log line, or a filename in place of the real thing.
 
 A spec that claims something about what the user sees must make that claim verifiable. There are two routes. The spec uses one of them.
 
-- A prototype. Required when the spec introduces a visual surface that has no existing reference, a new component or a new screen. Recommended in every other case. It goes in the Prototype section, at `.specs/prototypes/<id>.html`.
+- A prototype. Required when the spec introduces a visual surface that has no existing reference, a new component or a new screen. Recommended in every other case. It goes in the Prototype section, at `.specs/<id>/prototypes/`.
 - An acceptance criterion with a programmatic probe. Use it when the spec changes a visual surface that already exists. The current app is the reference. State the visual property that must hold, for example that the page does not scroll horizontally at the smallest target resolution.
 
 Never leave a visual claim without one of the two.
 
-When the spec has a prototype:
+When the spec has one or more prototypes:
 
-- It is the owner's responsibility to create the prototype during spec preparation, either with the maestro or with another agent.
-- It must be present before the maestro starts the builder.
+- A spec may have more than one prototype file. Name each file for the surface it shows.
+- It is the owner's responsibility to create them during spec preparation, either with the maestro or with another agent.
+- They must be present before the maestro starts the builder.
 - A prototype is accurate only in the part related to the spec. It can be inaccurate in every other part, a different logo or a different footer for example. That does not matter.
-- The prototype is the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The spec specifies a viewport only when it requires a non-standard size.
-- For a screenshot probe, render the prototype and the actual app at every target resolution, in the state shown or required by the spec. Inspect both screenshots and compare the visual result.
-- Do not assess the source code of the prototype.
+- The prototypes are the visual reference. Use the target resolutions in the applicable workspace `AGENTS.md`. The spec specifies a viewport only when it requires a non-standard size.
+- For a screenshot probe, render each prototype and the actual app at every target resolution, in the state shown or required by the spec. Inspect both screenshots and compare the visual result.
+- Do not assess the source code of a prototype.
 
 When the spec has no prototype, do no screenshot comparison. A visual claim is then stated as an acceptance criterion, and you verify it like every other one.
 
 ## Handoffs
 
-A handoff is a file in `.specs/handoffs/`. It is the subagent report. The closing message of a subagent is not.
+A handoff is a file in `.specs/<id>/handoffs/`. It is the subagent report. The closing message of a subagent is not.
 
-| File                       | Written by | Meaning                                                 | Format                                              |
-| -------------------------- | ---------- | ------------------------------------------------------- | --------------------------------------------------- |
-| `<id>.builder.json`        | Builder    | One implementation pass, `done` or `failed`             | [builder.json](.specs/templates/builder.json)       |
-| `<id>.escalation.<n>.json` | Builder    | A decision delegated to the owner, and later its answer | [escalation.json](.specs/templates/escalation.json) |
-| `<id>.verifier.json`       | Verifier   | The findings of one verifier pass                       | [verifier.json](.specs/templates/verifier.json)     |
+| File                  | Written by | Meaning                                                 | Format                                              |
+| --------------------- | ---------- | ------------------------------------------------------- | --------------------------------------------------- |
+| `builder.json`        | Builder    | One implementation pass, `done` or `failed`             | [builder.json](.specs/templates/builder.json)       |
+| `escalation.<n>.json` | Builder    | A decision delegated to the owner, and later its answer | [escalation.json](.specs/templates/escalation.json) |
+| `verifier.json`       | Verifier   | The findings of one verifier pass                       | [verifier.json](.specs/templates/verifier.json)     |
 
 These rules apply to every handoff:
 
@@ -164,7 +166,7 @@ Examples of an escalation:
 - More than one valid solution exists and the owner must choose one.
 - The spec cannot be verified as written.
 
-Escalations are numbered and permanent: `.specs/handoffs/<id>.escalation.<n>.json`, where `<n>` is the next free number for the spec. Never overwrite an escalation, never rename it, never delete it. Read in order, the escalations of a spec explain why it went the way it went.
+Escalations are numbered and permanent: `.specs/<id>/handoffs/escalation.<n>.json`, where `<n>` is the next free number for the spec. Never overwrite an escalation, never rename it, never delete it. Read in order, the escalations of a spec explain why it went the way it went.
 
 An active escalation has `"resolution": null`. A resolved escalation has `"resolution"` filled.
 Only the maestro writes a resolution, and only after the owner has decided. Fill `resolution` with the decision and the reason, in the escalation file itself, and commit it in the worktree that holds the escalation.
@@ -194,7 +196,7 @@ Verifier handoff format is [verifier.json](.specs/templates/verifier.json).
 - When a spec changes what the user sees and has no prototype, cover the visual claim with an acceptance criterion that has a programmatic probe. Do not create the spec without it.
 - When a decision belongs to the owner, report it and wait. Never decide in place of the owner.
 - Launch and supervise every builder and verifier. Report only observed process state and recorded handoffs to the owner.
-- On dirty or uncommitted launch base, tell the owner to commit the intended spec, any prototype, and workflow files, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
+- On dirty or uncommitted launch base, tell the owner to commit the intended spec folder, which holds the spec and any prototype, or to remove the unwanted changes. Wait for a clean base before you launch an agent.
 
 ### Launch an agent
 
@@ -202,7 +204,7 @@ Every agent runs in its own branch and worktree, and starts from committed state
 
 Call the `subagent` tool with `cwd` set to the absolute worktree path, `isolation: "none"`, `context: "fresh"`, and `async: false`. The call blocks until the child ends, so its completion is a first class result instead of a string parsed from terminal output. Do not run `pi` from the shell.
 
-Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.specs/specs/<id>.md` at the start of every pass. Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
+Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.specs/<id>/spec.md` at the start of every pass. Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
 
 ### Launch a builder
 
@@ -226,7 +228,7 @@ Spawn `agent: "builder"`.
 
 The instruction adds one read to the standard list when the pass is not the first:
 
-- A repair pass reads `.specs/handoffs/<id>.verifier.json` after the spec.
+- A repair pass reads `.specs/<id>/handoffs/verifier.json` after the spec.
 - A pass resumed after an escalation reads the resolved escalation named in the instruction, after the spec.
 
 ### Launch a verifier
@@ -306,8 +308,8 @@ The verifier role is defined in [verifier.md](.pi/agents/verifier.md). A verifie
 Use these scripts to write standard files.
 
 ```sh
-.specs/scripts/new-spec.sh <id>
-.specs/scripts/open-escalation.sh <id>   # numbers the escalation for you
-.specs/scripts/record-builder.sh <id>
-.specs/scripts/record-verifier.sh <id>
+.specs/scripts/new-spec.js <slug>        # makes the id and the spec folder
+.specs/scripts/open-escalation.js <id>   # numbers the escalation for you
+.specs/scripts/record-builder.js <id>
+.specs/scripts/record-verifier.js <id>
 ```
