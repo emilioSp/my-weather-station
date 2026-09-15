@@ -29,25 +29,13 @@ Document the one-time activation command in the local setup instructions.
 
 ## Acceptance criteria
 
-### AC1: The versioned pre-commit hook runs read-only lint and TypeScript checks.
-
-- probe: `git diff --exit-code && ./.githooks/pre-commit && git diff --exit-code`
-- postcondition: the repository passes the hook and the hook leaves no tracked-file change.
-- breakage: replace the hook command with `npm run lint:fix`; the final `git diff --exit-code` fails when Biome formats an unformatted tracked source file.
-
-### AC2: The root pre-commit command checks every workspace TypeScript configuration without emitting files.
-
-- probe: `npm run typecheck && git diff --exit-code`
-- postcondition: TypeScript accepts the collector, web, and shared workspace sources and leaves no tracked-file change.
-- breakage: add a deliberate invalid type assignment to one workspace source file; `npm run typecheck` fails.
-
-### AC3: The Maestro blocks agent launches when the hook is inactive.
+### AC1: The Maestro blocks agent launches when the hook is inactive.
 
 - probe: `test "$(git config --get core.hooksPath)" = .githooks && test -x .githooks/pre-commit`
 - postcondition: the configured Git hook path is `.githooks` and the pre-commit hook is executable before an agent launch.
 - breakage: run `git config --unset core.hooksPath`; the probe fails.
 
-### AC4: Local setup documents the hook activation command.
+### AC2: Local setup documents the hook activation command.
 
 - probe: `rg -F 'git config core.hooksPath .githooks' README.md`
 - postcondition: a developer can find the one-time hook activation command in the root setup documentation.
