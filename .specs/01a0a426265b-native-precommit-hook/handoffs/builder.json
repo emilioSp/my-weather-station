@@ -1,0 +1,20 @@
+{
+  "id": "01a0a426265b-native-precommit-hook",
+  "branch": "builder/01a0a426265b-native-precommit-hook-restart-1",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "test \"$(git config --get core.hooksPath)\" = .githooks && test -x .githooks/pre-commit",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "rg -F 'git config core.hooksPath .githooks' README.md",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "No assumptions beyond the technical details in the spec."
+}

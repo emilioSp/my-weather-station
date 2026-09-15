@@ -19,7 +19,7 @@ The owner talks to the maestro. The maestro talks to the builders and the verifi
 ## The roles
 
 - **Owner** — You. You bring the problem, decide every escalation and every finding, review the final code, and make every commit on the base branch. You never talk to a builder or a verifier.
-- **Maestro** — The agent you talk to. It writes the spec with you, creates the branches and the worktrees, spawns and supervises the other agents, and records your decisions. It writes no product code.
+- **Maestro** — The agent you talk to. It writes the spec with you, creates the branches and the worktrees, spawns and supervises the other agents, records your decisions, and removes the completed spec worktrees and branches after you confirm the final commit. It writes no product code.
 - **Builder** — The agent that implements one spec in its own worktree and records its observations. It never verifies its own work, and never touches a path the spec does not list.
 - **Verifier** — The agent that regenerates every probe and every breakage from scratch, in a clean worktree at the commit under verification. It reports findings and repairs nothing. It never gives a verdict.
 
@@ -48,6 +48,8 @@ flowchart TD
     human -->|Chore requested| chore[Maestro applies the chore and runs the existing tests]
     chore --> human
     human -->|Satisfied| push[Owner commits and pushes]
+    push --> confirm[Owner confirms the commit to the maestro]
+    confirm --> cleanup[Maestro removes the spec worktrees and branches]
 ```
 
 ## Step by step
@@ -74,6 +76,8 @@ The steps below follow the diagram, one for each box and each decision.
    - The owner asks for a chore. A chore does not change the behaviour. The maestro does it, runs the existing tests as a regression check, and puts the result in the staging area. The review starts again at step 9.
    - The owner is satisfied. Continue at step 10.
 10. **The owner commits the change and pushes it.**
+11. **The owner confirms the commit to the maestro.** This tells the maestro that the final review is complete.
+12. **The maestro removes the completed spec worktrees and branches.** It does this only after the owner confirmation.
 
 ## Start to contribute
 
