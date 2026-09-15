@@ -18,6 +18,7 @@
     "dev": "npm run dev --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "supabase:start": "supabase start",
+    "supabase:reset": "supabase db reset",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status -o env"
   },

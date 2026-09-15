@@ -1,0 +1,23 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run supabase:start
+      - run: npm run migrate:local -w @wx/collector
+      - run: npx playwright install --with-deps chromium
+      - run: npm test

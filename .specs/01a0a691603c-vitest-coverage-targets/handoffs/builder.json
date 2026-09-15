@@ -1,0 +1,26 @@
+{
+  "id": "01a0a691603c-vitest-coverage-targets",
+  "branch": "builder/01a0a691603c-vitest-coverage-targets",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "npm run supabase:start && npm run supabase:reset && npm run migrate:local -w @wx/collector && npm run test -w @wx/collector",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "npm run test -w @wx/shared",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC3",
+      "probe": "npm run supabase:start && npm run supabase:reset && npm run migrate:local -w @wx/collector && npm run test -w @wx/web",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "Collector database suites truncate measures in afterEach. The web Supabase API suite uses the real Supabase client for reads and a direct local PostgreSQL client only to seed and clean its test rows. No prototype is defined by the spec."
+}
