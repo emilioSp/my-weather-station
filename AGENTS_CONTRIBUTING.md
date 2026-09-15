@@ -202,9 +202,13 @@ Verifier handoff format is [verifier.json](.specs/templates/verifier.json).
 
 Every agent runs in its own branch and worktree, and starts from committed state. Uncommitted files are not copied.
 
-Call the `subagent` tool with `cwd` set to the absolute worktree path, `isolation: "none"`, `context: "fresh"`, and `async: false`. The call blocks until the child ends, so its completion is a first class result instead of a string parsed from terminal output. Do not run `pi` from the shell.
+Call the `subagent` tool with `cwd` set to the absolute worktree path and `isolation: "none"`.
 
-Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.specs/<id>/spec.md` at the start of every pass. Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
+The call blocks until the child ends, so its completion is a first class result instead of a string parsed from terminal output.
+
+Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.specs/<id>/spec.md` at the start of every pass.
+
+Everything else is already in `.pi/agents/`. Do not restate the role in the prompt and do not weaken it.
 
 ### Launch a builder
 

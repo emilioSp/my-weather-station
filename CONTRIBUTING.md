@@ -79,7 +79,7 @@ The steps below follow the diagram, one for each box and each decision.
 
 ### Requirements
 
-- **[pi.dev](https://pi.dev)**, with an extension that supports custom subagents defined in markdown. The maestro spawns the builder and the verifier through it.
+- **[pi.dev](https://pi.dev)**, with the **[pi-subagents](https://github.com/nicobailon/pi-subagents)** extension installed and enabled. This workflow uses its `subagent` tool and the Markdown agent definitions in `.pi/agents/`. Another extension must provide a compatible API.
 - **An OpenAI subscription or API key configured in pi.** The builder and the verifier run on GPT models.
 - **Node.js**, at the version in `.nvmrc`, with the dependencies installed.
 - **Git**, on a clean base branch.
