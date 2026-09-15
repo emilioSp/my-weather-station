@@ -303,7 +303,9 @@ The candidate commit is the technical approval stamp. It is the last verifier co
 
 Declare the technical spec completed when a candidate commit exists. On the base branch, run `git merge --squash <candidate-commit>`. Do not commit the merge result. The candidate product changes must remain staged for the owner. Keep every worktree until the owner makes the final commit.
 
-The owner reviews code quality on the base branch. If satisfied, the owner commits and pushes the candidate change.
+The owner reviews code quality on the base branch. If satisfied, the owner commits and pushes the candidate change. The owner then confirms that commit to the maestro.
+
+Only after that confirmation, the maestro removes every builder and verifier worktree created for the spec, then deletes their branches.
 
 If the owner requests a non-functional chore, the maestro applies it directly on the base branch. It must not change acceptance criteria, probes, breakages, tests, or functional behaviour. It runs the complete existing test suite for each affected workspace as a regression check, stages the chore changes, then returns the staged change to the owner for another final review. These tests are not a replacement for independent acceptance verification.
 
