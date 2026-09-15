@@ -25,8 +25,10 @@
     "@biomejs/biome": "2.4.10",
     "@playwright/test": "1.62.1",
     "@types/node": "26.4.1",
+    "@vitest/coverage-v8": "5.0.1",
     "supabase": "2.116.0",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
   },
   "allowScripts": {
     "@stoprocent/noble@2.8.0": true,
@@ -34,6 +36,6 @@
     "@serialport/bindings-cpp": false,
     "usb": false,
     "esbuild@0.28.2": true,
-    "fsevents@2.3.3": true
+    "fsevents@2.3.2": true
   }
 }

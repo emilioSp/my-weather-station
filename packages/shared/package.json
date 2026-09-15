@@ -7,9 +7,10 @@
     ".": "./index.ts"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run --coverage --config vitest.config.ts"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "4.4.3"
   }
 }
