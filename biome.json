@@ -14,6 +14,7 @@
       "!!.specs/*/prototypes",
       "!!**/dist",
       "!!**/coverage",
+      "!!**/test-results",
       "!!**/build",
       "!!**/*.css",
       "!!_site"

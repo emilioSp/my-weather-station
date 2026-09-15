@@ -1,5 +1,5 @@
 .env.*
-!apps/web/.env.prod
+!packages/web/.env.prod
 .npmrc
 .idea
 node_modules
@@ -9,7 +9,7 @@ dist
 
 # Playwright
 /test-results/
-/apps/web/test-results/
+/packages/web/test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

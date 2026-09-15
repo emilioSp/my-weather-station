@@ -9,11 +9,11 @@ measurements in PostgreSQL, and shows them in a web app.
 An npm workspaces monorepo with three workspaces.
 
 ```text
-apps/collector    @wx/collector  BLE daemon. Reads the meters and writes to PostgreSQL.
-                                 Owns .env, Dockerfile, knexfile.js and migrations/.
-apps/web          @wx/web        React + Vite app. Reads the measures from Supabase.
-packages/shared   @wx/shared     Domain schemas, the camelCase <-> snake_case mapping,
-                                 and UUID normalization.
+packages/collector  @wx/collector  BLE daemon. Reads the meters and writes to PostgreSQL.
+                                    Owns .env, Dockerfile, knexfile.js and migrations/.
+packages/web        @wx/web        React + Vite app. Reads the measures from Supabase.
+packages/shared     @wx/shared     Domain schemas, the camelCase <-> snake_case mapping,
+                                  and UUID normalization.
 ```
 
 The root holds only what is shared: the workspace globs, the Biome config, the TypeScript
@@ -22,7 +22,7 @@ base config and the lockfile.
 ### How the workspaces fit together
 
 The `workspaces` field in the root `package.json` holds directory globs, not package names.
-`["apps/*", "packages/*"]` is two lines and finds three workspaces. To add one, create the
+`["packages/*"]` finds all three workspaces. To add one, create the
 directory with its own `package.json` and run `npm install`. The root file does not change.
 
 `npm install` creates a single `node_modules` at the root, plus a symlink there for every
@@ -62,7 +62,7 @@ git config core.hooksPath .githooks
 
 ### Collector
 
-Create `apps/collector/.env`:
+Create `packages/collector/.env`:
 
 ```dotenv
 DEVICES=[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor"}]
@@ -98,7 +98,7 @@ npm run seed:local -w @wx/collector
 ### Web app
 
 The web app reads the `measures` table through the local Supabase API.
-`apps/web/.env` contains the local endpoint and public key. `apps/web/.env.prod`
+`packages/web/.env` contains the local endpoint and public key. `packages/web/.env.prod`
 contains the production values. Vite loads `.env` during development. Its build
 command uses the `prod` mode, which gives `.env.prod` priority.
 
@@ -116,7 +116,7 @@ npm run rollback:local -w @wx/collector             # undo the last local migrat
 npm run seed:local -w @wx/collector                 # replace local measures with one year of test data
 ```
 
-`seed:local` runs only with `NODE_ENV=development` and uses `apps/collector/.env`.
+`seed:local` runs only with `NODE_ENV=development` and uses `packages/collector/.env`.
 It deletes every row from the local `measures` table before it creates the test dataset.
 
 The root keeps only the scripts that act on every workspace:
@@ -144,7 +144,7 @@ The web UI deploys automatically after each push to `main`:
 
 In GitHub, open **Settings** → **Pages** and set **Source** to **GitHub Actions**.
 The Supabase URL and publishable key are deliberately committed in
-`apps/web/.env.prod`. They are public browser credentials; Supabase row level
+`packages/web/.env.prod`. They are public browser credentials; Supabase row level
 security protects the data.
 
 ### Collector
@@ -158,7 +158,7 @@ See [DEPLOY.md](DEPLOY.md).
 The collector uses the Strategy pattern:
 
 ```text
-apps/collector/index.ts
+packages/collector/index.ts
   └── meters/meter.factory.ts
       └── meters/Meter strategy
           ├── api/sensor.api.ts
@@ -189,7 +189,7 @@ inserted row.
 ### Web app
 
 ```text
-apps/web/main.tsx
+packages/web/main.tsx
   └── App.tsx
       └── supabase.api.ts
           └── @supabase/supabase-js -> PostgREST -> PostgreSQL

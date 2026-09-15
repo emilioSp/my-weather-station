@@ -13,8 +13,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-COPY apps/collector/package.json ./apps/collector/
-COPY apps/web/package.json ./apps/web/
+COPY packages/collector/package.json ./packages/collector/
+COPY packages/web/package.json ./packages/web/
 COPY packages/shared/package.json ./packages/shared/
 RUN npm ci --omit=dev --workspace @wx/collector
 
@@ -33,6 +33,6 @@ RUN apt-get update \
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/package.json ./package.json
 COPY packages/shared ./packages/shared
-COPY apps/collector ./apps/collector
+COPY packages/collector ./packages/collector
 
-CMD ["node", "apps/collector/index.ts"]
+CMD ["node", "packages/collector/index.ts"]

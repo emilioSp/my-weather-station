@@ -7,13 +7,12 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "apps/*",
     "packages/*"
   ],
   "scripts": {
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "tsc --project apps/collector/tsconfig.json && tsc --project apps/web/tsconfig.json && tsc --project packages/shared/tsconfig.json",
+    "typecheck": "tsc --project packages/collector/tsconfig.json && tsc --project packages/web/tsconfig.json && tsc --project packages/shared/tsconfig.json",
     "precommit": "npm run lint && npm run typecheck",
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",

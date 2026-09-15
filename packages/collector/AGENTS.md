@@ -82,7 +82,7 @@ npm run migrate:local -w @wx/collector
 ## Docker and Supabase local
 
 - Supabase CLI owns the local PostgreSQL and API stack.
-- The collector connects to Supabase local PostgreSQL through `apps/collector/.env` on port `54322`.
+- The collector connects to Supabase local PostgreSQL through `packages/collector/.env` on port `54322`.
 - The Docker build context is the repository root because it contains the lockfile and `packages/shared`.
 - `docker-build-and-push` passes `../..` as the build context.
 - Keep the Docker ignore file named `Dockerfile.dockerignore`. A plain `.dockerignore` in this workspace does not apply to the root build context.

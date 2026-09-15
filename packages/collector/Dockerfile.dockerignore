@@ -4,8 +4,8 @@ node_modules
 **/.env
 **/.env.*
 .npmrc
-apps/web/*
-!apps/web/package.json
+packages/web/*
+!packages/web/package.json
 coverage
 dist
 build
