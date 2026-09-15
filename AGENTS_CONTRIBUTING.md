@@ -200,6 +200,14 @@ Verifier handoff format is [verifier.json](.specs/templates/verifier.json).
 
 ### Launch an agent
 
+Before creating a worktree or launching a builder or verifier, confirm that the native hook is active:
+
+```sh
+test "$(git config --get core.hooksPath)" = .githooks && test -x .githooks/pre-commit
+```
+
+If this fails, report `git config core.hooksPath .githooks` to the owner and stop. Do not create the worktree or launch the agent.
+
 Every agent runs in its own branch and worktree, and starts from committed state. Uncommitted files are not copied.
 
 Call the `subagent` tool with `cwd` set to the absolute worktree path and `isolation: "none"`.

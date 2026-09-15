@@ -54,6 +54,12 @@ Install every workspace at once, from the repository root:
 npm install
 ```
 
+Activate the versioned pre-commit hook once for this clone:
+
+```sh
+git config core.hooksPath .githooks
+```
+
 ### Collector
 
 Create `apps/collector/.env`:
@@ -119,7 +125,10 @@ The root keeps only the scripts that act on every workspace:
 npm run supabase:start   # start the local Supabase stack
 npm run supabase:stop    # stop the local Supabase stack
 npm run supabase:status  # show local endpoints
-npm run lint             # Biome, whole repository
+npm run lint             # read-only Biome check, whole repository
+npm run lint:fix         # apply Biome fixes, whole repository
+npm run typecheck        # TypeScript check for every workspace
+npm run precommit        # read-only lint and TypeScript checks
 npm run build            # type check, plus the production build of the web app
 npm test                 # run tests in every workspace
 npm run dev              # every workspace that defines dev
