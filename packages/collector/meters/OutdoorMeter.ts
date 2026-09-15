@@ -13,8 +13,7 @@ export class OutdoorMeter extends Meter {
       manufacturerData &&
       manufacturerData.length >= 13 &&
       manufacturerData[0] === 0x69 &&
-      manufacturerData[1] === 0x09 &&
-      manufacturerData[2] === 0xd1
+      manufacturerData[1] === 0x09
     ) {
       const temperatureDecimal = (manufacturerData[10] & 0x0f) / 10;
       const temperatureInteger = manufacturerData[11] & 0x7f;
