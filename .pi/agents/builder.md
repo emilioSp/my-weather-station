@@ -4,13 +4,9 @@ description: Implements one workflow spec inside its assigned git worktree. Spaw
 model: openai-codex/gpt-5.6-terra
 thinking: medium
 tools: read, grep, find, ls, bash, edit, write
-excludeTools: contact_supervisor
 systemPromptMode: append
 inheritProjectContext: true
-inheritGlobalContext: false
-inheritSkills: false
 defaultContext: fresh
-allowNestedSubagents: false
 async: false
 timeoutMs: 3600000
 acceptance: { level: "none", reason: "Disabled on purpose. An independent verifier regenerates every probe in a separate worktree, so an automatic verdict here would add a second and weaker one." }

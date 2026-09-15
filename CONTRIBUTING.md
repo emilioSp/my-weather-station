@@ -124,3 +124,15 @@ The steps below follow the diagram, one for each box and each decision.
 | `.pi/agents/`                 | The builder and verifier roles, and the model each one runs                         |
 | `AGENTS_CONTRIBUTING.md`      | The rules every agent follows                                                       |
 | `AGENTS.md`                   | Code conventions, with one more in each workspace                                   |
+
+## Customization
+
+The builder and verifier definitions are in `.pi/agents/`. You can choose a model and a
+thinking level for each role by editing the `model` and `thinking` fields in its YAML front matter.
+
+| Role     | Default model                  | Default thinking |
+| -------- | ------------------------------ | ---------------- |
+| Builder  | `openai-codex/gpt-5.6-terra` | `medium`         |
+| Verifier | `openai-codex/gpt-5.6-sol`   | `medium`         |
+
+Keep the role instructions unchanged. The builder and verifier must remain independent.

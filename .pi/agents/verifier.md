@@ -4,13 +4,9 @@ description: Independently regenerates the observations for one workflow spec, i
 model: openai-codex/gpt-5.6-sol
 thinking: medium
 tools: read, grep, find, ls, bash, edit, write
-excludeTools: contact_supervisor
 systemPromptMode: append
 inheritProjectContext: true
-inheritGlobalContext: false
-inheritSkills: false
 defaultContext: fresh
-allowNestedSubagents: false
 async: false
 timeoutMs: 3600000
 acceptance: { level: "none", reason: "Disabled on purpose. This verifier is the verification step of the workflow. It reports findings with observations and never issues a verdict, so an automatic verdict here has nothing to add." }
