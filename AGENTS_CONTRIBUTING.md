@@ -221,7 +221,7 @@ git worktree add -b builder/<id> .worktree/<id> HEAD
 Install the dependencies in it.
 
 ```sh
-npm --prefix <worktree path> ci
+npm --prefix <worktree path> ci --prefer-offline --no-audit
 ```
 
 If the install fails, report it to the owner and do not spawn.
@@ -248,7 +248,7 @@ git worktree add -b verifier/<id>/<n> .worktree/<id>-verifier-<n> builder/<id>
 Install the dependencies in it.
 
 ```sh
-npm --prefix <worktree path> ci
+npm --prefix <worktree path> ci --prefer-offline --no-audit
 ```
 
 If the install fails, report it to the owner and do not spawn.
