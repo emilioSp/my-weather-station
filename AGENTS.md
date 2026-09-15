@@ -44,13 +44,14 @@ npm run <script> -w <workspace-name>
 - Types that describe stored rows belong in `packages/shared/types.ts`. Types used by one workspace stay in that workspace.
 - Keep utility modules under a `utils` folder.
 
-## TypeScript conventions
+## Code conventions
 
 - Use ESM only. Do not use CommonJS.
 - Prefer `type` over `interface`.
 - Use Zod inference for shared schema types.
 - Prefer named exports. Use a default export only when a tool requires it or for a single application entrypoint or singleton.
 - Prefer pure functions.
+- Use early returns.
 - Prefer arrow functions. Use classes only for strategies or objects with internal state.
 - Keep functions small. Split a function when it becomes hard to read.
 - Use `async` and `await`. Do not introduce callback APIs.
