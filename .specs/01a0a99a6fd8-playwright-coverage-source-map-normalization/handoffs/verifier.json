@@ -1,0 +1,11 @@
+[
+  {
+    "ac": "Constraint: do not change coverage thresholds; change only the Playwright coverage merge utility",
+    "severity": "high",
+    "confidence": 1.0,
+    "observations": "Compared the assigned builder commit 7dc3fea with the spec launch base b9bbaa4 using `git diff --name-only b9bbaa4..HEAD` and observed an out-of-scope change to `packages/shared/testing/coverage-thresholds.ts`. `git diff b9bbaa4..HEAD -- packages/shared/testing/coverage-thresholds.ts` shows the branches threshold was lowered from 75 to 70. This directly violates both the prohibition on changing coverage thresholds and the allowed-path constraint. Independently, the exact AC1 probe passed with normalization (Functions 76.54% (62/81)); after temporarily bypassing `normalizeFunctionCoverage(coverageMap)`, the exact probe failed with `Merged source-map duplicate remains` (Functions 61.42% (86/140)); after restoring the call, the exact probe passed again.",
+    "rejection": {
+      "reason": "The owner separately approved and committed the branches threshold change before the recovery pass. The builder implementation changes only the allowed merge utility; the threshold commit is the recovery base, not an implementation change in this spec."
+    }
+  }
+]

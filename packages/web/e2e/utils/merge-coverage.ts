@@ -28,6 +28,49 @@ const getE2ECoveragePaths = async (): Promise<string[]> => {
     .sort();
 };
 
+const isAnonymousFunction = (name: string): boolean =>
+  name.startsWith('(anonymous_');
+
+/*
+ * `coverage-final.json` can have two entries for one arrow function.
+ * Vitest and Playwright convert V8 coverage separately. Vitest can lose the
+ * TypeScript variable name and write `(anonymous_n)`, while Playwright uses
+ * the inferred source name. Istanbul then treats them as different functions
+ * and counts one as falsely uncovered. Example: Vitest writes `(anonymous_0)`
+ * and Playwright writes `Accordion` for `const Accordion = () => { ... }`.
+ * Both entries point to the same source declaration. In `Accordion.tsx`,
+ * Vitest records the component body as `(anonymous_0)` and the
+ * `onClick={() => setIsOpen(!isOpen)}` callback as `(anonymous_1)`.
+ */
+
+const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
+  for (const path of coverageMap.files()) {
+    const coverage = coverageMap.fileCoverageFor(path).data;
+    const namedDeclarationPositions = new Set(
+      Object.values(coverage.fnMap)
+        .filter(
+          (functionCoverage) => !isAnonymousFunction(functionCoverage.name),
+        )
+        .map(
+          (functionCoverage) =>
+            `${functionCoverage.decl.start.line}:${functionCoverage.decl.start.column}`,
+        ),
+    );
+
+    for (const [id, functionCoverage] of Object.entries(coverage.fnMap)) {
+      const declarationPosition = `${functionCoverage.decl.start.line}:${functionCoverage.decl.start.column}`;
+
+      if (
+        isAnonymousFunction(functionCoverage.name) &&
+        namedDeclarationPositions.has(declarationPosition)
+      ) {
+        delete coverage.fnMap[id];
+        delete coverage.f[id];
+      }
+    }
+  }
+};
+
 const checkCoverageThresholds = (coverageMap: CoverageMap): void => {
   const summary = coverageMap.getCoverageSummary();
   const metrics = Object.keys(coverageThresholds) as Array<
@@ -59,6 +102,8 @@ export const mergeCoverage = async (): Promise<void> => {
   for (const path of await getE2ECoveragePaths()) {
     coverageMap.merge(await readCoverage(path));
   }
+
+  normalizeFunctionCoverage(coverageMap);
 
   const context = reportLib.createContext({
     coverageMap,

@@ -1,0 +1,14 @@
+{
+  "id": "01a0a99a6fd8-playwright-coverage-source-map-normalization",
+  "branch": "builder/01a0a99a6fd8-playwright-coverage-source-map-normalization",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "rm -rf packages/web/coverage && npm exec --workspace @wx/web -- vitest run --coverage --config vitest.config.ts && npm exec --workspace @wx/web -- playwright test && (npm exec --workspace @wx/web -- node e2e/utils/merge-coverage.ts || true) && (cd packages/web && node --input-type=module -e \"…AC1 assertion…\")",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "No assumptions beyond the spec. The merge utility retains named functions and distinct nested handlers while removing only anonymous entries sharing a named declaration position."
+}

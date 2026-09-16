@@ -1,0 +1,16 @@
+{
+  "id": "01a0a983130f-web-e2e-coverage-targets",
+  "decision_so_far": "Added the two allowed Playwright E2E specs, with REST/RPC route mocks and JavaScript coverage capture for every new case.",
+  "blocked": "AC1 cannot be completed under the stated constraints. The restored `npm run test -w @wx/web` result is 74.69% branches and 69.28% functions, below the configured 75% targets. The required AC1 breakage also requires temporarily renaming the existing site-icons and temperature-units E2E files, which are outside the allowed paths. Production code, coverage configuration, and coverage utilities are prohibited changes.",
+  "options": [
+    "Expand the allowed paths to permit the AC1 breakage procedure and the necessary existing E2E test changes.",
+    "Revise the coverage target or the prohibited-path constraints.",
+    "Accept a failed implementation pass with the recorded coverage result."
+  ],
+  "recommendation": "Expand the allowed E2E test scope so the coverage shortfall can be addressed while retaining the required thresholds.",
+  "next_steps": {
+    "builder": "Resume after the owner resolves the path and coverage constraints.",
+    "maestro": "Obtain an owner decision and record its resolution in this escalation."
+  },
+  "resolution": "The owner confirms that the scope includes every direct Playwright spec file under packages/web/e2e/, including the existing site-icons and temperature-units specs. Extend those tests as needed to meet the configured coverage targets. This is a scope clarification, not a change to production code, coverage configuration, or thresholds."
+}
