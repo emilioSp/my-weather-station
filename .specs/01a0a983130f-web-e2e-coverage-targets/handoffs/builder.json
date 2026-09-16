@@ -1,0 +1,20 @@
+{
+  "id": "01a0a983130f-web-e2e-coverage-targets",
+  "branch": "builder/01a0a983130f-web-e2e-coverage-targets",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "npm run test -w @wx/web",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "npm exec --workspace @wx/web -- playwright test e2e/weather-station-branches.spec.ts",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "The smartphone test uses the browser touch event path at the 390 × 844 viewport and asserts the chart's own readout. No assumptions beyond the resolved scope clarification were made."
+}
