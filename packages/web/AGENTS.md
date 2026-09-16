@@ -24,6 +24,12 @@ main.tsx
 - Use `useMemo` and `useCallback` only when React Compiler does not optimize the case and the benefit exceeds the maintenance cost.
 - Do not use nested ternaries in JSX. Use guard clauses or single-level conditions.
 
+## E2E tests
+
+- Do not use XPath locators. Use `data-testid` attributes instead.
+- Assert user-visible results, not loading indicators alone.
+- Do not use fixed waits. Wait for an expected UI value or state.
+
 ## Styling and responsive layout
 
 - Use Tailwind utility classes.

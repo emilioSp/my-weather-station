@@ -120,7 +120,10 @@ export const LinearChart = ({
       extrema={extrema}
       temperatureUnit={temperatureUnit}
     >
-      <div className="mt-4 grid min-h-19 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs sm:hidden">
+      <div
+        className="mt-4 grid min-h-19 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs sm:hidden"
+        data-testid={`${sensor.toLowerCase()}-${metric}-touch-readout`}
+      >
         {touchMeasure === null ? (
           <span className="self-center text-[#9bad9e]">Touch and drag.</span>
         ) : (
@@ -188,6 +191,7 @@ export const LinearChart = ({
                   <ChartTooltip
                     {...tooltipProps}
                     metric={metric}
+                    sensor={sensor}
                     temperatureUnit={temperatureUnit}
                   />
                 </div>
@@ -288,6 +292,7 @@ const Extrema = ({ label, metric, value, temperatureUnit }: ExtremaProps) => (
 
 type ChartTooltipProps = TooltipContentProps & {
   metric: WeatherMetric;
+  sensor: Sensor;
   temperatureUnit: TemperatureUnit;
 };
 
@@ -296,6 +301,7 @@ const ChartTooltip = ({
   label,
   metric,
   payload,
+  sensor,
   temperatureUnit,
 }: ChartTooltipProps) => {
   const measure = payload[0]?.payload as ChartDatum | undefined;
@@ -305,7 +311,10 @@ const ChartTooltip = ({
   }
 
   return (
-    <div className="min-w-44 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs shadow-[0_10px_28px_rgb(0_0_0_/_0.3)]">
+    <div
+      className="min-w-44 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs shadow-[0_10px_28px_rgb(0_0_0_/_0.3)]"
+      data-testid={`${sensor.toLowerCase()}-${metric}-chart-tooltip`}
+    >
       <ChartReadout
         metric={metric}
         measure={measure}

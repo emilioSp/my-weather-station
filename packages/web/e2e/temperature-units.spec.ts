@@ -80,7 +80,7 @@ test.describe('Temperature units', () => {
     );
     await temperatureChart.hover({ position: { x: 200, y: 200 } });
     await expect(
-      temperatureChart.locator('xpath=..').locator('.recharts-tooltip-wrapper'),
+      page.getByTestId('outdoor-temperature-chart-tooltip'),
     ).toContainText('63.9°F');
     await expect(page.getByLabel('Measurement history')).not.toContainText(
       '20.0°C',

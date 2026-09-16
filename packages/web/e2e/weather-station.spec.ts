@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 import { saveCoverage } from './utils/save-coverage';
 
 const initialOutdoorMeasure = {
@@ -113,8 +113,39 @@ const mockWeatherStation = async ({
   });
 };
 
-const waitForCharts = async (page: Page): Promise<void> => {
-  await expect(page.getByRole('status')).toBeHidden({ timeout: 5_000 });
+const expectDesktopChartReadout = async ({
+  chart,
+  expectedValues,
+  page,
+  tooltipTestId,
+}: {
+  chart: Locator;
+  expectedValues: string[];
+  page: Page;
+  tooltipTestId: string;
+}): Promise<void> => {
+  await chart.scrollIntoViewIfNeeded();
+  const plot = chart.locator('.recharts-cartesian-grid');
+  await expect(plot).toBeVisible({ timeout: 5_000 });
+  const [chartBox, plotBox] = await Promise.all([
+    chart.boundingBox(),
+    plot.boundingBox(),
+  ]);
+  if (chartBox === null || plotBox === null) {
+    throw new Error('The chart plot is not rendered.');
+  }
+
+  await chart.hover({
+    position: {
+      x: plotBox.x - chartBox.x + plotBox.width - 1,
+      y: plotBox.y - chartBox.y + plotBox.height / 2,
+    },
+  });
+
+  const tooltip = page.getByTestId(tooltipTestId);
+  for (const expectedValue of expectedValues) {
+    await expect(tooltip).toContainText(expectedValue, { timeout: 5_000 });
+  }
 };
 
 test.describe('Weather station', () => {
@@ -204,10 +235,14 @@ test.describe('Weather station', () => {
     await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
     await expect(page.getByLabel('Current readings')).toContainText('-101 dBm');
     await expect(page.getByLabel('Current readings')).toContainText('1 dBm');
-    await expect(page.getByRole('status')).toBeVisible();
-    await expect(page.getByLabel('Loading chart')).toHaveCount(6);
-    await expect(page.getByRole('button', { name: 'Zoom out' })).toBeDisabled();
-    await waitForCharts(page);
+    await expectDesktopChartReadout({
+      chart: page
+        .getByLabel(/Interactive temperature chart for outdoor measurements/)
+        .first(),
+      expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
+      page,
+      tooltipTestId: 'outdoor-temperature-chart-tooltip',
+    });
 
     const refreshReadings = page.getByRole('button', {
       name: 'Refresh readings',
@@ -336,44 +371,44 @@ test.describe('Weather station', () => {
       });
 
       await page.goto('/');
-      await waitForCharts(page);
 
       const chart = page
         .getByLabel(/Interactive temperature chart for outdoor measurements/)
         .first();
-      const touchReadout = chart.locator(
-        'xpath=../../../../preceding-sibling::div',
+      const touchReadout = page.getByTestId(
+        'outdoor-temperature-touch-readout',
       );
       await expect(touchReadout.getByText('Touch and drag.')).toBeVisible();
       await chart.scrollIntoViewIfNeeded();
-      const box = await chart.boundingBox();
-      if (box === null) {
-        throw new Error('The outdoor temperature chart is not rendered.');
+      const plot = chart.locator('.recharts-cartesian-grid');
+      await expect(plot).toBeVisible({ timeout: 5_000 });
+      const plotBox = await plot.boundingBox();
+      if (plotBox === null) {
+        throw new Error('The outdoor temperature chart plot is not rendered.');
       }
-      await page.evaluate(
-        ({ x, y }) => {
-          const chartWrapper = document.querySelector(
-            '[aria-label^="Interactive temperature chart for outdoor measurements"]',
-          )?.parentElement;
-          const dispatchTouchEvent = (type: string) => {
-            const event = new Event(type, { bubbles: true });
-            Object.defineProperty(event, 'touches', {
-              value: [{ clientX: x, clientY: y }],
-            });
-            chartWrapper?.dispatchEvent(event);
-          };
-          dispatchTouchEvent('touchstart');
-          dispatchTouchEvent('touchmove');
-        },
-        { x: box.x + 200, y: box.y + 200 },
-      );
+      const touchPosition = {
+        x: plotBox.x + plotBox.width - 1,
+        y: plotBox.y + plotBox.height / 2,
+      };
+      await chart.evaluate((chartWrapper, position) => {
+        const dispatchTouchEvent = (type: string) => {
+          const event = new Event(type, { bubbles: true });
+          Object.defineProperty(event, 'touches', {
+            value: [{ clientX: position.x, clientY: position.y }],
+          });
+          chartWrapper.parentElement?.dispatchEvent(event);
+        };
+        dispatchTouchEvent('touchstart');
+        dispatchTouchEvent('touchmove');
+      }, touchPosition);
       await expect(touchReadout.getByText('Touch and drag.')).toBeHidden();
-      await expect(touchReadout.getByText('Heat index')).toBeVisible();
-      await page.evaluate(() => {
-        const chartWrapper = document.querySelector(
-          '[aria-label^="Interactive temperature chart for outdoor measurements"]',
-        )?.parentElement;
-        chartWrapper?.dispatchEvent(new Event('touchend', { bubbles: true }));
+      await expect(touchReadout).toContainText('01 Sept · 17:00:00');
+      await expect(touchReadout).toContainText('25.0°C');
+      await expect(touchReadout).toContainText('19.5°C');
+      await chart.evaluate((chartWrapper) => {
+        chartWrapper.parentElement?.dispatchEvent(
+          new Event('touchend', { bubbles: true }),
+        );
       });
 
       await saveCoverage({
@@ -397,39 +432,44 @@ test.describe('Weather station', () => {
     });
 
     await page.goto('/');
-    await waitForCharts(page);
+    const outdoorTemperatureChart = page
+      .getByLabel(/Interactive temperature chart for outdoor measurements/)
+      .first();
+    await expectDesktopChartReadout({
+      chart: outdoorTemperatureChart,
+      expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
+      page,
+      tooltipTestId: 'outdoor-temperature-chart-tooltip',
+    });
 
     const indoorAccordion = page.getByRole('button', { name: 'Indoor' });
     await expect(indoorAccordion).toHaveAttribute('aria-expanded', 'false');
     await indoorAccordion.click();
     await expect(indoorAccordion).toHaveAttribute('aria-expanded', 'true');
-    const indoorTemperatureChart = page
-      .getByLabel(/Interactive temperature chart for indoor measurements/)
-      .first();
-    await indoorTemperatureChart.hover({ position: { x: 200, y: 200 } });
-    await expect(
-      indoorTemperatureChart
-        .locator('xpath=..')
-        .locator('.recharts-tooltip-wrapper'),
-    ).toContainText('Temperature');
-    const outdoorHumidityChart = page
-      .getByLabel(/Interactive humidity chart for outdoor measurements/)
-      .first();
-    await outdoorHumidityChart.hover({ position: { x: 200, y: 200 } });
-    await expect(
-      outdoorHumidityChart
-        .locator('xpath=..')
-        .locator('.recharts-tooltip-wrapper'),
-    ).toContainText('Humidity');
-    const outdoorDewPointChart = page
-      .getByLabel(/Interactive dew point chart for outdoor measurements/)
-      .first();
-    await outdoorDewPointChart.hover({ position: { x: 200, y: 200 } });
-    await expect(
-      outdoorDewPointChart
-        .locator('xpath=..')
-        .locator('.recharts-tooltip-wrapper'),
-    ).toContainText('Dew point');
+    await expectDesktopChartReadout({
+      chart: page
+        .getByLabel(/Interactive temperature chart for indoor measurements/)
+        .first(),
+      expectedValues: ['01 Sept · 17:00:00', '24.0°C', '19.5°C'],
+      page,
+      tooltipTestId: 'indoor-temperature-chart-tooltip',
+    });
+    await expectDesktopChartReadout({
+      chart: page
+        .getByLabel(/Interactive humidity chart for outdoor measurements/)
+        .first(),
+      expectedValues: ['01 Sept · 17:00:00', '67%'],
+      page,
+      tooltipTestId: 'outdoor-humidity-chart-tooltip',
+    });
+    await expectDesktopChartReadout({
+      chart: page
+        .getByLabel(/Interactive dew point chart for outdoor measurements/)
+        .first(),
+      expectedValues: ['01 Sept · 17:00:00', '12.0°C'],
+      page,
+      tooltipTestId: 'outdoor-dewPoint-chart-tooltip',
+    });
     await indoorAccordion.click();
     await expect(indoorAccordion).toHaveAttribute('aria-expanded', 'false');
 
@@ -445,7 +485,12 @@ test.describe('Weather station', () => {
     ]) {
       await zoomOut.click();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
-      await waitForCharts(page);
+      await expectDesktopChartReadout({
+        chart: outdoorTemperatureChart,
+        expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
+        page,
+        tooltipTestId: 'outdoor-temperature-chart-tooltip',
+      });
     }
     await expect(zoomOut).toBeDisabled();
 
@@ -459,7 +504,12 @@ test.describe('Weather station', () => {
     ]) {
       await zoomIn.click();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
-      await waitForCharts(page);
+      await expectDesktopChartReadout({
+        chart: outdoorTemperatureChart,
+        expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
+        page,
+        tooltipTestId: 'outdoor-temperature-chart-tooltip',
+      });
     }
     await expect(zoomIn).toBeDisabled();
 
