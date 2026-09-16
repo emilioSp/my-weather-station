@@ -1,8 +1,8 @@
-# 01a0a983130f-web-e2e-coverage-targets: Web E2E branch coverage target
+# 01a0a983130f-web-e2e-coverage-targets: Web E2E component branch coverage
 
 ## Problem
 
-The web workspace reaches 70.52% global branch coverage. Add end-to-end tests for the missing weather-station user paths and reach 75% branch coverage.
+The web workspace reaches 74.23% global branch coverage. The main remaining gaps are visible states inside weather-station components. Add end-to-end tests for those states and reach 75% branch coverage.
 
 ## Constraints
 
@@ -20,16 +20,15 @@ The web workspace reaches 70.52% global branch coverage. Add end-to-end tests fo
 
 ## Technical details
 
-Before the builder starts, the owner commits the configured branch threshold at 75%.
+Use `packages/web/coverage/coverage-final.json` to select uncovered component branches. Extend `weather-station-branches.spec.ts` with browser assertions for these visible component states:
 
-Use `packages/web/coverage/coverage-final.json` to select uncovered branch outcomes. Add one `weather-station-branches.spec.ts` Playwright suite. It must cover these user paths with browser request mocks:
+- `LinearChart`: populated and empty charts, desktop tooltip, and touch tooltip interaction at the smartphone viewport
+- `RangeControls`: loading state, minimum zoom limit, maximum zoom limit, and selected range after zoom
+- `WeatherCard`: missing reading and weak, medium, and strong signal displays
+- `MeterAccordion`: loading placeholders, ready charts, and expanded and collapsed states
+- `WeatherStationHeader`: no available reading and refresh in progress
 
-- current-reading failure, chart-history failure, and no available readings
-- refresh when readings change and when they do not change
-- chart zoom controls at both limits and after a range change
-- opening and closing the Indoor accordion
-
-Each test must assert the visible result or the relevant accessible state. Do not add coverage-only interactions that lack a user assertion.
+Use browser request mocks to produce each state. Each interaction must assert visible text, button state, or accessible state. Do not add coverage-only interactions that lack a user assertion.
 
 ## Acceptance criteria
 
@@ -39,11 +38,11 @@ Each test must assert the visible result or the relevant accessible state. Do no
 - postcondition: Vitest and Playwright succeed. The final merged coverage summary reports at least 75% branches and meets every other configured threshold.
 - breakage: temporarily skip every test in `packages/web/e2e/weather-station-branches.spec.ts`; the probe fails its branch coverage threshold.
 
-### AC2: The E2E suite covers weather-station error, empty, refresh, range, and accordion paths.
+### AC2: The E2E suite shows the uncovered weather-station component states.
 
 - probe: `npm exec --workspace @wx/web -- playwright test e2e/weather-station-branches.spec.ts`
-- postcondition: Browser assertions show the current-reading error, chart-history error, empty readings, changed and unchanged refresh results, both chart zoom limits, a range request after zoom, and Indoor accordion `aria-expanded` changing from `false` to `true` and back to `false`.
-- breakage: temporarily replace the expected current-reading error text in `weather-station-branches.spec.ts`; the probe fails.
+- postcondition: Browser assertions show each state in the Technical details section, including a desktop chart tooltip, a smartphone touch chart readout, every signal display, both accordion states, and both zoom limits.
+- breakage: temporarily replace the expected `No readings available.` text in `weather-station-branches.spec.ts`; the probe fails.
 
 ## Out of scope
 
