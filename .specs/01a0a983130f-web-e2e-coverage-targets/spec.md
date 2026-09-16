@@ -1,8 +1,8 @@
-# 01a0a983130f-web-e2e-coverage-targets: Web E2E coverage targets
+# 01a0a983130f-web-e2e-coverage-targets: Web E2E branch coverage target
 
 ## Problem
 
-The raised global coverage targets fail in the web workspace. Add end-to-end tests that execute the missing weather-station states and meet the configured targets.
+The web workspace reaches 70.52% global branch coverage. Add end-to-end tests for the missing weather-station user paths and reach 75% branch coverage.
 
 ## Constraints
 
@@ -20,31 +20,35 @@ The raised global coverage targets fail in the web workspace. Add end-to-end tes
 
 ## Technical details
 
-Extend the existing weather-station Playwright coverage. Cover real user-visible states that the current tests do not execute: latest-reading failure, history failure, no available readings, refresh with changed and unchanged readings, and chart range controls. Use browser route handlers to return the required REST and RPC results.
+Before the builder starts, the owner commits the configured branch threshold at 75%.
+
+Use `packages/web/coverage/coverage-final.json` to select uncovered branch outcomes. Add one `weather-station-branches.spec.ts` Playwright suite. It must cover these user paths with browser request mocks:
+
+- current-reading failure, chart-history failure, and no available readings
+- refresh when readings change and when they do not change
+- chart zoom controls at both limits and after a range change
+- opening and closing the Indoor accordion
+
+Each test must assert the visible result or the relevant accessible state. Do not add coverage-only interactions that lack a user assertion.
 
 ## Acceptance criteria
 
-### AC1: The web test command meets all configured global coverage targets.
+### AC1: The web test command reaches 75% global branch coverage.
 
 - probe: `npm run test -w @wx/web`
-- postcondition: Playwright and Vitest succeed. The final merged coverage summary reports at least 80% statements and lines, and at least 75% branches and functions.
-- breakage: temporarily rename every `packages/web/e2e/*.spec.ts` file so Playwright finds no E2E tests; the probe fails.
+- postcondition: Vitest and Playwright succeed. The final merged coverage summary reports at least 75% branches and meets every other configured threshold.
+- breakage: temporarily skip every test in `packages/web/e2e/weather-station-branches.spec.ts`; the probe fails its branch coverage threshold.
 
-### AC2: The E2E tests show the weather-station error and empty-data states from mocked API responses.
+### AC2: The E2E suite covers weather-station error, empty, refresh, range, and accordion paths.
 
-- probe: `npx playwright test e2e/weather-station-states.spec.ts`
-- postcondition: The test asserts the visible current-reading error message, the visible chart-history error message, and both the `No readings yet` header state and `No measurements in this range.` chart state after their matching mocked endpoint responses.
-- breakage: temporarily change the current-reading error matcher in `weather-station-states.spec.ts` to a different literal; the probe fails.
-
-### AC3: The E2E tests show refresh and range-control behaviour from mocked API responses.
-
-- probe: `npx playwright test e2e/weather-station-interactions.spec.ts`
-- postcondition: The test asserts that refresh updates changed readings, does not replace unchanged readings, and that chart zoom controls change range, disable at the available limits, and request chart data for the selected range.
-- breakage: temporarily change the expected changed reading in `weather-station-interactions.spec.ts` to a different value; the probe fails.
+- probe: `npm exec --workspace @wx/web -- playwright test e2e/weather-station-branches.spec.ts`
+- postcondition: Browser assertions show the current-reading error, chart-history error, empty readings, changed and unchanged refresh results, both chart zoom limits, a range request after zoom, and Indoor accordion `aria-expanded` changing from `false` to `true` and back to `false`.
+- breakage: temporarily replace the expected current-reading error text in `weather-station-branches.spec.ts`; the probe fails.
 
 ## Out of scope
 
-- New product behaviour or production-code changes.
+- Coverage merge or source-map changes.
+- Production-code changes.
 - Unit tests.
 - Coverage-target changes.
 - Real Supabase calls.
