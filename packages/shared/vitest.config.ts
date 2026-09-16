@@ -1,16 +1,15 @@
 import { defineConfig } from 'vitest/config';
+import { coverageThresholds } from './index.ts';
 
 export default defineConfig({
   test: {
     include: ['**/*.test.ts'],
     coverage: {
+      provider: 'v8',
+      reporter: ['json', 'html', 'text-summary'],
       include: ['**/*.ts'],
-      thresholds: {
-        statements: 80,
-        lines: 80,
-        branches: 75,
-        functions: 75,
-      },
+      exclude: ['testing/coverage-thresholds.ts'],
+      thresholds: coverageThresholds,
     },
   },
 });

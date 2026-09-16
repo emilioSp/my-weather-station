@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { saveCoverage } from './utils/save-coverage';
 
 const latestOutdoorMeasure = {
   id: '00000000-0000-0000-0000-000000000001',
@@ -51,71 +52,105 @@ const mockMeasurements = async (page: Page): Promise<void> => {
   });
 };
 
-test('switches current readings and chart temperature displays to Fahrenheit', async ({
-  page,
-}) => {
-  await mockMeasurements(page);
-  await page.goto('/');
-  await page.getByLabel('Temperature unit').getByText('°F').click();
+test.describe('Temperature units', () => {
+  test('switches current readings and chart temperature displays to Fahrenheit', async ({
+    page,
+  }) => {
+    await page.coverage.startJSCoverage();
 
-  await expect(page.getByLabel('Current readings')).toContainText('68.0°F');
-  await expect(page.getByLabel('Current readings')).toContainText('53.6°F');
-  await expect(page.getByLabel('Current readings')).toContainText('67.1°F');
-  await expect(page.getByLabel('Measurement history')).toContainText('64.4°F', {
-    timeout: 5_000,
-  });
-  await expect(page.getByLabel('Measurement history')).toContainText('68.0°F');
+    await mockMeasurements(page);
+    await page.goto('/');
+    await page.getByLabel('Temperature unit').getByText('°F').click();
 
-  const temperatureChart = page.getByLabel(
-    /Interactive temperature chart for outdoor measurements/,
-  );
-  await temperatureChart.hover({ position: { x: 200, y: 200 } });
-  await expect(
-    temperatureChart.locator('xpath=..').locator('.recharts-tooltip-wrapper'),
-  ).toContainText('63.9°F');
-  await expect(page.getByLabel('Measurement history')).not.toContainText(
-    '20.0°C',
-  );
-});
-
-test('persists Fahrenheit after reload', async ({ page }) => {
-  await mockMeasurements(page);
-  await page.goto('/');
-  await page.getByLabel('Temperature unit').getByText('°F').click();
-  await page.reload();
-
-  await expect(page.getByRole('radio', { name: '°F' })).toBeChecked();
-  await expect(page.getByLabel('Current readings')).toContainText('68.0°F');
-  await expect(page.getByLabel('Measurement history')).toContainText('64.4°F', {
-    timeout: 5_000,
-  });
-  await expect(
-    page.evaluate(() => window.localStorage.getItem('temperature-unit')),
-  ).resolves.toBe('fahrenheit');
-});
-
-test('defaults safely to Celsius without valid browser storage', async ({
-  page,
-}) => {
-  await mockMeasurements(page);
-  await page.goto('/');
-  await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-  await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
-
-  await page.evaluate(() =>
-    window.localStorage.setItem('temperature-unit', 'kelvin'),
-  );
-  await page.reload();
-  await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-
-  await page.addInitScript(() => {
-    Object.defineProperty(window, 'localStorage', {
-      get: () => {
-        throw new Error('Storage unavailable');
+    await expect(page.getByLabel('Current readings')).toContainText('68.0°F');
+    await expect(page.getByLabel('Current readings')).toContainText('53.6°F');
+    await expect(page.getByLabel('Current readings')).toContainText('67.1°F');
+    await expect(page.getByLabel('Measurement history')).toContainText(
+      '64.4°F',
+      {
+        timeout: 5_000,
       },
+    );
+    await expect(page.getByLabel('Measurement history')).toContainText(
+      '68.0°F',
+    );
+
+    const temperatureChart = page.getByLabel(
+      /Interactive temperature chart for outdoor measurements/,
+    );
+    await temperatureChart.hover({ position: { x: 200, y: 200 } });
+    await expect(
+      temperatureChart.locator('xpath=..').locator('.recharts-tooltip-wrapper'),
+    ).toContainText('63.9°F');
+    await expect(page.getByLabel('Measurement history')).not.toContainText(
+      '20.0°C',
+    );
+
+    const jsCoverage = await page.coverage.stopJSCoverage();
+    await saveCoverage({
+      jsCoverage,
+      name: 'temperature-units-fahrenheit',
     });
   });
-  await page.reload();
-  await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-  await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
+
+  test('persists Fahrenheit after reload', async ({ page }) => {
+    await page.coverage.startJSCoverage();
+
+    await mockMeasurements(page);
+    await page.goto('/');
+    await page.getByLabel('Temperature unit').getByText('°F').click();
+    await page.reload();
+
+    await expect(page.getByRole('radio', { name: '°F' })).toBeChecked();
+    await expect(page.getByLabel('Current readings')).toContainText('68.0°F');
+    await expect(page.getByLabel('Measurement history')).toContainText(
+      '64.4°F',
+      {
+        timeout: 5_000,
+      },
+    );
+    await expect(
+      page.evaluate(() => window.localStorage.getItem('temperature-unit')),
+    ).resolves.toBe('fahrenheit');
+
+    const jsCoverage = await page.coverage.stopJSCoverage();
+    await saveCoverage({
+      jsCoverage,
+      name: 'temperature-units-reload',
+    });
+  });
+
+  test('defaults safely to Celsius without valid browser storage', async ({
+    page,
+  }) => {
+    await page.coverage.startJSCoverage();
+
+    await mockMeasurements(page);
+    await page.goto('/');
+    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
+    await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
+
+    await page.evaluate(() =>
+      window.localStorage.setItem('temperature-unit', 'kelvin'),
+    );
+    await page.reload();
+    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
+
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', {
+        get: () => {
+          throw new Error('Storage unavailable');
+        },
+      });
+    });
+    await page.reload();
+    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
+    await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
+
+    const jsCoverage = await page.coverage.stopJSCoverage();
+    await saveCoverage({
+      jsCoverage,
+      name: 'temperature-units-storage',
+    });
+  });
 });

@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "tsc && vite build --mode prod",
     "preview": "vite preview",
-    "test": "playwright test && vitest run --coverage --config vitest.config.ts"
+    "test": "rm -rf coverage && vitest run --coverage --config vitest.config.ts && playwright test && node e2e/utils/merge-coverage.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.4",
