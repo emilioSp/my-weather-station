@@ -5,9 +5,9 @@ import { dirname, join } from 'node:path';
 const specsDir = dirname(import.meta.dirname);
 const id = process.argv[2];
 
-if (!id || !/^[0-9a-f]{12}-[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) {
+if (!id || !/^\d{17}-[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) {
   console.error('Usage: .specs/scripts/record-builder.js <spec-id>');
-  console.error('A spec id is 12 hex characters, a hyphen, then the slug.');
+  console.error('A spec id is a UTC creation timestamp and a slug.');
   process.exit(1);
 }
 

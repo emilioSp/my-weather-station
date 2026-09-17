@@ -1,4 +1,4 @@
-# 01a0a983130f-web-e2e-coverage-targets: Web E2E component branch coverage
+# 20260916091854735-web-e2e-coverage-targets: Web E2E component branch coverage
 
 ## Problem
 
@@ -16,7 +16,7 @@ The web workspace reaches 74.23% global branch coverage. The main remaining gaps
 ## Allowed paths
 
 - `packages/web/e2e/**/*.spec.ts`
-- `.specs/01a0a983130f-web-e2e-coverage-targets/**`
+- `.specs/20260916091854735-web-e2e-coverage-targets/**`
 
 ## Technical details
 

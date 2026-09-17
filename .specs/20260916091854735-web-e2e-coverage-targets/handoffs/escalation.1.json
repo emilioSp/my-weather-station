@@ -1,5 +1,5 @@
 {
-  "id": "01a0a983130f-web-e2e-coverage-targets",
+  "id": "20260916091854735-web-e2e-coverage-targets",
   "decision_so_far": "Added the two allowed Playwright E2E specs, with REST/RPC route mocks and JavaScript coverage capture for every new case.",
   "blocked": "AC1 cannot be completed under the stated constraints. The restored `npm run test -w @wx/web` result is 74.69% branches and 69.28% functions, below the configured 75% targets. The required AC1 breakage also requires temporarily renaming the existing site-icons and temperature-units E2E files, which are outside the allowed paths. Production code, coverage configuration, and coverage utilities are prohibited changes.",
   "options": [

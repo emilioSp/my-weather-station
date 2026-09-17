@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { randomUUIDv7 } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -12,8 +11,8 @@ if (!slug || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
   process.exit(1);
 }
 
-const uuid = randomUUIDv7();
-const id = `${uuid.slice(0, 8)}${uuid.slice(9, 13)}-${slug}`;
+const timestamp = new Date().toISOString().replaceAll(/[-:.TZ]/g, '');
+const id = `${timestamp}-${slug}`;
 const specDir = join(specsDir, id);
 
 if (existsSync(specDir)) {
