@@ -48,7 +48,7 @@ export abstract class Meter implements MeterInterface {
       scanAttempt += 1
     ) {
       console.log(
-        `Device type: ${this.meter.type}, device ID: ${this.meter.deviceId}, address: ${this.meter.address}, scan attempt ${scanAttempt + 1}`,
+        `Device type: ${this.meter.type}, device ID: ${this.meter.deviceId}, device name: ${this.meter.deviceName}, address: ${this.meter.address}, scan attempt ${scanAttempt + 1}`,
       );
 
       const advertisement = await getAdvertisement(this.meter);
