@@ -32,6 +32,7 @@ The web app must show all four configured meters in the current-readings area af
 - `packages/web/components/weather-station/MeasurementHistory.tsx`
 - `packages/web/components/weather-station/MeterAccordion.tsx`
 - `packages/web/components/weather-station/LinearChart.tsx`
+- `packages/web/hooks/useWeatherStation.test.ts`
 - `packages/web/styles.css`
 - `packages/web/e2e/weather-station.spec.ts`
 - `packages/web/e2e/temperature-units.spec.ts`
