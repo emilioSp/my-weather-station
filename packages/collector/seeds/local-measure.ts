@@ -10,23 +10,32 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
   assertDevelopment();
 
   const { environment } = await import('#environment.ts');
-  const outdoorMeter = environment.DEVICES.find(
-    (meter) => meter.type === 'outdoor',
-  );
-  const indoorMeter = environment.DEVICES.find(
-    (meter) => meter.type === 'indoor',
-  );
-
-  if (!outdoorMeter || !indoorMeter) {
-    throw new Error('DEVICES must contain one indoor and one outdoor meter');
-  }
+  const meterPlaceholders = environment.DEVICES.map(
+    () => '(?::text, ?::text, ?::text, ?::text, ?::integer)',
+  ).join(', ');
+  const meterBindings = environment.DEVICES.flatMap((meter, index) => [
+    meter.deviceId,
+    meter.address,
+    meter.deviceName,
+    meter.type,
+    index,
+  ]);
 
   return knex.transaction(async (transaction) => {
     await transaction.raw('TRUNCATE measures;');
 
     await transaction.raw(
       `
-        WITH instants AS (
+        WITH configured_meters (
+          device_id,
+          address,
+          device_name,
+          device_type,
+          profile_index
+        ) AS (
+          VALUES ${meterPlaceholders}
+        ),
+        instants AS (
           SELECT
             measured_at,
             sin(
@@ -46,7 +55,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
             interval '5 minutes'
           ) AS series(measured_at)
         ),
-        outdoor AS (
+        conditions AS (
           SELECT
             measured_at,
             round(
@@ -83,61 +92,44 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
             measured_at_epoch
           FROM instants
         ),
-        indoor AS (
+        readings AS (
           SELECT
+            meter.device_id,
+            meter.address,
+            meter.device_name,
+            meter.device_type,
             measured_at,
             round(
               (
-                21
-                + 0.18 * (temperature - 16.2)
-                + 0.4 * sin(
+                temperature
+                + meter.profile_index * 0.8
+                + 0.3 * sin(
                   2 * pi() * (
-                    extract(hour FROM measured_at)
-                    + extract(minute FROM measured_at) / 60
-                    - 8
-                  ) / 24
-                )
-                + 0.12 * sin(
-                  2 * pi() * (measured_at_epoch / (3 * 60 * 60) + 0.35)
+                    measured_at_epoch / (3 * 60 * 60)
+                    + meter.profile_index / 10.0
+                  )
                 )
               )::numeric,
               1
             ) AS temperature,
             round(
               greatest(
-                35,
+                25,
                 least(
-                  65,
-                  45
-                    + 0.15 * (humidity - 55)
+                  92,
+                  humidity
+                    + meter.profile_index * 3
                     + 2 * sin(
-                      2 * pi() * (measured_at_epoch / (2 * 60 * 60) + 0.7)
+                      2 * pi() * (
+                        measured_at_epoch / (2 * 60 * 60)
+                        + meter.profile_index / 10.0
+                      )
                     )
                 )
               )
             )::integer AS humidity
-          FROM outdoor
-        ),
-        readings AS (
-          SELECT
-            ?::text AS device_id,
-            ?::text AS address,
-            ?::text AS device_name,
-            'outdoor'::text AS device_type,
-            measured_at,
-            temperature,
-            humidity
-          FROM outdoor
-          UNION ALL
-          SELECT
-            ?::text AS device_id,
-            ?::text AS address,
-            ?::text AS device_name,
-            'indoor'::text AS device_type,
-            measured_at,
-            temperature,
-            humidity
-          FROM indoor
+          FROM configured_meters AS meter
+          CROSS JOIN conditions
         ),
         heat_index AS (
           SELECT
@@ -232,14 +224,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
           measured_at
         FROM calculated;
       `,
-      [
-        outdoorMeter.deviceId,
-        outdoorMeter.address,
-        outdoorMeter.deviceName,
-        indoorMeter.deviceId,
-        indoorMeter.address,
-        indoorMeter.deviceName,
-      ],
+      meterBindings,
     );
 
     const [{ count }] = await transaction('measures').count('id as count');
