@@ -1,0 +1,11 @@
+[
+  {
+    "ac": "AC2",
+    "severity": "medium",
+    "confidence": 0.98,
+    "observations": "Executed `npm run migrate:local -w @wx/collector && npm run test:unit -w @wx/web -- supabase.api.test.ts` and observed 4 passing tests. Inspected and executed the real Supabase fixture: the two configured names returned by `getLatestMeasures` are `garden` with `device_type = 'outdoor'` and `kitchen` with `device_type = 'indoor'`. The fixture's second name sharing `indoor` (`office`) is not configured and is never queried by the configured-latest operation. Therefore the stated postcondition that the real requests return newest rows for at least two configured names sharing one device type is not exercised by the probe. Independently changed the latest predicate to `device_type`; the probe failed 2 tests, then passed all 4 after restoration. Also executed migration apply, rollback, and apply successfully and observed the installed function partitions, ranks, and groups by `device_name`.",
+    "rejection": {
+      "reason": "The owner rejects this finding. Latest-measure queries are defined by configured device names and do not use device type; two configured names with the same stored type are not required evidence."
+    }
+  }
+]

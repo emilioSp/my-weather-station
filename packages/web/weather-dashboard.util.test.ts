@@ -99,15 +99,10 @@ describe('weather dashboard utilities', () => {
       15,
     );
 
-    expect(
-      getLatestTimestamp({
-        indoorMeasures: [oldest, older],
-        outdoorMeasures: [newer, newest],
-      }),
-    ).toBe(Temporal.Instant.from(newest.measuredAt).epochMilliseconds);
-    expect(
-      getLatestTimestamp({ indoorMeasures: [], outdoorMeasures: [] }),
-    ).toBeNull();
+    expect(getLatestTimestamp([oldest, older, newer, newest])).toBe(
+      Temporal.Instant.from(newest.measuredAt).epochMilliseconds,
+    );
+    expect(getLatestTimestamp([])).toBeNull();
     expect(
       getRangeExtrema({
         measures: [older, newest, oldest, newer],

@@ -1,8 +1,9 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { saveCoverage } from './utils/save-coverage';
 
-const initialOutdoorMeasure = {
+const initialGardenMeasure = {
   id: '00000000-0000-0000-0000-000000000001',
+  device_name: 'garden',
   device_type: 'outdoor',
   measured_at: '2026-09-01T14:00:00.000Z',
   temperature: 20,
@@ -13,36 +14,38 @@ const initialOutdoorMeasure = {
   signal_power_dbm: -101,
 };
 
-const initialIndoorMeasure = {
-  ...initialOutdoorMeasure,
+const initialKitchenMeasure = {
+  ...initialGardenMeasure,
   id: '00000000-0000-0000-0000-000000000002',
+  device_name: 'kitchen',
   device_type: 'indoor',
   temperature: 21,
   signal_power_dbm: 1,
 };
 
-const changedOutdoorMeasure = {
-  ...initialOutdoorMeasure,
+const changedGardenMeasure = {
+  ...initialGardenMeasure,
   id: '00000000-0000-0000-0000-000000000003',
   measured_at: '2026-09-01T15:00:00.000Z',
   temperature: 25,
 };
 
-const changedIndoorMeasure = {
-  ...initialIndoorMeasure,
+const changedKitchenMeasure = {
+  ...initialKitchenMeasure,
   id: '00000000-0000-0000-0000-000000000004',
   measured_at: '2026-09-01T15:00:00.000Z',
   temperature: 24,
 };
 
 const history = {
-  indoor: [initialIndoorMeasure, changedIndoorMeasure],
-  outdoor: [initialOutdoorMeasure, changedOutdoorMeasure],
+  garden: [initialGardenMeasure, changedGardenMeasure],
+  kitchen: [initialKitchenMeasure, changedKitchenMeasure],
+  unconfigured: [initialGardenMeasure],
 };
 
 const mockLatestMeasures = async ({
   page,
-  rows = [initialOutdoorMeasure],
+  rows = [initialGardenMeasure],
 }: {
   page: Page;
   rows?: object[];
@@ -73,34 +76,43 @@ const mockHistory = async ({
   });
 };
 
+const getRequestedDeviceName = (route: {
+  request: () => { url: () => string };
+}) =>
+  new URL(route.request().url()).searchParams
+    .get('device_name')
+    ?.replace(/^eq\./, '');
+
 const mockWeatherStation = async ({
   page,
   latestResponses,
   requestedRanges,
 }: {
   page: Page;
-  latestResponses: Array<{ indoor: object; outdoor: object }>;
+  latestResponses: Array<{ garden: object; kitchen: object }>;
   requestedRanges?: Array<{ end: string; start: string }>;
 }): Promise<void> => {
   let latestResponseIndex = 0;
-  const answeredDeviceTypes = new Set<string>();
+  const answeredDeviceNames = new Set<string>();
 
   await page.route('**/rest/v1/measures**', async (route) => {
     const response =
       latestResponses[
         Math.min(latestResponseIndex, latestResponses.length - 1)
       ];
-    const isOutdoor = route.request().url().includes('device_type=eq.outdoor');
+    const deviceName = getRequestedDeviceName(route);
+    const measure =
+      deviceName === 'kitchen' ? response.kitchen : response.garden;
 
     await route.fulfill({
-      body: JSON.stringify([isOutdoor ? response.outdoor : response.indoor]),
+      body: JSON.stringify([measure]),
       contentType: 'application/json',
     });
 
-    answeredDeviceTypes.add(isOutdoor ? 'outdoor' : 'indoor');
-    if (answeredDeviceTypes.size === 2) {
+    answeredDeviceNames.add(deviceName ?? '');
+    if (answeredDeviceNames.size === 2) {
       latestResponseIndex += 1;
-      answeredDeviceTypes.clear();
+      answeredDeviceNames.clear();
     }
   });
   await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
@@ -152,6 +164,125 @@ const expectDesktopChartReadout = async ({
 };
 
 test.describe('Weather station', () => {
+  test('shows configured names and icons and omits missing or unknown history groups', async ({
+    page,
+  }) => {
+    await page.coverage.startJSCoverage();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockWeatherStation({
+      page,
+      latestResponses: [
+        { garden: initialGardenMeasure, kitchen: initialKitchenMeasure },
+      ],
+    });
+    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      await route.fulfill({
+        body: JSON.stringify({
+          garden: history.garden,
+          unconfigured: history.unconfigured,
+        }),
+        contentType: 'application/json',
+      });
+    });
+
+    await page.goto('/');
+
+    await expect(page.getByTestId('garden-icon')).toBeVisible();
+    await expect(page.getByTestId('kitchen-icon')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'garden' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'kitchen' })).toHaveCount(0);
+    await expect(
+      page.getByLabel(/Interactive temperature chart for garden measurements/),
+    ).toBeVisible();
+    await expect(page.getByText('Indoor', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Outdoor', { exact: true })).toHaveCount(0);
+    await expect(
+      page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    ).resolves.toBe(true);
+
+    await saveCoverage({
+      jsCoverage: await page.coverage.stopJSCoverage(),
+      name: 'weather-station-configured-devices',
+    });
+  });
+
+  test('shows chart placeholders while named history is loading', async ({
+    page,
+  }) => {
+    await page.coverage.startJSCoverage();
+    let releaseHistory!: () => void;
+    const historyReady = new Promise<void>((resolve) => {
+      releaseHistory = resolve;
+    });
+    await page.route('**/rest/v1/measures**', async (route) => {
+      const deviceName = getRequestedDeviceName(route);
+      await route.fulfill({
+        body: JSON.stringify([
+          deviceName === 'kitchen'
+            ? initialKitchenMeasure
+            : initialGardenMeasure,
+        ]),
+        contentType: 'application/json',
+      });
+    });
+    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      await historyReady;
+      await route.fulfill({
+        body: JSON.stringify(history),
+        contentType: 'application/json',
+      });
+    });
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByLabel('Loading chart')).toHaveCount(6);
+    releaseHistory();
+    await expect(
+      page.getByLabel(/Interactive temperature chart for garden measurements/),
+    ).toBeVisible();
+
+    await saveCoverage({
+      jsCoverage: await page.coverage.stopJSCoverage(),
+      name: 'weather-station-history-loading',
+    });
+  });
+
+  test('shows empty charts for configured history keys without measures', async ({
+    page,
+  }) => {
+    await page.coverage.startJSCoverage();
+    await page.route('**/rest/v1/measures**', async (route) => {
+      const deviceName = getRequestedDeviceName(route);
+      await route.fulfill({
+        body: JSON.stringify([
+          deviceName === 'kitchen'
+            ? initialKitchenMeasure
+            : initialGardenMeasure,
+        ]),
+        contentType: 'application/json',
+      });
+    });
+    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      await route.fulfill({
+        body: JSON.stringify({ garden: [], kitchen: [] }),
+        contentType: 'application/json',
+      });
+    });
+
+    await page.goto('/');
+    await expect(page.getByText('No measurements in this range.')).toHaveCount(
+      6,
+    );
+
+    await saveCoverage({
+      jsCoverage: await page.coverage.stopJSCoverage(),
+      name: 'weather-station-empty-history',
+    });
+  });
+
   test('shows the current-reading error returned by the API', async ({
     page,
   }) => {
@@ -211,9 +342,8 @@ test.describe('Weather station', () => {
 
     await expect(page.getByText('No readings yet')).toBeVisible();
     await expect(page.getByText('No readings available.')).toHaveCount(2);
-    await expect(
-      page.getByText('No measurements in this range.').first(),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'garden' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'kitchen' })).toHaveCount(0);
 
     await saveCoverage({
       jsCoverage: await page.coverage.stopJSCoverage(),
@@ -228,9 +358,9 @@ test.describe('Weather station', () => {
     await mockWeatherStation({
       page,
       latestResponses: [
-        { indoor: initialIndoorMeasure, outdoor: initialOutdoorMeasure },
-        { indoor: changedIndoorMeasure, outdoor: changedOutdoorMeasure },
-        { indoor: changedIndoorMeasure, outdoor: changedOutdoorMeasure },
+        { garden: initialGardenMeasure, kitchen: initialKitchenMeasure },
+        { garden: changedGardenMeasure, kitchen: changedKitchenMeasure },
+        { garden: changedGardenMeasure, kitchen: changedKitchenMeasure },
       ],
     });
 
@@ -240,11 +370,11 @@ test.describe('Weather station', () => {
     await expect(page.getByLabel('Current readings')).toContainText('1 dBm');
     await expectDesktopChartReadout({
       chart: page
-        .getByLabel(/Interactive temperature chart for outdoor measurements/)
+        .getByLabel(/Interactive temperature chart for garden measurements/)
         .first(),
       expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
       page,
-      tooltipTestId: 'outdoor-temperature-chart-tooltip',
+      tooltipTestId: 'garden-temperature-chart-tooltip',
     });
 
     const refreshReadings = page.getByRole('button', {
@@ -273,11 +403,6 @@ test.describe('Weather station', () => {
     await page.coverage.startJSCoverage();
     let failRefresh = false;
     await page.route('**/rest/v1/measures**', async (route) => {
-      const isOutdoor = route
-        .request()
-        .url()
-        .includes('device_type=eq.outdoor');
-
       await route.fulfill(
         failRefresh
           ? {
@@ -287,7 +412,9 @@ test.describe('Weather station', () => {
             }
           : {
               body: JSON.stringify([
-                isOutdoor ? initialOutdoorMeasure : initialIndoorMeasure,
+                getRequestedDeviceName(route) === 'kitchen'
+                  ? initialKitchenMeasure
+                  : initialGardenMeasure,
               ]),
               contentType: 'application/json',
             },
@@ -316,30 +443,30 @@ test.describe('Weather station', () => {
       page,
       latestResponses: [
         {
-          indoor: { ...initialIndoorMeasure, signal_power_dbm: -75 },
-          outdoor: { ...initialOutdoorMeasure, signal_power_dbm: -125 },
+          kitchen: { ...initialKitchenMeasure, signal_power_dbm: -75 },
+          garden: { ...initialGardenMeasure, signal_power_dbm: -125 },
         },
         {
-          indoor: {
-            ...initialIndoorMeasure,
-            id: changedIndoorMeasure.id,
+          kitchen: {
+            ...initialKitchenMeasure,
+            id: changedKitchenMeasure.id,
             signal_power_dbm: -75,
           },
-          outdoor: {
-            ...initialOutdoorMeasure,
-            id: changedOutdoorMeasure.id,
+          garden: {
+            ...initialGardenMeasure,
+            id: changedGardenMeasure.id,
             signal_power_dbm: -10,
           },
         },
         {
-          indoor: {
-            ...initialIndoorMeasure,
-            id: changedIndoorMeasure.id,
+          kitchen: {
+            ...initialKitchenMeasure,
+            id: changedKitchenMeasure.id,
             signal_power_dbm: -75,
           },
-          outdoor: {
-            ...initialOutdoorMeasure,
-            id: changedOutdoorMeasure.id,
+          garden: {
+            ...initialGardenMeasure,
+            id: changedGardenMeasure.id,
             signal_power_dbm: -10,
           },
         },
@@ -369,25 +496,23 @@ test.describe('Weather station', () => {
       await mockWeatherStation({
         page,
         latestResponses: [
-          { indoor: initialIndoorMeasure, outdoor: initialOutdoorMeasure },
+          { kitchen: initialKitchenMeasure, garden: initialGardenMeasure },
         ],
       });
 
       await page.goto('/');
 
       const chart = page
-        .getByLabel(/Interactive temperature chart for outdoor measurements/)
+        .getByLabel(/Interactive temperature chart for garden measurements/)
         .first();
-      const touchReadout = page.getByTestId(
-        'outdoor-temperature-touch-readout',
-      );
+      const touchReadout = page.getByTestId('garden-temperature-touch-readout');
       await expect(touchReadout.getByText('Touch and drag.')).toBeVisible();
       await chart.scrollIntoViewIfNeeded();
       const plot = chart.locator('.recharts-cartesian-grid');
       await expect(plot).toBeVisible({ timeout: 5_000 });
       const plotBox = await plot.boundingBox();
       if (plotBox === null) {
-        throw new Error('The outdoor temperature chart plot is not rendered.');
+        throw new Error('The garden temperature chart plot is not rendered.');
       }
       const touchPosition = {
         x: plotBox.x + plotBox.width - 1,
@@ -421,7 +546,7 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('changes chart ranges at both limits and toggles the Indoor accordion', async ({
+  test('changes chart ranges at both limits and toggles the kitchen accordion', async ({
     page,
   }) => {
     await page.coverage.startJSCoverage();
@@ -429,52 +554,52 @@ test.describe('Weather station', () => {
     await mockWeatherStation({
       page,
       latestResponses: [
-        { indoor: initialIndoorMeasure, outdoor: initialOutdoorMeasure },
+        { kitchen: initialKitchenMeasure, garden: initialGardenMeasure },
       ],
       requestedRanges,
     });
 
     await page.goto('/');
-    const outdoorTemperatureChart = page
-      .getByLabel(/Interactive temperature chart for outdoor measurements/)
+    const gardenTemperatureChart = page
+      .getByLabel(/Interactive temperature chart for garden measurements/)
       .first();
     await expectDesktopChartReadout({
-      chart: outdoorTemperatureChart,
+      chart: gardenTemperatureChart,
       expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
       page,
-      tooltipTestId: 'outdoor-temperature-chart-tooltip',
+      tooltipTestId: 'garden-temperature-chart-tooltip',
     });
 
-    const indoorAccordion = page.getByRole('button', { name: 'Indoor' });
-    await expect(indoorAccordion).toHaveAttribute('aria-expanded', 'false');
-    await indoorAccordion.click();
-    await expect(indoorAccordion).toHaveAttribute('aria-expanded', 'true');
+    const kitchenAccordion = page.getByRole('button', { name: 'kitchen' });
+    await expect(kitchenAccordion).toHaveAttribute('aria-expanded', 'false');
+    await kitchenAccordion.click();
+    await expect(kitchenAccordion).toHaveAttribute('aria-expanded', 'true');
     await expectDesktopChartReadout({
       chart: page
-        .getByLabel(/Interactive temperature chart for indoor measurements/)
+        .getByLabel(/Interactive temperature chart for kitchen measurements/)
         .first(),
       expectedValues: ['01 Sept · 17:00:00', '24.0°C', '19.5°C'],
       page,
-      tooltipTestId: 'indoor-temperature-chart-tooltip',
+      tooltipTestId: 'kitchen-temperature-chart-tooltip',
     });
     await expectDesktopChartReadout({
       chart: page
-        .getByLabel(/Interactive humidity chart for outdoor measurements/)
+        .getByLabel(/Interactive humidity chart for garden measurements/)
         .first(),
       expectedValues: ['01 Sept · 17:00:00', '67%'],
       page,
-      tooltipTestId: 'outdoor-humidity-chart-tooltip',
+      tooltipTestId: 'garden-humidity-chart-tooltip',
     });
     await expectDesktopChartReadout({
       chart: page
-        .getByLabel(/Interactive dew point chart for outdoor measurements/)
+        .getByLabel(/Interactive dew point chart for garden measurements/)
         .first(),
       expectedValues: ['01 Sept · 17:00:00', '12.0°C'],
       page,
-      tooltipTestId: 'outdoor-dewPoint-chart-tooltip',
+      tooltipTestId: 'garden-dewPoint-chart-tooltip',
     });
-    await indoorAccordion.click();
-    await expect(indoorAccordion).toHaveAttribute('aria-expanded', 'false');
+    await kitchenAccordion.click();
+    await expect(kitchenAccordion).toHaveAttribute('aria-expanded', 'false');
 
     const zoomOut = page.getByRole('button', { name: 'Zoom out' });
     const zoomIn = page.getByRole('button', { name: 'Zoom in' });
@@ -489,10 +614,10 @@ test.describe('Weather station', () => {
       await zoomOut.click();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
       await expectDesktopChartReadout({
-        chart: outdoorTemperatureChart,
+        chart: gardenTemperatureChart,
         expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
         page,
-        tooltipTestId: 'outdoor-temperature-chart-tooltip',
+        tooltipTestId: 'garden-temperature-chart-tooltip',
       });
     }
     await expect(zoomOut).toBeDisabled();
@@ -508,10 +633,10 @@ test.describe('Weather station', () => {
       await zoomIn.click();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
       await expectDesktopChartReadout({
-        chart: outdoorTemperatureChart,
+        chart: gardenTemperatureChart,
         expectedValues: ['01 Sept · 17:00:00', '25.0°C', '19.5°C'],
         page,
-        tooltipTestId: 'outdoor-temperature-chart-tooltip',
+        tooltipTestId: 'garden-temperature-chart-tooltip',
       });
     }
     await expect(zoomIn).toBeDisabled();

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { type Measure, type MeterType, toCamelCaseKeys } from '@wx/shared';
+import { type Measure, toCamelCaseKeys } from '@wx/shared';
 import { environment } from '#environment.ts';
 
 const supabase = createClient(
@@ -12,10 +12,7 @@ export type MeasureQueryResult = {
   error: Error | null;
 };
 
-export type MeasureHistory = {
-  indoor: Measure[];
-  outdoor: Measure[];
-};
+export type MeasureHistory = Record<string, Measure[]>;
 
 export type MeasureHistoryQueryResult = {
   history: MeasureHistory;
@@ -23,7 +20,7 @@ export type MeasureHistoryQueryResult = {
 };
 
 type GetMeasuresInput = {
-  deviceType: MeterType;
+  deviceName: string;
 };
 
 type GetChartHistoryInput = {
@@ -31,7 +28,7 @@ type GetChartHistoryInput = {
   measuredBefore: Date;
 };
 
-const toMeasureResult = ({
+export const toMeasureResult = ({
   data,
   error,
 }: {
@@ -42,17 +39,33 @@ const toMeasureResult = ({
   error,
 });
 
+export const toMeasureHistory = (data: unknown): MeasureHistory =>
+  toCamelCaseKeys<MeasureHistory>(data ?? {});
+
 export const getLatestMeasure = async ({
-  deviceType,
+  deviceName,
 }: GetMeasuresInput): Promise<MeasureQueryResult> => {
   const { data, error } = await supabase
     .from('measures')
     .select('*')
-    .eq('device_type', deviceType)
+    .eq('device_name', deviceName)
     .order('measured_at', { ascending: false })
     .limit(1);
 
   return toMeasureResult({ data, error });
+};
+
+export const getLatestMeasures = async (): Promise<MeasureQueryResult> => {
+  const results = await Promise.all(
+    environment.DEVICES.map(({ deviceName }) =>
+      getLatestMeasure({ deviceName }),
+    ),
+  );
+
+  return {
+    rows: results.flatMap(({ rows }) => rows),
+    error: results.find(({ error }) => error !== null)?.error ?? null,
+  };
 };
 
 export const getChartHistory = async ({
@@ -65,9 +78,7 @@ export const getChartHistory = async ({
   });
 
   return {
-    history: toCamelCaseKeys<MeasureHistory>(
-      data ?? { indoor: [], outdoor: [] },
-    ),
+    history: toMeasureHistory(data),
     error,
   };
 };

@@ -9,30 +9,40 @@ import {
 import { getSignalPercentage } from '#weather-dashboard.util.ts';
 
 type WeatherCardProps = {
-  label: 'Indoor' | 'Outdoor';
+  deviceName: string;
+  label: string;
   icon: IconType;
+  colorIndex: number;
   measure: Measure | null;
   temperatureUnit: TemperatureUnit;
 };
 
+const cardColors = [
+  'bg-linear-to-br from-[#343223] to-[#1d2822]',
+  'bg-linear-to-br from-[#203638] to-[#182525]',
+];
+
 export const WeatherCard = ({
+  deviceName,
   label,
   icon: Icon,
+  colorIndex,
   measure,
   temperatureUnit,
 }: WeatherCardProps) => {
-  const isIndoor = label === 'Indoor';
-  const cardColor = isIndoor
-    ? 'bg-linear-to-br from-[#203638] to-[#182525]'
-    : 'bg-linear-to-br from-[#343223] to-[#1d2822]';
+  const cardColor = cardColors[colorIndex % cardColors.length];
 
   if (measure === null) {
     return (
       <article
         className={`min-h-97 rounded-2xl border border-[#2b3a38] p-5 sm:p-[22px] ${cardColor}`}
       >
-        <div className="flex items-center gap-2 text-sm font-bold">
-          <Icon aria-hidden="true" className="text-lg" />
+        <div className="flex items-center gap-2 text-sm font-bold capitalize">
+          <Icon
+            aria-hidden="true"
+            className="text-lg"
+            data-testid={`${deviceName}-icon`}
+          />
           {label}
         </div>
         <p className="mt-24 text-sm text-[#9bad9e]">No readings available.</p>
@@ -46,8 +56,12 @@ export const WeatherCard = ({
     <article
       className={`min-h-97 rounded-2xl border border-[#2b3a38] p-5 sm:p-[22px] ${cardColor}`}
     >
-      <div className="flex items-center gap-2 text-sm font-bold">
-        <Icon aria-hidden="true" className="text-lg" />
+      <div className="flex items-center gap-2 text-sm font-bold capitalize">
+        <Icon
+          aria-hidden="true"
+          className="text-lg"
+          data-testid={`${deviceName}-icon`}
+        />
         {label}
       </div>
       <div className="mt-7 text-[clamp(58px,7vw,82px)] leading-[0.85] font-semibold tracking-[-0.09em]">

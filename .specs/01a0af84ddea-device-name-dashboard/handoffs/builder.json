@@ -1,0 +1,31 @@
+{
+  "id": "01a0af84ddea-device-name-dashboard",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "npm run test:unit -w @wx/web -- environment.test.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "npm run migrate:local -w @wx/collector && npm run test:unit -w @wx/web -- supabase.api.test.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC3",
+      "probe": "npm run test:e2e -w @wx/web -- weather-station.spec.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC4",
+      "probe": "npm run test:unit -w @wx/web -- useWeatherStation.test.ts weather-dashboard.util.test.ts && npm run test:e2e -w @wx/web",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "The tracked Vite device configuration uses the existing garden and kitchen collector names, with FaSeedling and FaHouse as the supported icon-map entries. Loading history renders configured placeholders; after the response, names absent from the name-keyed history are omitted. The migration down path was executed once and the migration was reapplied. Detailed breakage and restore outputs are recorded in observations.md."
+}
