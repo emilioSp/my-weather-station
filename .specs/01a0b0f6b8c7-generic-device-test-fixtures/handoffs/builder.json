@@ -1,0 +1,25 @@
+{
+  "id": "01a0b0f6b8c7-generic-device-test-fixtures",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "npm run test:unit -w @wx/web -- hooks/useWeatherStation.test.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "npm run test:e2e -w @wx/web -- weather-station.spec.ts temperature-units.spec.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC3",
+      "probe": "npm run test:coverage -w @wx/web",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "Hook tests use a hoisted neutral device configuration. E2E fixtures load the web development VITE_DEVICES configuration with Vite's existing loadEnv utility, so rows and selectors follow configured names without adding dependencies. All request routes remain inline in their consuming tests; observations.md records the required breakage and restore probes."
+}
