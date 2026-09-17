@@ -1,4 +1,4 @@
-# 01a0a426265b-native-precommit-hook: Native pre-commit hook
+# 20260915081918747-native-precommit-hook: Native pre-commit hook
 
 ## Problem
 
@@ -17,7 +17,7 @@ The repository has no pre-commit check. A commit must run read-only lint and Typ
 - `.githooks/pre-commit`
 - `AGENTS_CONTRIBUTING.md`
 - `README.md`
-- `.specs/01a0a426265b-native-precommit-hook/**`
+- `.specs/20260915081918747-native-precommit-hook/**`
 
 ## Technical details
 

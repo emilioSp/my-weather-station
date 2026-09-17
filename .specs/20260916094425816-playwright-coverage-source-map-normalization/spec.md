@@ -1,4 +1,4 @@
-# 01a0a99a6fd8-playwright-coverage-source-map-normalization: Playwright coverage source-map normalization
+# 20260916094425816-playwright-coverage-source-map-normalization: Playwright coverage source-map normalization
 
 ## Problem
 
@@ -15,7 +15,7 @@ The Playwright coverage collector counts compiler-generated V8 function entries 
 ## Allowed paths
 
 - `packages/web/e2e/utils/merge-coverage.ts`
-- `.specs/01a0a99a6fd8-playwright-coverage-source-map-normalization/**`
+- `.specs/20260916094425816-playwright-coverage-source-map-normalization/**`
 
 ## Technical details
 

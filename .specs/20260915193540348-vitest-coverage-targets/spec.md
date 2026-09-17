@@ -1,4 +1,4 @@
-# 01a0a691603c-vitest-coverage-targets: Vitest coverage targets
+# 20260915193540348-vitest-coverage-targets: Vitest coverage targets
 
 ## Problem
 
@@ -22,7 +22,7 @@ The Vitest coverage run fails in collector, shared, and web. Each workspace must
 - `packages/collector/**/*.test.ts`
 - `packages/shared/**/*.test.ts`
 - `packages/web/**/*.test.ts`
-- `.specs/01a0a691603c-vitest-coverage-targets/**`
+- `.specs/20260915193540348-vitest-coverage-targets/**`
 
 ## Technical details
 
