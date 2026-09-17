@@ -23,12 +23,15 @@ Each stored measurement must carry the configured device name. The name must be 
 - `packages/collector/environment.test.ts`
 - `packages/collector/meters/Meter.ts`
 - `packages/collector/meters/Meter.test.ts`
+- `packages/collector/meters/utils/utils.test.ts`
 - `packages/collector/db/measure.repository.ts`
 - `packages/collector/db/measure.repository.test.ts`
 - `packages/collector/migrations/**`
 - `packages/shared/types.ts`
 - `packages/shared/shared.test.ts`
 - `packages/web/supabase.api.test.ts`
+- `packages/web/hooks/useWeatherStation.test.ts`
+- `packages/web/weather-dashboard.util.test.ts`
 - `.specs/01a0ae5c8d4c-device-name-measure/**`
 
 ## Technical details
