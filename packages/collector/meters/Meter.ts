@@ -7,10 +7,11 @@ import { getAdvertisement } from '#api/sensor.api.ts';
 import { storeMeasure } from '#db/measure.repository.ts';
 import { environment } from '#environment.ts';
 import NoCompleteReadingError from '#errors/NoCompleteReadingError.ts';
-import type {
-  Advertisement,
-  Meter as MeterConfiguration,
-  MeterInterface,
+import {
+  type Advertisement,
+  type Meter as MeterConfiguration,
+  type MeterInterface,
+  meterSchema,
 } from '#types.ts';
 import { calculateDewPoint } from './utils/calculateDewPoint.util.ts';
 import { calculateHeatIndex } from './utils/calculateHeatIndex.util.ts';
@@ -25,11 +26,13 @@ type UpdateReadingInput = {
   reading: Partial<WeatherReading>;
 };
 
+type ConfiguredMeter = MeterConfiguration & { deviceName: string };
+
 export abstract class Meter implements MeterInterface {
-  protected readonly meter: MeterConfiguration;
+  protected readonly meter: ConfiguredMeter;
 
   constructor(meter: MeterConfiguration) {
-    this.meter = meter;
+    this.meter = meterSchema.parse(meter);
   }
 
   public getMeter(): MeterConfiguration {
@@ -58,6 +61,7 @@ export abstract class Meter implements MeterInterface {
         if (completeReading) {
           const measure = await storeMeasure({
             type: this.meter.type,
+            deviceName: this.meter.deviceName,
             deviceId: advertisement.deviceId,
             address: advertisement.address,
             ...completeReading,

@@ -19,6 +19,7 @@ describe('meter calculations', () => {
       formatMeasure({
         id: '123e4567-e89b-12d3-a456-426614174000',
         deviceId: 'device',
+        deviceName: 'test meter',
         address: 'address',
         deviceType: 'indoor',
         temperature: 20,

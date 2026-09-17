@@ -79,6 +79,8 @@ npm run new:migration -w @wx/collector -- <name>
 npm run migrate:local -w @wx/collector
 ```
 
+- Keep `seeds/local-measure.ts` in sync with the `measures` schema after every migration.
+
 ## Docker and Supabase local
 
 - Supabase CLI owns the local PostgreSQL and API stack.

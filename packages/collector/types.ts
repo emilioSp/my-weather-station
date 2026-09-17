@@ -23,10 +23,15 @@ export type Advertisement = z.infer<typeof advertisementSchema>;
 export const meterSchema = z
   .object({
     type: meterTypeSchema,
+    deviceName: z.string().trim().min(1),
   })
   .and(deviceIdentifiersSchema);
 
-export type Meter = z.infer<typeof meterSchema>;
+type ParsedMeter = z.infer<typeof meterSchema>;
+
+export type Meter = Omit<ParsedMeter, 'deviceName'> & {
+  deviceName?: ParsedMeter['deviceName'];
+};
 
 export type MeterInterface = {
   getMeter: () => Meter;

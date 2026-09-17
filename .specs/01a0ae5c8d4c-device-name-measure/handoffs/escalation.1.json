@@ -1,0 +1,16 @@
+{
+  "id": "01a0ae5c8d4c-device-name-measure",
+  "decision_so_far": "Changed packages/shared/types.ts so the exported Measure type uses the parsed measure schema and requires deviceName.",
+  "blocked": "The required shared contract change makes npm run build fail in three fixture files outside the spec's allowed paths: packages/collector/meters/utils/utils.test.ts, packages/web/hooks/useWeatherStation.test.ts, and packages/web/weather-dashboard.util.test.ts. Each fixture assigns a Measure without the required deviceName. The existing spec allows packages/shared/types.ts but does not allow those three files.",
+  "options": [
+    "Expand the allowed paths to permit adding deviceName to the three affected fixtures.",
+    "Revise the shared contract requirement or constraints so the existing fixtures remain type-correct.",
+    "Accept a failed implementation pass with the required Measure contract change and the recorded build errors."
+  ],
+  "recommendation": "Expand the allowed paths to permit updating the three affected fixtures while retaining the required shared Measure contract.",
+  "next_steps": {
+    "builder": "Resume after the owner resolves the allowed-path conflict.",
+    "maestro": "Obtain an owner decision and record its resolution in this escalation."
+  },
+  "resolution": "Owner approved adding packages/collector/meters/utils/utils.test.ts, packages/web/hooks/useWeatherStation.test.ts, and packages/web/weather-dashboard.util.test.ts to the spec's allowed paths. This permits required deviceName fixtures to be updated while keeping Measure.deviceName required."
+}

@@ -122,6 +122,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
           SELECT
             ?::text AS device_id,
             ?::text AS address,
+            ?::text AS device_name,
             'outdoor'::text AS device_type,
             measured_at,
             temperature,
@@ -131,6 +132,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
           SELECT
             ?::text AS device_id,
             ?::text AS address,
+            ?::text AS device_name,
             'indoor'::text AS device_type,
             measured_at,
             temperature,
@@ -159,6 +161,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
         INSERT INTO measures (
           device_id,
           address,
+          device_name,
           device_type,
           temperature,
           dew_point,
@@ -171,6 +174,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
         SELECT
           device_id,
           address,
+          device_name,
           device_type,
           temperature,
           round(
@@ -231,8 +235,10 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
       [
         outdoorMeter.deviceId,
         outdoorMeter.address,
+        outdoorMeter.deviceName,
         indoorMeter.deviceId,
         indoorMeter.address,
+        indoorMeter.deviceName,
       ],
     );
 
