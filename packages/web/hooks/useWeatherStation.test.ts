@@ -61,13 +61,43 @@ describe('useWeatherStation', () => {
     await Promise.resolve();
 
     expect(result.currentMeasures).toBeNull();
-    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(2);
+    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(4);
     expect(weatherApi.getLatestMeasure).toHaveBeenNthCalledWith(1, {
       deviceName: 'garden',
     });
     expect(weatherApi.getLatestMeasure).toHaveBeenNthCalledWith(2, {
       deviceName: 'kitchen',
     });
+    expect(weatherApi.getLatestMeasure).toHaveBeenNthCalledWith(3, {
+      deviceName: 'living room',
+    });
+    expect(weatherApi.getLatestMeasure).toHaveBeenNthCalledWith(4, {
+      deviceName: 'bedroom',
+    });
+  });
+
+  it('sets empty history when current measures have no readings', async () => {
+    weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
+    state.values = [
+      {
+        byDeviceName: {
+          garden: null,
+          kitchen: null,
+          'living room': null,
+          bedroom: null,
+        },
+        error: null,
+      },
+      null,
+      'LAST_DAY',
+      false,
+    ];
+
+    const result = useWeatherStation();
+    await Promise.resolve();
+
+    expect(result.measureHistory).toBeNull();
+    expect(weatherApi.getChartHistory).not.toHaveBeenCalled();
   });
 
   it('loads name-keyed history and refreshes a complete current state', async () => {
@@ -99,7 +129,7 @@ describe('useWeatherStation', () => {
     await refresh;
 
     expect(weatherApi.getChartHistory).toHaveBeenCalledOnce();
-    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(4);
+    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(8);
     result.changeRange(1);
     result.changeRange(99);
   });

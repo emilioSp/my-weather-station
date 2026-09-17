@@ -8,6 +8,21 @@ import {
 } from '#utils/temperature-unit.util.ts';
 import { getSignalPercentage } from '#weather-dashboard.util.ts';
 
+export type MeterTheme = {
+  themeClassName: string;
+  chartColor: string;
+};
+
+const meterThemes: MeterTheme[] = [
+  { themeClassName: 'meter-theme-garden', chartColor: '#b9e53b' },
+  { themeClassName: 'meter-theme-kitchen', chartColor: '#83d2e5' },
+  { themeClassName: 'meter-theme-living-room', chartColor: '#f0a46a' },
+  { themeClassName: 'meter-theme-bedroom', chartColor: '#c9a7ef' },
+];
+
+export const getMeterTheme = (colorIndex: number): MeterTheme =>
+  meterThemes[colorIndex] ?? meterThemes[0];
+
 type WeatherCardProps = {
   deviceName: string;
   label: string;
@@ -17,10 +32,33 @@ type WeatherCardProps = {
   temperatureUnit: TemperatureUnit;
 };
 
-const cardColors = [
-  'bg-linear-to-br from-[#343223] to-[#1d2822]',
-  'bg-linear-to-br from-[#203638] to-[#182525]',
-];
+type WeatherCardHeadingProps = {
+  deviceName: string;
+  label: string;
+  icon: IconType;
+  meterTheme: MeterTheme;
+};
+
+const WeatherCardHeading = ({
+  deviceName,
+  label,
+  icon: Icon,
+  meterTheme,
+}: WeatherCardHeadingProps) => (
+  <div className="meter-heading flex items-center gap-2 text-sm font-bold capitalize">
+    <span
+      aria-hidden="true"
+      className={`meter-indicator ${meterTheme.themeClassName}`}
+      data-testid={`${deviceName}-indicator`}
+    />
+    <span>{label}</span>
+    <Icon
+      aria-hidden="true"
+      className="text-base text-[#eaf0e9]"
+      data-testid={`${deviceName}-icon`}
+    />
+  </div>
+);
 
 export const WeatherCard = ({
   deviceName,
@@ -30,21 +68,18 @@ export const WeatherCard = ({
   measure,
   temperatureUnit,
 }: WeatherCardProps) => {
-  const cardColor = cardColors[colorIndex % cardColors.length];
+  const meterTheme = getMeterTheme(colorIndex);
+  const cardClassName = `meter-card ${meterTheme.themeClassName} rounded-2xl border p-5`;
 
   if (measure === null) {
     return (
-      <article
-        className={`min-h-97 rounded-2xl border border-[#2b3a38] p-5 sm:p-[22px] ${cardColor}`}
-      >
-        <div className="flex items-center gap-2 text-sm font-bold capitalize">
-          <Icon
-            aria-hidden="true"
-            className="text-lg"
-            data-testid={`${deviceName}-icon`}
-          />
-          {label}
-        </div>
+      <article className={cardClassName}>
+        <WeatherCardHeading
+          deviceName={deviceName}
+          icon={Icon}
+          label={label}
+          meterTheme={meterTheme}
+        />
         <p className="mt-24 text-sm text-[#9bad9e]">No readings available.</p>
       </article>
     );
@@ -53,27 +88,23 @@ export const WeatherCard = ({
   const signalPercentage = getSignalPercentage(measure.signalPowerDBM);
 
   return (
-    <article
-      className={`min-h-97 rounded-2xl border border-[#2b3a38] p-5 sm:p-[22px] ${cardColor}`}
-    >
-      <div className="flex items-center gap-2 text-sm font-bold capitalize">
-        <Icon
-          aria-hidden="true"
-          className="text-lg"
-          data-testid={`${deviceName}-icon`}
-        />
-        {label}
-      </div>
-      <div className="mt-7 text-[clamp(58px,7vw,82px)] leading-[0.85] font-semibold tracking-[-0.09em]">
+    <article className={cardClassName}>
+      <WeatherCardHeading
+        deviceName={deviceName}
+        icon={Icon}
+        label={label}
+        meterTheme={meterTheme}
+      />
+      <div className="meter-temperature mt-7 leading-[0.85] font-semibold tracking-[-0.09em]">
         {convertTemperature({
           celsius: measure.temperature,
           unit: temperatureUnit,
         }).toFixed(1)}
-        <small className="ml-2 text-[22px] tracking-[-0.04em]">
+        <small className="ml-2 text-[20px] tracking-[-0.04em]">
           °{temperatureUnit === 'celsius' ? 'C' : 'F'}
         </small>
       </div>
-      <div className="mt-[26px] grid grid-cols-2 gap-x-3 gap-y-5">
+      <div className="mt-7 grid grid-cols-2 gap-x-3 gap-y-[18px]">
         <WeatherCardMetric label="Humidity" value={`${measure.humidity}%`} />
         <WeatherCardMetric
           label="Dew point"
@@ -90,7 +121,7 @@ export const WeatherCard = ({
           })}
         />
       </div>
-      <div className="mt-5 border-t border-[#2b3a38] pt-4">
+      <div className="mt-[19px] border-t border-[#2b3a38] pt-[13px]">
         <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
           Sensor health
         </div>
@@ -115,11 +146,11 @@ type WeatherCardMetricProps = {
 };
 
 const WeatherCardMetric = ({ label, value }: WeatherCardMetricProps) => (
-  <div className="border-t border-[#2b3a38] pt-3">
+  <div className="border-t border-[#2b3a38] pt-[10px]">
     <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
       {label}
     </div>
-    <b className="mt-1.5 block text-[23px] tracking-[-0.05em]">{value}</b>
+    <b className="mt-[5px] block text-[20px] tracking-[-0.05em]">{value}</b>
   </div>
 );
 
@@ -130,9 +161,9 @@ type HealthRowProps = {
 };
 
 const HealthRow = ({ label, value, barValue }: HealthRowProps) => (
-  <div className="flex items-center justify-between border-b border-[#2b3a38]/65 py-2.5 last:border-0">
-    <span className="text-[15px] font-semibold">{label}</span>
-    <span className="font-mono text-sm text-[#9bad9e]">
+  <div className="meter-health-row flex items-center justify-between border-b border-[#2b3a38]/65 py-2 text-sm font-bold last:border-0">
+    <span>{label}</span>
+    <span className="font-mono text-[13px] font-normal text-[#9bad9e]">
       {value}
       <ProgressBar value={barValue} />
     </span>

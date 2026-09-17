@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { MeterTheme } from '#components/weather-station/WeatherCard.tsx';
 import {
   formatTemperature,
   type TemperatureUnit,
@@ -33,18 +34,13 @@ type ChartDatum = Measure & {
 };
 
 type LinearChartProps = {
-  colorIndex: number;
+  meterTheme: MeterTheme;
   metric: WeatherMetric;
   range: ChartRange;
   sensor: Sensor;
   measures: Measure[];
   temperatureUnit: TemperatureUnit;
 };
-
-const chartColors = ['#b9e53b', '#83d2e5'];
-
-const getChartColor = (colorIndex: number): string =>
-  chartColors[colorIndex % chartColors.length];
 
 const getYAxisDomain = ({
   metric,
@@ -67,14 +63,14 @@ const getYAxisDomain = ({
 };
 
 export const LinearChart = ({
-  colorIndex,
+  meterTheme,
   metric,
   range,
   sensor,
   measures,
   temperatureUnit,
 }: LinearChartProps) => {
-  const chartColor = getChartColor(colorIndex);
+  const chartColor = meterTheme.chartColor;
   const [touchTooltipActive, setTouchTooltipActive] = React.useState<
     boolean | null
   >(null);

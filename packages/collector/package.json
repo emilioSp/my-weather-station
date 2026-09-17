@@ -16,6 +16,7 @@
     "rollback:local": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:rollback",
     "seed:local": "NODE_ENV=development node --env-file=.env ../../node_modules/knex/bin/cli.js seed:run --specific local-measure.ts",
     "build": "tsc",
+    "dev": "npm run seed:local",
     "test:unit": "vitest run --config vitest.config.ts",
     "test:coverage": "vitest run --coverage --config vitest.config.ts",
     "docker-build-and-push": "docker buildx build --platform linux/arm64 --file Dockerfile --tag espatola/my-weather-station:latest --push ../.."

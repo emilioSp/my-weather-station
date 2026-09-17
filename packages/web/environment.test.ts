@@ -11,28 +11,32 @@ describe('web environment', () => {
   it('accepts ordered named devices with supported icons', () => {
     const result = environmentSchema.safeParse(
       environmentInput([
-        { deviceName: 'kitchen', icon: 'FaHouse' },
         { deviceName: 'garden', icon: 'FaSeedling' },
+        { deviceName: 'kitchen', icon: 'FaKitchenSet' },
+        { deviceName: 'living room', icon: 'FaCouch' },
+        { deviceName: 'bedroom', icon: 'FaBed' },
       ]),
     );
 
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.VITE_DEVICES).toEqual([
-        { deviceName: 'kitchen', icon: 'FaHouse' },
         { deviceName: 'garden', icon: 'FaSeedling' },
+        { deviceName: 'kitchen', icon: 'FaKitchenSet' },
+        { deviceName: 'living room', icon: 'FaCouch' },
+        { deviceName: 'bedroom', icon: 'FaBed' },
       ]);
     }
   });
 
   it.each([
     ['invalid JSON', '{not-json}'],
-    ['blank name', JSON.stringify([{ deviceName: ' ', icon: 'FaHouse' }])],
+    ['blank name', JSON.stringify([{ deviceName: ' ', icon: 'FaSeedling' }])],
     [
       'duplicate names',
       JSON.stringify([
-        { deviceName: 'same', icon: 'FaHouse' },
         { deviceName: 'same', icon: 'FaSeedling' },
+        { deviceName: 'same', icon: 'FaBed' },
       ]),
     ],
     [

@@ -25,6 +25,35 @@ const latestKitchenMeasure = {
   heat_index: 21.2,
 };
 
+const latestLivingRoomMeasure = {
+  ...latestGardenMeasure,
+  id: '00000000-0000-0000-0000-000000000003',
+  device_name: 'living room',
+  device_type: 'indoor',
+  temperature: 22,
+  humidity: 46,
+  dew_point: 10,
+  heat_index: 22.1,
+};
+
+const latestBedroomMeasure = {
+  ...latestGardenMeasure,
+  id: '00000000-0000-0000-0000-000000000004',
+  device_name: 'bedroom',
+  device_type: 'indoor',
+  temperature: 19,
+  humidity: 51,
+  dew_point: 9,
+  heat_index: 19.2,
+};
+
+const latestMeasures: Record<string, object> = {
+  garden: latestGardenMeasure,
+  kitchen: latestKitchenMeasure,
+  'living room': latestLivingRoomMeasure,
+  bedroom: latestBedroomMeasure,
+};
+
 const history = {
   garden: [
     { ...latestGardenMeasure, temperature: 18, heat_index: 17.7 },
@@ -33,6 +62,14 @@ const history = {
   kitchen: [
     { ...latestKitchenMeasure, temperature: 19, heat_index: 18.7 },
     latestKitchenMeasure,
+  ],
+  'living room': [
+    { ...latestLivingRoomMeasure, temperature: 20, heat_index: 19.8 },
+    latestLivingRoomMeasure,
+  ],
+  bedroom: [
+    { ...latestBedroomMeasure, temperature: 17, heat_index: 16.8 },
+    latestBedroomMeasure,
   ],
 };
 
@@ -43,9 +80,7 @@ const mockMeasurements = async (page: Page): Promise<void> => {
       ?.replace(/^eq\./, '');
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify([
-        deviceName === 'kitchen' ? latestKitchenMeasure : latestGardenMeasure,
-      ]),
+      body: JSON.stringify([latestMeasures[deviceName ?? 'garden']]),
     });
   });
   await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
@@ -69,6 +104,8 @@ test.describe('Temperature units', () => {
     await expect(page.getByLabel('Current readings')).toContainText('68.0°F');
     await expect(page.getByLabel('Current readings')).toContainText('53.6°F');
     await expect(page.getByLabel('Current readings')).toContainText('67.1°F');
+    await expect(page.getByLabel('Current readings')).toContainText('71.6°F');
+    await expect(page.getByLabel('Current readings')).toContainText('66.2°F');
     await expect(page.getByLabel('Measurement history')).toContainText(
       '64.4°F',
       {
@@ -77,6 +114,9 @@ test.describe('Temperature units', () => {
     );
     await expect(page.getByLabel('Measurement history')).toContainText(
       '68.0°F',
+    );
+    await expect(page.getByLabel('Measurement history')).toContainText(
+      '62.6°F',
     );
 
     const temperatureChart = page.getByLabel(

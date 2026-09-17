@@ -1,10 +1,12 @@
 import type { IconType } from 'react-icons';
-import { FaHouse, FaSeedling } from 'react-icons/fa6';
+import { FaBed, FaCouch, FaKitchenSet, FaSeedling } from 'react-icons/fa6';
 import { z } from 'zod';
 
 export const deviceIconMap = {
-  FaHouse,
   FaSeedling,
+  FaKitchenSet,
+  FaCouch,
+  FaBed,
 } as const satisfies Record<string, IconType>;
 
 export type DeviceIconName = keyof typeof deviceIconMap;

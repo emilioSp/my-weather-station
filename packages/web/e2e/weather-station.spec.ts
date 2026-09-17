@@ -23,23 +23,73 @@ const initialKitchenMeasure = {
   signal_power_dbm: 1,
 };
 
-const changedGardenMeasure = {
+const initialLivingRoomMeasure = {
   ...initialGardenMeasure,
   id: '00000000-0000-0000-0000-000000000003',
+  device_name: 'living room',
+  device_type: 'indoor',
+  temperature: 22,
+  humidity: 54,
+  signal_power_dbm: -45,
+};
+
+const initialBedroomMeasure = {
+  ...initialGardenMeasure,
+  id: '00000000-0000-0000-0000-000000000004',
+  device_name: 'bedroom',
+  device_type: 'indoor',
+  temperature: 19,
+  humidity: 51,
+  signal_power_dbm: -62,
+};
+
+const changedGardenMeasure = {
+  ...initialGardenMeasure,
+  id: '00000000-0000-0000-0000-000000000005',
   measured_at: '2026-09-01T15:00:00.000Z',
   temperature: 25,
 };
 
 const changedKitchenMeasure = {
   ...initialKitchenMeasure,
-  id: '00000000-0000-0000-0000-000000000004',
+  id: '00000000-0000-0000-0000-000000000006',
   measured_at: '2026-09-01T15:00:00.000Z',
   temperature: 24,
+};
+
+const changedLivingRoomMeasure = {
+  ...initialLivingRoomMeasure,
+  id: '00000000-0000-0000-0000-000000000007',
+  measured_at: '2026-09-01T15:00:00.000Z',
+  temperature: 23,
+};
+
+const changedBedroomMeasure = {
+  ...initialBedroomMeasure,
+  id: '00000000-0000-0000-0000-000000000008',
+  measured_at: '2026-09-01T15:00:00.000Z',
+  temperature: 20,
+};
+
+const initialMeasures: Record<string, object> = {
+  garden: initialGardenMeasure,
+  kitchen: initialKitchenMeasure,
+  'living room': initialLivingRoomMeasure,
+  bedroom: initialBedroomMeasure,
+};
+
+const changedMeasures: Record<string, object> = {
+  garden: changedGardenMeasure,
+  kitchen: changedKitchenMeasure,
+  'living room': changedLivingRoomMeasure,
+  bedroom: changedBedroomMeasure,
 };
 
 const history = {
   garden: [initialGardenMeasure, changedGardenMeasure],
   kitchen: [initialKitchenMeasure, changedKitchenMeasure],
+  'living room': [initialLivingRoomMeasure, changedLivingRoomMeasure],
+  bedroom: [initialBedroomMeasure, changedBedroomMeasure],
   unconfigured: [initialGardenMeasure],
 };
 
@@ -89,7 +139,7 @@ const mockWeatherStation = async ({
   requestedRanges,
 }: {
   page: Page;
-  latestResponses: Array<{ garden: object; kitchen: object }>;
+  latestResponses: Array<Record<string, object>>;
   requestedRanges?: Array<{ end: string; start: string }>;
 }): Promise<void> => {
   let latestResponseIndex = 0;
@@ -101,8 +151,7 @@ const mockWeatherStation = async ({
         Math.min(latestResponseIndex, latestResponses.length - 1)
       ];
     const deviceName = getRequestedDeviceName(route);
-    const measure =
-      deviceName === 'kitchen' ? response.kitchen : response.garden;
+    const measure = response[deviceName ?? 'garden'] ?? response.garden;
 
     await route.fulfill({
       body: JSON.stringify([measure]),
@@ -110,7 +159,7 @@ const mockWeatherStation = async ({
     });
 
     answeredDeviceNames.add(deviceName ?? '');
-    if (answeredDeviceNames.size === 2) {
+    if (answeredDeviceNames.size === 4) {
       latestResponseIndex += 1;
       answeredDeviceNames.clear();
     }
@@ -164,36 +213,34 @@ const expectDesktopChartReadout = async ({
 };
 
 test.describe('Weather station', () => {
-  test('shows configured names and icons and omits missing or unknown history groups', async ({
+  test('shows all configured names, icons, and history accordions', async ({
     page,
   }) => {
     await page.coverage.startJSCoverage();
     await page.setViewportSize({ width: 390, height: 844 });
     await mockWeatherStation({
       page,
-      latestResponses: [
-        { garden: initialGardenMeasure, kitchen: initialKitchenMeasure },
-      ],
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify({
-          garden: history.garden,
-          unconfigured: history.unconfigured,
-        }),
-        contentType: 'application/json',
-      });
+      latestResponses: [initialMeasures],
     });
 
     await page.goto('/');
 
-    await expect(page.getByTestId('garden-icon')).toBeVisible();
-    await expect(page.getByTestId('kitchen-icon')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'garden' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'kitchen' })).toHaveCount(0);
+    const cards = page.getByLabel('Current readings').locator('article');
+    await expect(cards).toHaveCount(4);
+    for (const deviceName of ['garden', 'kitchen', 'living room', 'bedroom']) {
+      await expect(page.getByTestId(`${deviceName}-icon`)).toBeVisible();
+      await expect(
+        page.getByTestId(`${deviceName}-history-icon`),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: deviceName }),
+      ).toBeVisible();
+    }
     await expect(
       page.getByLabel(/Interactive temperature chart for garden measurements/),
     ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Zoom out' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Zoom in' })).toBeVisible();
     await expect(page.getByText('Indoor', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Outdoor', { exact: true })).toHaveCount(0);
     await expect(
@@ -210,6 +257,114 @@ test.describe('Weather station', () => {
     });
   });
 
+  test('uses distinct meter themes at every target viewport', async ({
+    page,
+  }) => {
+    await page.coverage.startJSCoverage();
+    await mockWeatherStation({
+      page,
+      latestResponses: [initialMeasures],
+    });
+    await page.setViewportSize({ width: 1280, height: 700 });
+    await page.goto('/');
+
+    const targetViewports = [
+      { columns: 4, height: 700, width: 1280 },
+      { columns: 2, height: 1024, width: 768 },
+      { columns: 1, height: 844, width: 390 },
+    ];
+    const deviceNames = ['garden', 'kitchen', 'living room', 'bedroom'];
+    const readings = page.getByLabel('Current readings');
+
+    for (const viewport of targetViewports) {
+      await page.setViewportSize({
+        height: viewport.height,
+        width: viewport.width,
+      });
+      await expect
+        .poll(() =>
+          readings.evaluate(
+            (element) =>
+              getComputedStyle(element).gridTemplateColumns.split(' ').length,
+          ),
+        )
+        .toBe(viewport.columns);
+
+      const cardDetails = await readings
+        .locator('article')
+        .evaluateAll((cards) =>
+          cards.map((card) => ({
+            accent: getComputedStyle(card)
+              .getPropertyValue('--meter-accent')
+              .trim(),
+            heading: Array.from(card.firstElementChild?.children ?? []).map(
+              (child) => ({
+                testId: child.getAttribute('data-testid'),
+                text: child.textContent?.trim(),
+              }),
+            ),
+          })),
+        );
+      expect(new Set(cardDetails.map(({ accent }) => accent)).size).toBe(4);
+      expect(cardDetails.map(({ heading }) => heading)).toEqual(
+        deviceNames.map((deviceName) => [
+          { testId: `${deviceName}-indicator`, text: '' },
+          { testId: null, text: deviceName },
+          { testId: `${deviceName}-icon`, text: '' },
+        ]),
+      );
+
+      const historyHeadingDetails = await page
+        .getByLabel('Measurement history')
+        .locator('section > button')
+        .evaluateAll((buttons) =>
+          buttons.map((button) =>
+            Array.from(button.firstElementChild?.children ?? []).map(
+              (child) => ({
+                testId: child.getAttribute('data-testid'),
+                text: child.textContent?.trim(),
+              }),
+            ),
+          ),
+        );
+      expect(historyHeadingDetails).toEqual(
+        deviceNames.map((deviceName) => [
+          { testId: `${deviceName}-history-indicator`, text: '' },
+          { testId: null, text: deviceName },
+          { testId: `${deviceName}-history-icon`, text: '' },
+        ]),
+      );
+      await expect(
+        page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
+        ),
+      ).resolves.toBe(true);
+    }
+
+    await expect
+      .poll(() =>
+        page
+          .getByTestId('garden-indicator')
+          .evaluate((indicator) => getComputedStyle(indicator).animationName),
+      )
+      .not.toBe('none');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect
+      .poll(() =>
+        page
+          .getByTestId('garden-indicator')
+          .evaluate((indicator) => getComputedStyle(indicator).animationName),
+      )
+      .toBe('none');
+
+    await saveCoverage({
+      jsCoverage: await page.coverage.stopJSCoverage(),
+      name: 'weather-station-meter-themes',
+    });
+  });
+
   test('shows chart placeholders while named history is loading', async ({
     page,
   }) => {
@@ -221,11 +376,7 @@ test.describe('Weather station', () => {
     await page.route('**/rest/v1/measures**', async (route) => {
       const deviceName = getRequestedDeviceName(route);
       await route.fulfill({
-        body: JSON.stringify([
-          deviceName === 'kitchen'
-            ? initialKitchenMeasure
-            : initialGardenMeasure,
-        ]),
+        body: JSON.stringify([initialMeasures[deviceName ?? 'garden']]),
         contentType: 'application/json',
       });
     });
@@ -238,7 +389,7 @@ test.describe('Weather station', () => {
     });
 
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByLabel('Loading chart')).toHaveCount(6);
+    await expect(page.getByLabel('Loading chart')).toHaveCount(12);
     releaseHistory();
     await expect(
       page.getByLabel(/Interactive temperature chart for garden measurements/),
@@ -257,24 +408,25 @@ test.describe('Weather station', () => {
     await page.route('**/rest/v1/measures**', async (route) => {
       const deviceName = getRequestedDeviceName(route);
       await route.fulfill({
-        body: JSON.stringify([
-          deviceName === 'kitchen'
-            ? initialKitchenMeasure
-            : initialGardenMeasure,
-        ]),
+        body: JSON.stringify([initialMeasures[deviceName ?? 'garden']]),
         contentType: 'application/json',
       });
     });
     await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
       await route.fulfill({
-        body: JSON.stringify({ garden: [], kitchen: [] }),
+        body: JSON.stringify({
+          garden: [],
+          kitchen: [],
+          'living room': [],
+          bedroom: [],
+        }),
         contentType: 'application/json',
       });
     });
 
     await page.goto('/');
     await expect(page.getByText('No measurements in this range.')).toHaveCount(
-      6,
+      12,
     );
 
     await saveCoverage({
@@ -341,9 +493,12 @@ test.describe('Weather station', () => {
     await page.goto('/');
 
     await expect(page.getByText('No readings yet')).toBeVisible();
-    await expect(page.getByText('No readings available.')).toHaveCount(2);
-    await expect(page.getByRole('button', { name: 'garden' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'kitchen' })).toHaveCount(0);
+    await expect(page.getByText('No readings available.')).toHaveCount(4);
+    for (const deviceName of ['garden', 'kitchen', 'living room', 'bedroom']) {
+      await expect(page.getByRole('button', { name: deviceName })).toHaveCount(
+        0,
+      );
+    }
 
     await saveCoverage({
       jsCoverage: await page.coverage.stopJSCoverage(),
@@ -357,11 +512,7 @@ test.describe('Weather station', () => {
     await page.coverage.startJSCoverage();
     await mockWeatherStation({
       page,
-      latestResponses: [
-        { garden: initialGardenMeasure, kitchen: initialKitchenMeasure },
-        { garden: changedGardenMeasure, kitchen: changedKitchenMeasure },
-        { garden: changedGardenMeasure, kitchen: changedKitchenMeasure },
-      ],
+      latestResponses: [initialMeasures, changedMeasures, changedMeasures],
     });
 
     await page.goto('/');
@@ -412,9 +563,7 @@ test.describe('Weather station', () => {
             }
           : {
               body: JSON.stringify([
-                getRequestedDeviceName(route) === 'kitchen'
-                  ? initialKitchenMeasure
-                  : initialGardenMeasure,
+                initialMeasures[getRequestedDeviceName(route) ?? 'garden'],
               ]),
               contentType: 'application/json',
             },
@@ -443,32 +592,19 @@ test.describe('Weather station', () => {
       page,
       latestResponses: [
         {
-          kitchen: { ...initialKitchenMeasure, signal_power_dbm: -75 },
+          ...initialMeasures,
           garden: { ...initialGardenMeasure, signal_power_dbm: -125 },
+          kitchen: { ...initialKitchenMeasure, signal_power_dbm: -75 },
         },
         {
-          kitchen: {
-            ...initialKitchenMeasure,
-            id: changedKitchenMeasure.id,
-            signal_power_dbm: -75,
-          },
-          garden: {
-            ...initialGardenMeasure,
-            id: changedGardenMeasure.id,
-            signal_power_dbm: -10,
-          },
+          ...changedMeasures,
+          kitchen: { ...changedKitchenMeasure, signal_power_dbm: -75 },
+          garden: { ...changedGardenMeasure, signal_power_dbm: -10 },
         },
         {
-          kitchen: {
-            ...initialKitchenMeasure,
-            id: changedKitchenMeasure.id,
-            signal_power_dbm: -75,
-          },
-          garden: {
-            ...initialGardenMeasure,
-            id: changedGardenMeasure.id,
-            signal_power_dbm: -10,
-          },
+          ...changedMeasures,
+          kitchen: { ...changedKitchenMeasure, signal_power_dbm: -75 },
+          garden: { ...changedGardenMeasure, signal_power_dbm: -10 },
         },
       ],
     });
@@ -495,9 +631,7 @@ test.describe('Weather station', () => {
       await page.setViewportSize({ width: 390, height: 844 });
       await mockWeatherStation({
         page,
-        latestResponses: [
-          { kitchen: initialKitchenMeasure, garden: initialGardenMeasure },
-        ],
+        latestResponses: [initialMeasures],
       });
 
       await page.goto('/');
@@ -553,9 +687,7 @@ test.describe('Weather station', () => {
     const requestedRanges: Array<{ end: string; start: string }> = [];
     await mockWeatherStation({
       page,
-      latestResponses: [
-        { kitchen: initialKitchenMeasure, garden: initialGardenMeasure },
-      ],
+      latestResponses: [initialMeasures],
       requestedRanges,
     });
 

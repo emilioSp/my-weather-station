@@ -1,7 +1,8 @@
 import type { Measure } from '@wx/shared';
 import { MeterAccordion } from '#components/weather-station/MeterAccordion.tsx';
 import { RangeControls } from '#components/weather-station/RangeControls.tsx';
-import { environment } from '#environment.ts';
+import { getMeterTheme } from '#components/weather-station/WeatherCard.tsx';
+import { deviceIconMap, environment } from '#environment.ts';
 import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
 import type { ChartRange } from '#weather-dashboard.util.ts';
 
@@ -34,7 +35,8 @@ export const MeasurementHistory = ({
     )
     .map(({ device, index }) => ({
       device,
-      index,
+      icon: deviceIconMap[device.icon],
+      meterTheme: getMeterTheme(index),
       measures: measuresByDeviceName[device.deviceName] ?? [],
     }));
 
@@ -49,18 +51,21 @@ export const MeasurementHistory = ({
       {error !== null ? (
         <HistoryError message={error} />
       ) : (
-        historyDevices.map(({ device, index, measures }, historyIndex) => (
-          <MeterAccordion
-            key={device.deviceName}
-            defaultOpen={historyIndex === 0}
-            colorIndex={index}
-            isLoading={isLoading}
-            measures={measures}
-            range={range}
-            sensor={device.deviceName}
-            temperatureUnit={temperatureUnit}
-          />
-        ))
+        historyDevices.map(
+          ({ device, icon, meterTheme, measures }, historyIndex) => (
+            <MeterAccordion
+              key={device.deviceName}
+              defaultOpen={historyIndex === 0}
+              icon={icon}
+              isLoading={isLoading}
+              measures={measures}
+              meterTheme={meterTheme}
+              range={range}
+              sensor={device.deviceName}
+              temperatureUnit={temperatureUnit}
+            />
+          ),
+        )
       )}
     </section>
   );

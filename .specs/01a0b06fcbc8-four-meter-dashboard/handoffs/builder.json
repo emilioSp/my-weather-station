@@ -1,0 +1,25 @@
+{
+  "id": "01a0b06fcbc8-four-meter-dashboard",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "npm run test:unit -w @wx/web -- environment.test.ts",
+      "red_ok": false,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "npm run test:e2e -w @wx/web -- weather-station.spec.ts temperature-units.spec.ts",
+      "red_ok": false,
+      "green_ok": true
+    },
+    {
+      "ac": "AC3",
+      "probe": "npm run test:e2e -w @wx/web -- weather-station.spec.ts",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "Repaired the unrejected AC3 visual finding by matching prototype card spacing, typography, meter-bar sizing, mobile inset, and history heading sizing in the allowed web component and stylesheet paths. The rejected AC1 and AC2 probe gaps were left unchanged; their repair-pass breakage and restore outputs are recorded in observations.md. Prototype and mocked-app screenshots were compared at 1280x700, 768x1024, and 390x844 and restored afterward. npm run lint, npm run build, and the final green probes passed."
+}

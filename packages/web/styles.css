@@ -13,6 +13,124 @@ body {
   background: radial-gradient(circle at 86% 0%, #294033 0, transparent 26rem), #10191b;
 }
 
+.meter-theme-garden {
+  --meter-accent: #b9e53b;
+}
+
+.meter-theme-kitchen {
+  --meter-accent: #83d2e5;
+}
+
+.meter-theme-living-room {
+  --meter-accent: #f0a46a;
+}
+
+.meter-theme-bedroom {
+  --meter-accent: #c9a7ef;
+}
+
+.meter-card {
+  min-height: 340px;
+  line-height: normal;
+  border-color: color-mix(in srgb, var(--meter-accent) 22%, #2b3a38);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--meter-accent) 16%, #192524),
+    #182321 70%
+  );
+}
+
+.meter-heading,
+.meter-history-heading,
+.meter-health-row {
+  line-height: normal;
+}
+
+.meter-card .font-mono {
+  font-family: 'DM Mono', monospace;
+}
+
+.meter-temperature {
+  font-size: clamp(58px, 5.4vw, 78px);
+}
+
+.meter-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: var(--meter-accent);
+  animation: meter-pulse 2s ease-out infinite;
+}
+
+@keyframes meter-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--meter-accent) 55%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter-indicator {
+    animation: none;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--meter-accent) 70%, transparent);
+  }
+}
+
+@media (min-width: 1101px) {
+  [aria-label='Current readings'] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .meter-card {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .meter-card {
+    min-height: 0;
+  }
+
+  .meter-temperature {
+    font-size: 70px;
+  }
+}
+
+[aria-label='Measurement history'] > section > button {
+  min-height: 67px;
+  gap: 10px;
+  padding: 20px;
+  font-size: 14px;
+  line-height: normal;
+}
+
+.meter-card .ml-2.inline-block {
+  width: 42px;
+  height: 4px;
+}
+
+.meter-card .ml-2.inline-block > span {
+  background: var(--meter-accent);
+}
+
+@media (max-width: 639px) {
+  [aria-label='Measurement history'] > section > button {
+    min-height: 64px;
+  }
+
+  main:has([aria-label='Current readings']) {
+    padding-inline: clamp(20px, 4vw, 64px);
+  }
+}
+
 button {
   font: inherit;
 }
