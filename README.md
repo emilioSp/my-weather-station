@@ -128,9 +128,10 @@ npm run supabase:status  # show local endpoints
 npm run lint             # read-only Biome check, whole repository
 npm run lint:fix         # apply Biome fixes, whole repository
 npm run typecheck        # TypeScript check for every workspace
-npm run precommit        # read-only lint and TypeScript checks
+npm run precommit        # lint, type check, tests, and coverage in every workspace
 npm run build            # type check, plus the production build of the web app
 npm test                 # run tests in every workspace
+npm run test:coverage    # run tests and coverage in every workspace
 npm run dev              # every workspace that defines dev
 ```
 

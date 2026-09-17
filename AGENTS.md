@@ -70,13 +70,6 @@ npm run <script> -w <workspace-name>
 - Use test names that state the given condition and result.
 - Keep each assertion meaningful. Remove redundant assertions, except explicit exclusion checks.
 - Do not add tests without behavior value. Check coverage before removing tests and fixtures.
-- Run final checks from the repository root:
-
-```sh
-npm run lint
-npm run build
-npm test
-```
 
 ## Documentation
 

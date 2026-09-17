@@ -136,7 +136,6 @@ A builder uses `done` only when all these conditions are true:
 - It recorded observations for every acceptance criterion.
 - Every stated breakage made its probe fail.
 - After each restore, the probe succeeded again.
-- `npm run lint`, `npm run build`, and `npm run test` succeeded.
 - No owner decision is required.
 
 `failed` means the builder cannot produce a verifiable candidate with the current spec, constraints, and environment. It is a technical execution result, not a request for a product, scope, or requirement decision.
