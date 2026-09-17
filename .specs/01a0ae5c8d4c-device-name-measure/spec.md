@@ -46,13 +46,13 @@ Update focused collector, shared, and web API integration tests. Test fixtures m
 
 ### AC1: The database stores a required device name and supplies `UNKNOWN` when no name is inserted.
 
-- probe: `npm test -w @wx/collector -- db/measure.repository.test.ts`
+- probe: `npm run test:unit -w @wx/collector -- db/measure.repository.test.ts`
 - postcondition: a repository-created measure has its configured `device_name`, and a raw insert without that column reads back `UNKNOWN`.
 - breakage: remove `device_name` from the repository insert or remove the column default from the migration.
 
 ### AC2: The collector accepts named devices only when their names are non-empty and unique, then stores the configured name.
 
-- probe: `npm test -w @wx/collector -- environment.test.ts meters/Meter.test.ts`
+- probe: `npm run test:unit -w @wx/collector -- environment.test.ts meters/Meter.test.ts`
 - postcondition: duplicate or blank device names make environment validation fail, and a meter read sends its configured name to storage.
 - breakage: remove the duplicate-name refinement or omit `deviceName` from the meter storage input.
 
