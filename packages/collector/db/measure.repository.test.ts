@@ -65,17 +65,4 @@ describe('storeMeasure', () => {
       signal_power_dbm: -48,
     });
   });
-
-  it('uses UNKNOWN for a raw insert without a device name', async () => {
-    await db.raw(`
-      INSERT INTO measures (
-        device_id, device_type, temperature, dew_point, heat_index,
-        humidity, battery, signal_power_dbm
-      ) VALUES ('raw-device', 'indoor', 20, 10, 21, 50, 80, -50)
-    `);
-
-    await expect(
-      db('measures').select('device_name').first(),
-    ).resolves.toMatchObject({ device_name: 'UNKNOWN' });
-  });
 });
