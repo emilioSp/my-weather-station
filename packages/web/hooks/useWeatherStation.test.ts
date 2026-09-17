@@ -27,7 +27,7 @@ import { useWeatherStation } from '#hooks/useWeatherStation.ts';
 const measure: Measure = {
   id: '123e4567-e89b-12d3-a456-426614174000',
   deviceId: 'device',
-  deviceName: 'test meter',
+  deviceName: 'kitchen',
   address: 'address',
   deviceType: 'indoor',
   measuredAt: '2026-01-01T00:00:00Z',
@@ -37,6 +37,13 @@ const measure: Measure = {
   humidity: 50,
   battery: 80,
   signalPowerDBM: -50,
+};
+
+const gardenMeasure: Measure = {
+  ...measure,
+  id: '123e4567-e89b-12d3-a456-426614174001',
+  deviceName: 'garden',
+  deviceType: 'outdoor',
 };
 
 afterEach(() => {
@@ -55,21 +62,30 @@ describe('useWeatherStation', () => {
 
     expect(result.currentMeasures).toBeNull();
     expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(2);
+    expect(weatherApi.getLatestMeasure).toHaveBeenNthCalledWith(1, {
+      deviceName: 'garden',
+    });
+    expect(weatherApi.getLatestMeasure).toHaveBeenNthCalledWith(2, {
+      deviceName: 'kitchen',
+    });
   });
 
-  it('loads history and refreshes a complete current state', async () => {
+  it('loads name-keyed history and refreshes a complete current state', async () => {
     vi.useFakeTimers();
     weatherApi.getLatestMeasure.mockResolvedValue({
       rows: [measure],
       error: null,
     });
     weatherApi.getChartHistory.mockResolvedValue({
-      history: { indoor: [measure], outdoor: [] },
+      history: { garden: [gardenMeasure], kitchen: [measure] },
       error: null,
     });
     state.values = [
-      { indoor: measure, outdoor: null, error: null },
-      { indoor: [], outdoor: [], error: null },
+      {
+        byDeviceName: { garden: gardenMeasure, kitchen: measure },
+        error: null,
+      },
+      { history: {}, error: null },
       'LAST_DAY',
       false,
     ];

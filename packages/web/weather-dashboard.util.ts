@@ -105,14 +105,8 @@ export const filterMeasuresForRange = ({
   );
 };
 
-export const getLatestTimestamp = ({
-  indoorMeasures,
-  outdoorMeasures,
-}: {
-  indoorMeasures: Measure[];
-  outdoorMeasures: Measure[];
-}): number | null => {
-  const timestamps = [...indoorMeasures, ...outdoorMeasures].map((measure) =>
+export const getLatestTimestamp = (measures: Measure[]): number | null => {
+  const timestamps = measures.map((measure) =>
     new Date(measure.measuredAt).getTime(),
   );
 

@@ -1,14 +1,14 @@
 import type { Measure } from '@wx/shared';
 import { MeterAccordion } from '#components/weather-station/MeterAccordion.tsx';
 import { RangeControls } from '#components/weather-station/RangeControls.tsx';
+import { environment } from '#environment.ts';
 import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
 import type { ChartRange } from '#weather-dashboard.util.ts';
 
 type MeasurementHistoryProps = {
   error: string | null;
-  indoorMeasures: Measure[];
+  measuresByDeviceName: Record<string, Measure[]>;
   isLoading: boolean;
-  outdoorMeasures: Measure[];
   range: ChartRange;
   rangeIndex: number;
   temperatureUnit: TemperatureUnit;
@@ -17,44 +17,54 @@ type MeasurementHistoryProps = {
 
 export const MeasurementHistory = ({
   error,
-  indoorMeasures,
+  measuresByDeviceName,
   isLoading,
-  outdoorMeasures,
   range,
   rangeIndex,
   temperatureUnit,
   onRangeIndexChange,
-}: MeasurementHistoryProps) => (
-  <section className="mt-4 grid gap-4" aria-label="Measurement history">
-    <RangeControls
-      isLoading={isLoading}
-      rangeIndex={rangeIndex}
-      range={range}
-      onRangeIndexChange={onRangeIndexChange}
-    />
-    {error !== null ? (
-      <HistoryError message={error} />
-    ) : (
-      <>
-        <MeterAccordion
-          defaultOpen
-          isLoading={isLoading}
-          measures={outdoorMeasures}
-          range={range}
-          sensor="Outdoor"
-          temperatureUnit={temperatureUnit}
-        />
-        <MeterAccordion
-          isLoading={isLoading}
-          measures={indoorMeasures}
-          range={range}
-          sensor="Indoor"
-          temperatureUnit={temperatureUnit}
-        />
-      </>
-    )}
-  </section>
-);
+}: MeasurementHistoryProps) => {
+  const historyDevices = environment.DEVICES.map((device, index) => ({
+    device,
+    index,
+  }))
+    .filter(
+      ({ device }) =>
+        isLoading || Object.hasOwn(measuresByDeviceName, device.deviceName),
+    )
+    .map(({ device, index }) => ({
+      device,
+      index,
+      measures: measuresByDeviceName[device.deviceName] ?? [],
+    }));
+
+  return (
+    <section className="mt-4 grid gap-4" aria-label="Measurement history">
+      <RangeControls
+        isLoading={isLoading}
+        rangeIndex={rangeIndex}
+        range={range}
+        onRangeIndexChange={onRangeIndexChange}
+      />
+      {error !== null ? (
+        <HistoryError message={error} />
+      ) : (
+        historyDevices.map(({ device, index, measures }, historyIndex) => (
+          <MeterAccordion
+            key={device.deviceName}
+            defaultOpen={historyIndex === 0}
+            colorIndex={index}
+            isLoading={isLoading}
+            measures={measures}
+            range={range}
+            sensor={device.deviceName}
+            temperatureUnit={temperatureUnit}
+          />
+        ))
+      )}
+    </section>
+  );
+};
 
 type HistoryErrorProps = {
   message: string;

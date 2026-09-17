@@ -31,11 +31,10 @@ export const WeatherStation = () => {
   const {
     currentMeasures,
     currentRange,
-    indoorMeasures,
     isRefreshing,
     latestMeasuredAt,
     measureHistory,
-    outdoorMeasures,
+    measuresByDeviceName,
     rangeIndex,
     refreshMeasures,
     changeRange,
@@ -66,15 +65,13 @@ export const WeatherStation = () => {
       />
       <div className="pt-4">
         <CurrentReadings
-          indoor={currentMeasures.indoor}
-          outdoor={currentMeasures.outdoor}
+          measuresByDeviceName={currentMeasures.byDeviceName}
           temperatureUnit={temperatureUnit}
         />
         <MeasurementHistory
           error={measureHistory?.error ?? null}
-          indoorMeasures={indoorMeasures}
+          measuresByDeviceName={measuresByDeviceName}
           isLoading={measureHistory === null}
-          outdoorMeasures={outdoorMeasures}
           range={currentRange}
           rangeIndex={rangeIndex}
           temperatureUnit={temperatureUnit}

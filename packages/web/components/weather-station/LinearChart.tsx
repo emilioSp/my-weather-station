@@ -26,13 +26,14 @@ import {
   type WeatherMetric,
 } from '#weather-dashboard.util.ts';
 
-type Sensor = 'Indoor' | 'Outdoor';
+type Sensor = string;
 
 type ChartDatum = Measure & {
   timestamp: number;
 };
 
 type LinearChartProps = {
+  colorIndex: number;
   metric: WeatherMetric;
   range: ChartRange;
   sensor: Sensor;
@@ -40,10 +41,10 @@ type LinearChartProps = {
   temperatureUnit: TemperatureUnit;
 };
 
-const chartColors: Record<Sensor, string> = {
-  Indoor: '#83d2e5',
-  Outdoor: '#b9e53b',
-};
+const chartColors = ['#b9e53b', '#83d2e5'];
+
+const getChartColor = (colorIndex: number): string =>
+  chartColors[colorIndex % chartColors.length];
 
 const getYAxisDomain = ({
   metric,
@@ -66,12 +67,14 @@ const getYAxisDomain = ({
 };
 
 export const LinearChart = ({
+  colorIndex,
   metric,
   range,
   sensor,
   measures,
   temperatureUnit,
 }: LinearChartProps) => {
+  const chartColor = getChartColor(colorIndex);
   const [touchTooltipActive, setTouchTooltipActive] = React.useState<
     boolean | null
   >(null);
@@ -100,7 +103,6 @@ export const LinearChart = ({
     return (
       <ChartCard
         metric={metric}
-        sensor={sensor}
         extrema={null}
         temperatureUnit={temperatureUnit}
       >
@@ -116,13 +118,12 @@ export const LinearChart = ({
   return (
     <ChartCard
       metric={metric}
-      sensor={sensor}
       extrema={extrema}
       temperatureUnit={temperatureUnit}
     >
       <div
         className="mt-4 grid min-h-19 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs sm:hidden"
-        data-testid={`${sensor.toLowerCase()}-${metric}-touch-readout`}
+        data-testid={`${sensor}-${metric}-touch-readout`}
       >
         {touchMeasure === null ? (
           <span className="self-center text-[#9bad9e]">Touch and drag.</span>
@@ -137,7 +138,7 @@ export const LinearChart = ({
       <div className="mt-4 h-[380px] sm:mt-[18px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            aria-label={`Interactive ${details.label.toLowerCase()} chart for ${sensor.toLowerCase()} measurements in ${range.label.toLowerCase()}.`}
+            aria-label={`Interactive ${details.label.toLowerCase()} chart for ${sensor} measurements in ${range.label.toLowerCase()}.`}
             data={chartData}
             margin={{ top: 20, right: 20, bottom: 50, left: 20 }}
             onTouchEnd={() => {
@@ -205,7 +206,7 @@ export const LinearChart = ({
               dot={false}
               isAnimationActive={false}
               name={sensor}
-              stroke={chartColors[sensor]}
+              stroke={chartColor}
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={3}
@@ -219,7 +220,6 @@ export const LinearChart = ({
 
 type ChartCardProps = {
   metric: WeatherMetric;
-  sensor: Sensor;
   extrema: { low: number; high: number } | null;
   children: React.ReactNode;
   temperatureUnit: TemperatureUnit;
@@ -227,7 +227,6 @@ type ChartCardProps = {
 
 const ChartCard = ({
   metric,
-  sensor,
   extrema,
   children,
   temperatureUnit,
@@ -240,14 +239,6 @@ const ChartCard = ({
         <div>
           <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
             {details.label}
-          </div>
-          <div className="mt-1 flex items-center gap-1.5 text-sm font-bold">
-            <i
-              aria-hidden="true"
-              className="inline-block size-1.5 rounded-full"
-              style={{ backgroundColor: chartColors[sensor] }}
-            />
-            {sensor}
           </div>
         </div>
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 sm:justify-end">
@@ -313,7 +304,7 @@ const ChartTooltip = ({
   return (
     <div
       className="min-w-44 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs shadow-[0_10px_28px_rgb(0_0_0_/_0.3)]"
-      data-testid={`${sensor.toLowerCase()}-${metric}-chart-tooltip`}
+      data-testid={`${sensor}-${metric}-chart-tooltip`}
     >
       <ChartReadout
         metric={metric}

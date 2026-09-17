@@ -1,5 +1,6 @@
 import type { Measure } from '@wx/shared';
 import * as React from 'react';
+import { environment } from '#environment.ts';
 import {
   getChartHistory,
   getLatestMeasure,
@@ -18,12 +19,12 @@ import {
 } from '#weather-dashboard.util.ts';
 
 type CurrentMeasures = {
-  indoor: Measure | null;
-  outdoor: Measure | null;
+  byDeviceName: Record<string, Measure | null>;
   error: string | null;
 };
 
-type ChartHistory = MeasureHistory & {
+type ChartHistory = {
+  history: MeasureHistory;
   error: string | null;
 };
 
@@ -33,33 +34,47 @@ const waitUntil = (deadline: number): Promise<void> =>
   });
 
 const getLatestRows = ({
-  indoorResult,
-  outdoorResult,
+  results,
 }: {
-  indoorResult: MeasureQueryResult;
-  outdoorResult: MeasureQueryResult;
+  results: MeasureQueryResult[];
 }): CurrentMeasures => ({
-  indoor: indoorResult.rows[0] ?? null,
-  outdoor: outdoorResult.rows[0] ?? null,
-  error: indoorResult.error?.message ?? outdoorResult.error?.message ?? null,
+  byDeviceName: Object.fromEntries(
+    environment.DEVICES.map(({ deviceName }, index) => [
+      deviceName,
+      results[index].rows[0] ?? null,
+    ]),
+  ),
+  error: results.find(({ error }) => error !== null)?.error?.message ?? null,
 });
 
 const loadLatestMeasures = async (): Promise<CurrentMeasures> => {
-  const [indoorResult, outdoorResult] = await Promise.all([
-    getLatestMeasure({ deviceType: 'indoor' }),
-    getLatestMeasure({ deviceType: 'outdoor' }),
-  ]);
+  const results = await Promise.all(
+    environment.DEVICES.map(({ deviceName }) =>
+      getLatestMeasure({ deviceName }),
+    ),
+  );
 
-  return getLatestRows({ indoorResult, outdoorResult });
+  return getLatestRows({ results });
 };
 
 const getHistoryRows = ({
   history,
   error,
 }: MeasureHistoryQueryResult): ChartHistory => ({
-  ...history,
+  history: Object.fromEntries(
+    Object.entries(history).filter(([deviceName]) =>
+      environment.DEVICES.some((device) => device.deviceName === deviceName),
+    ),
+  ),
   error: error?.message ?? null,
 });
+
+const getMeasures = (currentMeasures: CurrentMeasures | null): Measure[] =>
+  currentMeasures === null
+    ? []
+    : Object.values(currentMeasures.byDeviceName).filter(
+        (measure): measure is Measure => measure !== null,
+      );
 
 export const useWeatherStation = () => {
   const [currentMeasures, setCurrentMeasures] =
@@ -72,16 +87,7 @@ export const useWeatherStation = () => {
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const currentRange: ChartRange = chartRanges[rangeKey];
   const rangeIndex = chartRangeKeys.indexOf(rangeKey);
-  const latestMeasuredAt = getLatestTimestamp({
-    indoorMeasures:
-      currentMeasures?.indoor === null || currentMeasures === null
-        ? []
-        : [currentMeasures.indoor],
-    outdoorMeasures:
-      currentMeasures?.outdoor === null || currentMeasures === null
-        ? []
-        : [currentMeasures.outdoor],
-  });
+  const latestMeasuredAt = getLatestTimestamp(getMeasures(currentMeasures));
 
   React.useEffect(() => {
     let isMounted = true;
@@ -107,7 +113,7 @@ export const useWeatherStation = () => {
     }
 
     if (latestMeasuredAt === null) {
-      setMeasureHistory({ indoor: [], outdoor: [], error: null });
+      setMeasureHistory({ history: {}, error: null });
       return;
     }
 
@@ -144,8 +150,11 @@ export const useWeatherStation = () => {
     const latestRows = await loadLatestMeasures();
     const isUnchanged =
       latestRows.error === null &&
-      latestRows.indoor?.id === currentMeasures?.indoor?.id &&
-      latestRows.outdoor?.id === currentMeasures?.outdoor?.id;
+      environment.DEVICES.every(
+        ({ deviceName }) =>
+          latestRows.byDeviceName[deviceName]?.id ===
+          currentMeasures?.byDeviceName[deviceName]?.id,
+      );
 
     if (!isUnchanged) {
       setCurrentMeasures(latestRows);
@@ -169,41 +178,33 @@ export const useWeatherStation = () => {
   const chartEnd =
     measureHistory === null
       ? null
-      : getLatestTimestamp({
-          indoorMeasures: measureHistory.indoor,
-          outdoorMeasures: measureHistory.outdoor,
-        });
-  const indoorMeasures = React.useMemo(
+      : getLatestTimestamp(Object.values(measureHistory.history).flat());
+  const measuresByDeviceName = React.useMemo(
     () =>
-      measureHistory === null || chartEnd === null
-        ? []
-        : filterMeasuresForRange({
-            measures: measureHistory.indoor,
-            range: currentRange,
-            end: chartEnd,
-          }),
-    [measureHistory, currentRange, chartEnd],
-  );
-  const outdoorMeasures = React.useMemo(
-    () =>
-      measureHistory === null || chartEnd === null
-        ? []
-        : filterMeasuresForRange({
-            measures: measureHistory.outdoor,
-            range: currentRange,
-            end: chartEnd,
-          }),
+      measureHistory === null
+        ? {}
+        : Object.fromEntries(
+            Object.entries(measureHistory.history).map(
+              ([deviceName, measures]) => [
+                deviceName,
+                filterMeasuresForRange({
+                  measures,
+                  range: currentRange,
+                  end: chartEnd ?? Number.POSITIVE_INFINITY,
+                }),
+              ],
+            ),
+          ),
     [measureHistory, currentRange, chartEnd],
   );
 
   return {
     currentMeasures,
     currentRange,
-    indoorMeasures,
     isRefreshing,
     latestMeasuredAt,
     measureHistory,
-    outdoorMeasures,
+    measuresByDeviceName,
     rangeIndex,
     refreshMeasures,
     changeRange,

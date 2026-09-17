@@ -65,7 +65,7 @@ git config core.hooksPath .githooks
 Create `packages/collector/.env`:
 
 ```dotenv
-DEVICES=[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor"}]
+DEVICES=[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor","deviceName":"garden"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor","deviceName":"kitchen"}]
 BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
 POSTGRES_TIMEOUT_MS=15000
@@ -76,9 +76,10 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 ```
 
-`DEVICES` is a JSON array of meter identifiers and strategy types. On macOS, use the Noble
-peripheral ID in `deviceId`. On Raspberry Pi Linux, use the Bluetooth address from
-`ble-raw.ts` in `address`, including the colons. Meters are read sequentially.
+`DEVICES` is a JSON array of meter identifiers, strategy types, and required unique `deviceName`
+values. On macOS, use the Noble peripheral ID in `deviceId`. On Raspberry Pi Linux, use the
+Bluetooth address from `ble-raw.ts` in `address`, including the colons. Meters are read
+sequentially.
 `BLE_TIMEOUT_MS` is the timeout of one scan attempt and defaults to 15 seconds.
 `SCAN_RETRIES` is the maximum number of attempts and defaults to 8.
 `POSTGRES_TIMEOUT_MS` is the connection, query, and pool timeout for PostgreSQL. It defaults to 15 seconds.
@@ -101,6 +102,25 @@ The web app reads the `measures` table through the local Supabase API.
 `packages/web/.env` contains the local endpoint and public key. `packages/web/.env.prod`
 contains the production values. Vite loads `.env` during development. Its build
 command uses the `prod` mode, which gives `.env.prod` priority.
+
+### How to add a new meter
+
+Add the collector device with a unique `deviceName`:
+
+```dotenv
+DEVICES=[{"deviceId":"new-device-id","type":"indoor","deviceName":"office"}]
+```
+
+Add the same name to `VITE_DEVICES` in both web environment files, together with a supported
+React Icons export name:
+
+```dotenv
+VITE_DEVICES=[{"deviceName":"office","icon":"FaHouse"}]
+```
+
+Each `VITE_DEVICES.deviceName` must match the collector `DEVICES.deviceName`. Adding a
+collector device also requires adding its device name and supported React Icons export name
+to the web configuration, then deploying the web app.
 
 ## Commands
 

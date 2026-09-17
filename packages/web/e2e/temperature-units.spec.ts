@@ -1,8 +1,9 @@
 import { expect, type Page, test } from '@playwright/test';
 import { saveCoverage } from './utils/save-coverage';
 
-const latestOutdoorMeasure = {
+const latestGardenMeasure = {
   id: '00000000-0000-0000-0000-000000000001',
+  device_name: 'garden',
   device_type: 'outdoor',
   measured_at: '2026-09-01T14:00:00.000Z',
   temperature: 20,
@@ -13,9 +14,10 @@ const latestOutdoorMeasure = {
   signal_power_dbm: -55,
 };
 
-const latestIndoorMeasure = {
-  ...latestOutdoorMeasure,
+const latestKitchenMeasure = {
+  ...latestGardenMeasure,
   id: '00000000-0000-0000-0000-000000000002',
+  device_name: 'kitchen',
   device_type: 'indoor',
   temperature: 21,
   humidity: 49,
@@ -24,23 +26,25 @@ const latestIndoorMeasure = {
 };
 
 const history = {
-  outdoor: [
-    { ...latestOutdoorMeasure, temperature: 18, heat_index: 17.7 },
-    latestOutdoorMeasure,
+  garden: [
+    { ...latestGardenMeasure, temperature: 18, heat_index: 17.7 },
+    latestGardenMeasure,
   ],
-  indoor: [
-    { ...latestIndoorMeasure, temperature: 19, heat_index: 18.7 },
-    latestIndoorMeasure,
+  kitchen: [
+    { ...latestKitchenMeasure, temperature: 19, heat_index: 18.7 },
+    latestKitchenMeasure,
   ],
 };
 
 const mockMeasurements = async (page: Page): Promise<void> => {
   await page.route('**/rest/v1/measures**', async (route) => {
-    const isOutdoor = route.request().url().includes('device_type=eq.outdoor');
+    const deviceName = new URL(route.request().url()).searchParams
+      .get('device_name')
+      ?.replace(/^eq\./, '');
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify([
-        isOutdoor ? latestOutdoorMeasure : latestIndoorMeasure,
+        deviceName === 'kitchen' ? latestKitchenMeasure : latestGardenMeasure,
       ]),
     });
   });
@@ -76,11 +80,11 @@ test.describe('Temperature units', () => {
     );
 
     const temperatureChart = page.getByLabel(
-      /Interactive temperature chart for outdoor measurements/,
+      /Interactive temperature chart for garden measurements/,
     );
     await temperatureChart.hover({ position: { x: 200, y: 200 } });
     await expect(
-      page.getByTestId('outdoor-temperature-chart-tooltip'),
+      page.getByTestId('garden-temperature-chart-tooltip'),
     ).toContainText('63.9°F');
     await expect(page.getByLabel('Measurement history')).not.toContainText(
       '20.0°C',

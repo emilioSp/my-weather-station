@@ -211,6 +211,8 @@ Every agent runs in its own branch and worktree, and starts from committed state
 
 Call the `subagent` tool with `cwd` set to the absolute worktree path and `isolation: "none"`.
 
+Do not set the `output` or `outputMode` parameters for a builder or verifier. They make an external artifact authoritative and can prevent the required repository handoff from being written. A committed file in `.specs/<id>/handoffs/` is the only terminal handoff.
+
 The call blocks until the child ends, so its completion is a first class result instead of a string parsed from terminal output.
 
 Every spawn instruction states the spec id, the absolute path of the assigned worktree, which is the agent's root, and that the agent must read `AGENTS.md`, `AGENTS_CONTRIBUTING.md`, and `.specs/<id>/spec.md` at the start of every pass.

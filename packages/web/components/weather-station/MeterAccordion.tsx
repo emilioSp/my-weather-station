@@ -7,23 +7,28 @@ import type { ChartRange, WeatherMetric } from '#weather-dashboard.util.ts';
 const chartMetrics: WeatherMetric[] = ['temperature', 'humidity', 'dewPoint'];
 
 type MeterAccordionProps = {
-  defaultOpen?: boolean;
+  defaultOpen: boolean;
+  colorIndex: number;
   isLoading: boolean;
   measures: Measure[];
   range: ChartRange;
-  sensor: 'Indoor' | 'Outdoor';
+  sensor: string;
   temperatureUnit: TemperatureUnit;
 };
 
 export const MeterAccordion = ({
-  defaultOpen = false,
+  defaultOpen,
+  colorIndex,
   isLoading,
   measures,
   range,
   sensor,
   temperatureUnit,
 }: MeterAccordionProps) => (
-  <Accordion defaultOpen={defaultOpen} title={sensor}>
+  <Accordion
+    defaultOpen={defaultOpen}
+    title={<span className="capitalize">{sensor}</span>}
+  >
     <div className="grid gap-4 px-3 pb-3 sm:px-[23px] sm:pb-[23px]">
       {isLoading
         ? chartMetrics.map((metric) => (
@@ -32,6 +37,7 @@ export const MeterAccordion = ({
         : chartMetrics.map((metric) => (
             <LinearChart
               key={`${sensor}-${metric}`}
+              colorIndex={colorIndex}
               metric={metric}
               range={range}
               sensor={sensor}
