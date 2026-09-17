@@ -1,8 +1,8 @@
 ---
 name: builder
 description: Implements one workflow spec inside its assigned git worktree. Spawn it after the spec folder is committed. It records its observations and writes a terminal handoff. The builder does not approve its own work.
-model: openai-codex/gpt-5.6-terra
-thinking: medium
+model: openai-codex/gpt-5.6-luna
+thinking: max
 tools: read, grep, find, ls, bash, edit, write
 systemPromptMode: append
 inheritProjectContext: true
