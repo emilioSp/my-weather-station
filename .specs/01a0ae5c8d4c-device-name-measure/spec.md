@@ -58,7 +58,7 @@ Update focused collector, shared, and web API integration tests. Test fixtures m
 
 ### AC3: The shared measure contract and both existing Supabase read paths expose `deviceName`.
 
-- probe: `npm test -w @wx/shared && npm test -w @wx/web -- supabase.api.test.ts`
+- probe: `npm run test:unit -w @wx/shared && npm run test:unit -w @wx/web -- supabase.api.test.ts`
 - postcondition: the shared measure schema accepts `deviceName`; latest-measure and chart-history responses from the local Supabase API contain the stored name.
 - breakage: remove `device_name` from the chart-history function selection or from the shared measure schema.
 
