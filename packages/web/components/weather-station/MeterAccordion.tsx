@@ -1,6 +1,8 @@
 import type { Measure } from '@wx/shared';
+import type { IconType } from 'react-icons';
 import { Accordion } from '#components/primitives/Accordion.tsx';
 import { LinearChart } from '#components/weather-station/LinearChart.tsx';
+import type { MeterTheme } from '#components/weather-station/WeatherCard.tsx';
 import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
 import type { ChartRange, WeatherMetric } from '#weather-dashboard.util.ts';
 
@@ -8,9 +10,10 @@ const chartMetrics: WeatherMetric[] = ['temperature', 'humidity', 'dewPoint'];
 
 type MeterAccordionProps = {
   defaultOpen: boolean;
-  colorIndex: number;
+  icon: IconType;
   isLoading: boolean;
   measures: Measure[];
+  meterTheme: MeterTheme;
   range: ChartRange;
   sensor: string;
   temperatureUnit: TemperatureUnit;
@@ -18,16 +21,31 @@ type MeterAccordionProps = {
 
 export const MeterAccordion = ({
   defaultOpen,
-  colorIndex,
+  icon: Icon,
   isLoading,
   measures,
+  meterTheme,
   range,
   sensor,
   temperatureUnit,
 }: MeterAccordionProps) => (
   <Accordion
     defaultOpen={defaultOpen}
-    title={<span className="capitalize">{sensor}</span>}
+    title={
+      <span className="meter-history-heading flex items-center gap-2 capitalize text-sm">
+        <span
+          aria-hidden="true"
+          className={`meter-indicator ${meterTheme.themeClassName}`}
+          data-testid={`${sensor}-history-indicator`}
+        />
+        <span>{sensor}</span>
+        <Icon
+          aria-hidden="true"
+          className="text-base text-[#eaf0e9]"
+          data-testid={`${sensor}-history-icon`}
+        />
+      </span>
+    }
   >
     <div className="grid gap-4 px-3 pb-3 sm:px-[23px] sm:pb-[23px]">
       {isLoading
@@ -37,7 +55,7 @@ export const MeterAccordion = ({
         : chartMetrics.map((metric) => (
             <LinearChart
               key={`${sensor}-${metric}`}
-              colorIndex={colorIndex}
+              meterTheme={meterTheme}
               metric={metric}
               range={range}
               sensor={sensor}

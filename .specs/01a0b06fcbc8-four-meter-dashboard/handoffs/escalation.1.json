@@ -1,0 +1,18 @@
+{
+  "id": "01a0b06fcbc8-four-meter-dashboard",
+  "decision_so_far": "The four-device dashboard implementation is complete within the paths allowed by the spec. The acceptance probes pass after their breakages are restored, lint passes, and the root build passes.",
+  "blocked": "The full web unit suite fails because packages/web/hooks/useWeatherStation.test.ts still expects the previous two-device call counts (2 and 4). With four configured devices, the unchanged hook correctly makes 4 initial calls and 8 calls across initial load plus refresh. That test path is not allowed by the spec.",
+  "options": [
+    "Expand the spec allowed paths to include packages/web/hooks/useWeatherStation.test.ts and update its stale call-count fixtures for four devices.",
+    "Keep the allowed paths unchanged and accept the existing full-unit-suite failure as an owner-approved follow-up outside this spec."
+  ],
+  "recommendation": "Expand the allowed paths and update the hook test expectations, because the current configuration makes the existing unit test assertions stale and the normal web unit suite should remain green.",
+  "next_steps": {
+    "owner": "Choose whether the stale hook test may be updated by resolving this escalation and, if so, expand the allowed paths.",
+    "maestro": "Resolve this escalation only after the owner decision, then resume the builder in the same worktree."
+  },
+  "resolution": {
+    "decision": "Expand the allowed paths to include packages/web/hooks/useWeatherStation.test.ts and update its four-device call-count expectations.",
+    "reason": "The owner approved the change. The spec update is committed."
+  }
+}
