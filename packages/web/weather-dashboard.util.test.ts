@@ -21,6 +21,7 @@ const createMockedMeasure = (
   id,
   measuredAt: measuredAt.toString(),
   deviceId: 'device',
+  deviceName: 'test meter',
   address: 'address',
   deviceType: 'indoor',
   temperature,

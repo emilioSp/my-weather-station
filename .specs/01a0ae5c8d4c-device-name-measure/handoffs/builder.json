@@ -1,0 +1,26 @@
+{
+  "id": "01a0ae5c8d4c-device-name-measure",
+  "branch": "builder/01a0ae5c8d4c-device-name-measure",
+  "status": "done",
+  "acs": [
+    {
+      "ac": "AC1",
+      "probe": "npm run test:unit -w @wx/collector -- db/measure.repository.test.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC2",
+      "probe": "npm run test:unit -w @wx/collector -- environment.test.ts meters/Meter.test.ts",
+      "red_ok": true,
+      "green_ok": true
+    },
+    {
+      "ac": "AC3",
+      "probe": "npm run test:unit -w @wx/shared && npm run test:unit -w @wx/web -- supabase.api.test.ts",
+      "red_ok": true,
+      "green_ok": true
+    }
+  ],
+  "notes": "Resumed after the owner resolved escalation.3. Regenerated all probes with the approved test:unit scripts; each stated breakage failed its probe and each restoration passed. The split migrations were rolled back and reapplied. No product-code corrections were needed in this pass. Lint and build passed; Vite emitted its existing chunk-size warning."
+}

@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "tsc && vite build --mode prod",
     "preview": "vite preview",
-    "test": "rm -rf coverage && vitest run --config vitest.config.ts && playwright test",
+    "test:unit": "rm -rf coverage && vitest run --config vitest.config.ts",
+    "test:e2e": "playwright test",
     "test:coverage": "rm -rf coverage && vitest run --coverage --config vitest.config.ts && playwright test && node e2e/utils/merge-coverage.ts"
   },
   "dependencies": {

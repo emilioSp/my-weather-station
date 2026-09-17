@@ -2,7 +2,7 @@ import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
   Object.assign(process.env, {
-    DEVICES: '[{"type":"indoor","deviceId":"test"}]',
+    DEVICES: '[{"type":"indoor","deviceId":"test","deviceName":"test meter"}]',
     POSTGRES_HOST: '127.0.0.1',
     POSTGRES_PORT: '54322',
     POSTGRES_DB: 'postgres',
@@ -23,11 +23,13 @@ vi.mock('#api/sensor.api.ts', () => sensor);
 
 const indoor = {
   type: 'indoor' as const,
+  deviceName: 'indoor meter',
   deviceId: 'indoor-device',
   address: 'aa:bb',
 };
 const outdoor = {
   type: 'outdoor' as const,
+  deviceName: 'outdoor meter',
   deviceId: 'outdoor-device',
   address: 'cc:dd',
 };
@@ -62,6 +64,7 @@ describe('meters', () => {
 
     expect(measure).toMatchObject({
       deviceId: 'indoor-device',
+      deviceName: 'indoor meter',
       deviceType: 'indoor',
       temperature: 20.5,
       humidity: 60,
@@ -70,7 +73,7 @@ describe('meters', () => {
     });
     expect(
       await db('measures').where({ id: measure.id }).first(),
-    ).toBeDefined();
+    ).toMatchObject({ device_name: 'indoor meter' });
   });
 
   it('combines outdoor advertisements before storing a complete reading', async () => {
@@ -94,6 +97,7 @@ describe('meters', () => {
     const measure = await new OutdoorMeter(outdoor).read();
 
     expect(measure).toMatchObject({
+      deviceName: 'outdoor meter',
       deviceType: 'outdoor',
       temperature: 25.3,
       humidity: 70,

@@ -1,0 +1,16 @@
+{
+  "id": "01a0ae5c8d4c-device-name-measure",
+  "decision_so_far": "Repaired AC3's valid shared-contract finding by retaining a required deviceName in Measure and adding deviceName to the three fixtures authorized by escalation.1.",
+  "blocked": "The exact AC3 probe no longer succeeds after owner commit 89fd9eb changed packages/web/package.json: `npm test -w @wx/web -- supabase.api.test.ts` now forwards the filename to Playwright after Vitest. Vitest passes all 11 tests, including the two Supabase API tests, but Playwright runs under packages/web/e2e and exits 1 with `Error: No tests found`. packages/web/package.json is outside this spec's allowed paths.",
+  "options": [
+    "Revise AC3's probe to run the targeted web Vitest file directly, for example `npm exec -w @wx/web -- vitest run --config vitest.config.ts supabase.api.test.ts`, after the shared test command.",
+    "Expand the allowed paths to permit changing the web test script so the existing AC3 probe does not pass its filename to Playwright.",
+    "Accept an escalation or failed pass despite the exact probe's exit 1; the repaired targeted Supabase API tests pass."
+  ],
+  "recommendation": "Revise AC3's probe to use the direct Vitest command. `npm exec -w @wx/web -- vitest run --config vitest.config.ts supabase.api.test.ts` passed 1 file / 2 tests against the repaired code.",
+  "next_steps": {
+    "builder": "Wait for the owner decision, then resume from the resolved escalation.",
+    "maestro": "Obtain an owner decision and record its resolution in this escalation before resuming the builder."
+  },
+  "resolution": "Owner updated the test scripts and approved the AC3 probe `npm run test:unit -w @wx/shared && npm run test:unit -w @wx/web -- supabase.api.test.ts`. Owner also directed that the chart-history function replacement move to a separate migration after the migration that adds device_name, and that the ranked-row projection use SELECT * where possible so future measure columns flow through without another explicit list."
+}

@@ -83,6 +83,7 @@ const mockWeatherStation = async ({
   requestedRanges?: Array<{ end: string; start: string }>;
 }): Promise<void> => {
   let latestResponseIndex = 0;
+  const answeredDeviceTypes = new Set<string>();
 
   await page.route('**/rest/v1/measures**', async (route) => {
     const response =
@@ -96,8 +97,10 @@ const mockWeatherStation = async ({
       contentType: 'application/json',
     });
 
-    if (!isOutdoor) {
+    answeredDeviceTypes.add(isOutdoor ? 'outdoor' : 'indoor');
+    if (answeredDeviceTypes.size === 2) {
       latestResponseIndex += 1;
+      answeredDeviceTypes.clear();
     }
   });
   await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {

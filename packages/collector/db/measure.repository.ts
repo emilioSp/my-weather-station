@@ -3,13 +3,14 @@ import { toCamelCaseKeys, toSnakeCaseKeys } from '@wx/shared';
 import db from '#db/db.ts';
 import type { Advertisement, Meter } from '#types.ts';
 
-type StoreMeasureInput = Pick<Meter, 'type'> &
+type StoreMeasureInput = Pick<Meter, 'type' | 'deviceName'> &
   Pick<Advertisement, 'deviceId' | 'address'> &
   WeatherReading;
 
 export const storeMeasure = async ({
   deviceId,
   address,
+  deviceName,
   type: deviceType,
   temperature,
   dewPoint,
@@ -23,6 +24,7 @@ export const storeMeasure = async ({
       toSnakeCaseKeys({
         deviceId,
         address,
+        deviceName,
         deviceType,
         temperature,
         dewPoint,

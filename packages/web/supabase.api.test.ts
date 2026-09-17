@@ -23,12 +23,12 @@ afterAll(async () => {
 const seedMeasures = async () => {
   await database.query(`
     INSERT INTO measures (
-      id, device_id, device_type, address, temperature, dew_point, heat_index,
-      humidity, battery, signal_power_dbm, measured_at
+      id, device_id, device_name, device_type, address, temperature, dew_point,
+      heat_index, humidity, battery, signal_power_dbm, measured_at
     ) VALUES
-      ('00000000-0000-0000-0000-000000000001', 'indoor-device', 'indoor', 'aa:bb', 10.0, 5.0, 11.0, 50, 80, -60, '2020-01-01T00:00:00Z'),
-      ('00000000-0000-0000-0000-000000000002', 'indoor-device', 'indoor', 'aa:bb', 20.0, 15.0, 21.0, 60, 90, -50, '2020-01-01T12:00:00Z'),
-      ('00000000-0000-0000-0000-000000000003', 'outdoor-device', 'outdoor', 'cc:dd', 5.0, 0.0, 6.0, 70, 70, -70, '2020-01-01T06:00:00Z')
+      ('00000000-0000-0000-0000-000000000001', 'indoor-device', 'Kitchen', 'indoor', 'aa:bb', 10.0, 5.0, 11.0, 50, 80, -60, '2020-01-01T00:00:00Z'),
+      ('00000000-0000-0000-0000-000000000002', 'indoor-device', 'Kitchen', 'indoor', 'aa:bb', 20.0, 15.0, 21.0, 60, 90, -50, '2020-01-01T12:00:00Z'),
+      ('00000000-0000-0000-0000-000000000003', 'outdoor-device', 'Garden', 'outdoor', 'cc:dd', 5.0, 0.0, 6.0, 70, 70, -70, '2020-01-01T06:00:00Z')
   `);
 };
 
@@ -46,16 +46,29 @@ describe('Supabase API', () => {
     expect(latest.rows).toHaveLength(1);
     expect(latest.rows[0]).toMatchObject({
       id: '00000000-0000-0000-0000-000000000002',
+      deviceName: 'Kitchen',
       temperature: 20,
       deviceType: 'indoor',
     });
     expect(history.error).toBeNull();
     expect(history.history.indoor).toMatchObject([
-      { id: '00000000-0000-0000-0000-000000000001', temperature: 10 },
-      { id: '00000000-0000-0000-0000-000000000002', temperature: 20 },
+      {
+        id: '00000000-0000-0000-0000-000000000001',
+        deviceName: 'Kitchen',
+        temperature: 10,
+      },
+      {
+        id: '00000000-0000-0000-0000-000000000002',
+        deviceName: 'Kitchen',
+        temperature: 20,
+      },
     ]);
     expect(history.history.outdoor).toMatchObject([
-      { id: '00000000-0000-0000-0000-000000000003', temperature: 5 },
+      {
+        id: '00000000-0000-0000-0000-000000000003',
+        deviceName: 'Garden',
+        temperature: 5,
+      },
     ]);
   });
 

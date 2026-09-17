@@ -1,0 +1,16 @@
+{
+  "id": "01a0ae5c8d4c-device-name-measure",
+  "decision_so_far": "Split the device_name column addition from the chart-history replacement into sequential migrations. The replacement migration uses SELECT * for the selected measure rows and restores the prior function on down.",
+  "blocked": "The exact AC1 and AC2 probes in spec.md use `npm test -w @wx/collector ...`, but owner commit 7e5f465 renamed the collector script to `test:unit` and removed `test`. Both exact probes exit 1 with `Missing script: \"test\"`, including after the implementation is restored. The equivalent `npm run test:unit -w @wx/collector -- db/measure.repository.test.ts` (2 tests) and `npm run test:unit -w @wx/collector -- environment.test.ts meters/Meter.test.ts` (7 tests) pass.",
+  "options": [
+    "Revise AC1 and AC2 probes to use `npm run test:unit -w @wx/collector` with their existing file arguments.",
+    "Expand the allowed paths to permit restoring a collector `test` script so the existing probes remain exact.",
+    "Accept a failed pass even though the focused collector unit tests pass under the current script name."
+  ],
+  "recommendation": "Revise AC1 and AC2 probes to use the current `test:unit` script; no product-code or migration change is needed.",
+  "next_steps": {
+    "builder": "Resume after the owner resolves the probe/script mismatch.",
+    "maestro": "Obtain an owner decision and record its resolution in this escalation before resuming the builder."
+  },
+  "resolution": "Owner approved updating AC1 and AC2 to use the collector test:unit script. The spec now defines `npm run test:unit -w @wx/collector -- db/measure.repository.test.ts` for AC1 and `npm run test:unit -w @wx/collector -- environment.test.ts meters/Meter.test.ts` for AC2."
+}

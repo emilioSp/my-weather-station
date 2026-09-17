@@ -37,9 +37,12 @@ export type WeatherReading = z.infer<typeof weatherReadingSchema>;
 export const measureSchema = weatherReadingSchema
   .extend({
     id: z.uuid(),
+    deviceName: z.string(),
     deviceType: meterTypeSchema,
     measuredAt: z.string(),
   })
   .and(deviceIdentifiersSchema);
 
-export type Measure = z.infer<typeof measureSchema>;
+type ParsedMeasure = z.infer<typeof measureSchema>;
+
+export type Measure = ParsedMeasure;

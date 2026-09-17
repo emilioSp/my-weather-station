@@ -75,15 +75,17 @@ describe('shared schemas', () => {
   });
 
   it('validates complete measures', () => {
-    expect(
-      measureSchema.safeParse({
-        ...reading,
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        deviceType: 'outdoor',
-        measuredAt: '2026-01-01T00:00:00Z',
-        address: 'AA:BB',
-      }).success,
-    ).toBe(true);
+    const result = measureSchema.safeParse({
+      ...reading,
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      deviceName: 'garden',
+      deviceType: 'outdoor',
+      measuredAt: '2026-01-01T00:00:00Z',
+      address: 'AA:BB',
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.deviceName).toBe('garden');
     expect(
       measureSchema.safeParse({ ...reading, id: 'not-a-uuid' }).success,
     ).toBe(false);

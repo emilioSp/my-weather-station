@@ -14,9 +14,19 @@ const devicesSchema = z
       return z.NEVER;
     }
   })
-  .pipe(z.array(meterSchema).min(1));
+  .pipe(
+    z
+      .array(meterSchema)
+      .min(1)
+      .refine(
+        (devices) =>
+          new Set(devices.map(({ deviceName }) => deviceName)).size ===
+          devices.length,
+        { message: 'DEVICES must contain unique device names' },
+      ),
+  );
 
-const environmentSchema = z.object({
+export const environmentSchema = z.object({
   DEVICES: devicesSchema,
   BLE_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
   SCAN_RETRIES: z.coerce.number().int().positive().default(8),
