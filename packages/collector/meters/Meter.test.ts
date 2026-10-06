@@ -1,3 +1,4 @@
+// Verify meter decoding and factory rejection with controlled sensor advertisements.
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
@@ -124,6 +125,7 @@ describe('meters', () => {
     expect(createMeter(indoor)).toBeInstanceOf(IndoorMeter);
     expect(createMeter(outdoor)).toBeInstanceOf(OutdoorMeter);
     expect(() =>
+      // JUSTIFICATION: This test deliberately passes an invalid runtime type to exercise the factory's rejection branch.
       createMeter({ ...indoor, type: 'unknown' as 'indoor' }),
     ).toThrow('Unknown meter type unknown');
     expect(new IndoorMeter(indoor).getMeter()).toEqual(indoor);

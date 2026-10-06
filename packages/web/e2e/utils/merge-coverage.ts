@@ -1,3 +1,4 @@
+// Merge unit and browser coverage and enforce thresholds after web tests.
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { coverageThresholds } from '@wx/shared';
@@ -77,6 +78,7 @@ const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
 const checkCoverageThresholds = (coverageMap: CoverageMap): void => {
   const summary = coverageMap.getCoverageSummary();
 
+  // JUSTIFICATION: The shared thresholds object contains only the coverage metric keys used by Istanbul.
   const metrics = Object.keys(coverageThresholds) as Array<
     keyof typeof coverageThresholds
   >;

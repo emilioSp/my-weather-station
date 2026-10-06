@@ -1,3 +1,4 @@
+// Prepare measurement values and chart ranges for the weather dashboard.
 import type { Measure } from '@wx/shared';
 import {
   formatTemperature,
@@ -28,7 +29,7 @@ export type ChartRangeKey = (typeof CHART_RANGES)[keyof typeof CHART_RANGES];
 
 export type ChartRange = (typeof chartRanges)[ChartRangeKey];
 
-export const chartRangeKeys = Object.values(CHART_RANGES) as ChartRangeKey[];
+export const chartRangeKeys = Object.values(CHART_RANGES);
 
 export type WeatherMetric = 'temperature' | 'humidity' | 'dewPoint';
 

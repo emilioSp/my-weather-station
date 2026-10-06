@@ -1,3 +1,4 @@
+// Verify the declared site icons and their rendered assets in browser tests.
 import { expect, type Page, test } from '@playwright/test';
 import { saveCoverage } from './utils/save-coverage';
 
@@ -71,6 +72,7 @@ const getLinkHref = async (page: Page, selector: string): Promise<string> => {
   const href = await page.locator(selector).getAttribute('href');
   expect(href).not.toBeNull();
 
+  // JUSTIFICATION: The preceding assertion rejects null, but Playwright's expect does not narrow the type.
   return new URL(href as string, page.url()).href;
 };
 

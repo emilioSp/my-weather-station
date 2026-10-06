@@ -1,3 +1,4 @@
+// Verify temperature unit selection and persistence in browser tests.
 import { expect, type Page, test } from '@playwright/test';
 import { loadEnv } from 'vite';
 import { saveCoverage } from './utils/save-coverage';
@@ -24,6 +25,7 @@ type ReadingValues = Omit<
   'id' | 'device_name' | 'device_type' | 'measured_at'
 >;
 
+// JUSTIFICATION: The repository's development configuration lists devices with string deviceName fields.
 const configuredDevices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
 ) as ConfiguredDevice[];

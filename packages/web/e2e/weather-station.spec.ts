@@ -1,3 +1,4 @@
+// Verify weather dashboard behavior in browser tests with controlled API responses.
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { loadEnv } from 'vite';
 import { saveCoverage } from './utils/save-coverage';
@@ -26,6 +27,7 @@ type ReadingValues = Omit<
 
 type ChartMetric = 'temperature' | 'humidity' | 'dewPoint';
 
+// JUSTIFICATION: The repository's development configuration lists devices with string deviceName fields.
 const configuredDevices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
 ) as ConfiguredDevice[];
@@ -860,6 +862,7 @@ test.describe('Weather station', () => {
       });
     });
     await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      // JUSTIFICATION: The intercepted get_chart_history request sends p_end and p_start as ISO timestamp strings.
       const parameters = route.request().postDataJSON() as {
         p_end: string;
         p_start: string;

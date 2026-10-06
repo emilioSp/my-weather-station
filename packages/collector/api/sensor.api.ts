@@ -1,3 +1,4 @@
+// Scan Noble peripherals and return validated advertisements during meter reads.
 import { on } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 import noble, { type Peripheral } from '@stoprocent/noble';
@@ -34,6 +35,7 @@ const findPeripheral = async (meter: Meter): Promise<Peripheral | null> => {
 
   const abortController = new AbortController();
 
+  // JUSTIFICATION: Noble's discover event emits one Peripheral; node:events.on does not retain that event type.
   const peripheralEvents = on(noble, 'discover', {
     signal: abortController.signal,
   }) as AsyncIterable<[Peripheral]>;

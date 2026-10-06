@@ -1,3 +1,4 @@
+// Render measurement charts and pointer readouts in the weather dashboard.
 import type { Measure } from '@wx/shared';
 import * as React from 'react';
 import {
@@ -290,6 +291,9 @@ type ChartTooltipProps = TooltipContentProps & {
   temperatureUnit: TemperatureUnit;
 };
 
+const isNumericLabel = (label: unknown): label is number =>
+  typeof label === 'number';
+
 const ChartTooltip = ({
   active,
   label,
@@ -298,9 +302,10 @@ const ChartTooltip = ({
   sensor,
   temperatureUnit,
 }: ChartTooltipProps) => {
+  // JUSTIFICATION: Recharts returns an entry from this chart's ChartDatum data array in the tooltip payload.
   const measure = payload[0]?.payload as ChartDatum | undefined;
 
-  if (!active || measure === undefined || typeof label !== 'number') {
+  if (!active || measure === undefined || !isNumericLabel(label)) {
     return null;
   }
 
