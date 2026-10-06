@@ -10,8 +10,6 @@
     "includes": [
       "**",
       "!!**/node_modules",
-      "!!.worktree",
-      "!!.specs/*/prototypes",
       "!!**/dist",
       "!!**/coverage",
       "!!**/test-results",
