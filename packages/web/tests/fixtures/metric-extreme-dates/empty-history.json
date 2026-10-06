@@ -1,0 +1,17 @@
+{
+  "history": [[]],
+  "latest": [
+    {
+      "id": "00000000-0000-0000-0000-000000000020",
+      "device_name": "Sensor A",
+      "device_type": "outdoor",
+      "measured_at": "2026-10-06T12:00:00Z",
+      "temperature": 25,
+      "humidity": 70,
+      "dew_point": 12,
+      "heat_index": 25,
+      "battery": 80,
+      "signal_power_dbm": -55
+    }
+  ]
+}

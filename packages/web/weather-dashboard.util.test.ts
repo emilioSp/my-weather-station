@@ -112,8 +112,58 @@ describe('weather dashboard utilities', () => {
         measures: [older, newest, oldest, newer],
         metric: 'temperature',
       }),
-    ).toEqual({ low: 10, high: 30 });
+    ).toEqual({
+      low: 10,
+      high: 30,
+      lowMeasuredAt: oldest.measuredAt,
+      highMeasuredAt: newer.measuredAt,
+    });
     expect(getRangeExtrema({ measures: [], metric: 'temperature' })).toBeNull();
+  });
+
+  it('compares original values before rounding and selects the earliest available ties before sampling', () => {
+    const later = createMockedMeasure(
+      'later',
+      Temporal.Instant.from('2026-10-06T08:00:00Z'),
+      18.01,
+    );
+
+    const earlier = createMockedMeasure(
+      'earlier',
+      Temporal.Instant.from('2026-10-06T06:00:00Z'),
+      18.04,
+    );
+
+    expect(
+      getRangeExtrema({ measures: [earlier, later], metric: 'temperature' }),
+    ).toEqual({
+      low: 18.01,
+      high: 18.04,
+      lowMeasuredAt: later.measuredAt,
+      highMeasuredAt: earlier.measuredAt,
+    });
+
+    const repeatedMeasures = [
+      later,
+      { ...earlier, temperature: later.temperature },
+      later,
+    ];
+
+    const samples = downsampleMeasures({
+      measures: repeatedMeasures,
+      metric: 'temperature',
+      maximumBuckets: 1,
+    });
+
+    expect(samples).toEqual([later]);
+    expect(
+      getRangeExtrema({ measures: repeatedMeasures, metric: 'temperature' }),
+    ).toEqual({
+      low: 18.01,
+      high: 18.01,
+      lowMeasuredAt: earlier.measuredAt,
+      highMeasuredAt: earlier.measuredAt,
+    });
   });
 
   it('keeps small measure lists and downsampled bucket extrema', () => {

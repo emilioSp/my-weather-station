@@ -118,20 +118,56 @@ export const getLatestTimestamp = (measures: Measure[]): number | null => {
   return timestamps.length === 0 ? null : Math.max(...timestamps);
 };
 
+export type RangeExtrema = {
+  low: number;
+  high: number;
+  lowMeasuredAt: string;
+  highMeasuredAt: string;
+};
+
 export const getRangeExtrema = ({
   measures,
   metric,
 }: {
   measures: Measure[];
   metric: WeatherMetric;
-}): { low: number; high: number } | null => {
+}): RangeExtrema | null => {
   if (measures.length === 0) {
     return null;
   }
 
-  const values = measures.map((measure) => measure[metric]);
+  const { low, high } = measures.reduce(
+    (result, measure) => {
+      const isEarlierThanLow =
+        new Date(measure.measuredAt).getTime() <
+        new Date(result.low.measuredAt).getTime();
 
-  return { low: Math.min(...values), high: Math.max(...values) };
+      const isEarlierThanHigh =
+        new Date(measure.measuredAt).getTime() <
+        new Date(result.high.measuredAt).getTime();
+
+      return {
+        low:
+          measure[metric] < result.low[metric] ||
+          (measure[metric] === result.low[metric] && isEarlierThanLow)
+            ? measure
+            : result.low,
+        high:
+          measure[metric] > result.high[metric] ||
+          (measure[metric] === result.high[metric] && isEarlierThanHigh)
+            ? measure
+            : result.high,
+      };
+    },
+    { low: measures[0], high: measures[0] },
+  );
+
+  return {
+    low: low[metric],
+    high: high[metric],
+    lowMeasuredAt: low.measuredAt,
+    highMeasuredAt: high.measuredAt,
+  };
 };
 
 export const downsampleMeasures = ({
