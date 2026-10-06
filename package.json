@@ -14,7 +14,7 @@
     "lint:fix": "biome check --write .",
     "lint:anti-slop": "oxlint --fix",
     "typecheck": "tsc --project packages/collector/tsconfig.json && tsc --project packages/web/tsconfig.json && tsc --project packages/shared/tsconfig.json",
-    "check": "npm run lint && npm run typecheck && npm run test:coverage",
+    "check": "npm run lint:anti-slop && npm run lint && npm run typecheck && npm run test:coverage",
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
