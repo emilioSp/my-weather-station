@@ -15,7 +15,8 @@
       "!!**/test-results",
       "!!**/build",
       "!!**/*.css",
-      "!!_site"
+      "!!_site",
+      "!!**/.pi/*"
     ]
   },
   "formatter": {
