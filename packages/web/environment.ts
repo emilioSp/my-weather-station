@@ -31,6 +31,7 @@ const devicesSchema = z
         code: 'custom',
         message: 'VITE_DEVICES must be valid JSON',
       });
+
       return z.NEVER;
     }
   })

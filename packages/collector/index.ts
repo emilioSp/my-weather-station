@@ -8,6 +8,7 @@ import type { Meter } from './types.ts';
 
 const readMeter = async (meterConfig: Meter): Promise<Measure> => {
   const meter = createMeter(meterConfig);
+
   return meter.read();
 };
 
@@ -19,6 +20,7 @@ const run = async (): Promise<void> => {
       .toZonedDateTimeISO('Europe/Rome')
       .toString({ smallestUnit: 'seconds' }),
   );
+
   for (const meter of environment.DEVICES) {
     try {
       measures.push(await readMeter(meter));
@@ -27,6 +29,7 @@ const run = async (): Promise<void> => {
         console.error(error);
         continue;
       }
+
       throw error;
     }
   }

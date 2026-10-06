@@ -53,6 +53,7 @@ describe('weather dashboard utilities', () => {
 
   it('filters values at and within the selected range', () => {
     const end = Temporal.Instant.from('2026-01-02T00:00:00Z');
+
     const measures = [
       createMockedMeasure(
         'outside',
@@ -83,16 +84,19 @@ describe('weather dashboard utilities', () => {
       Temporal.Instant.from('2026-01-01T00:00:00Z'),
       10,
     );
+
     const older = createMockedMeasure(
       'older',
       Temporal.Instant.from('2026-01-01T06:00:00Z'),
       25,
     );
+
     const newer = createMockedMeasure(
       'newer',
       Temporal.Instant.from('2026-01-02T00:00:00Z'),
       30,
     );
+
     const newest = createMockedMeasure(
       'newest',
       Temporal.Instant.from('2026-01-02T06:00:00Z'),
@@ -114,6 +118,7 @@ describe('weather dashboard utilities', () => {
 
   it('keeps small measure lists and downsampled bucket extrema', () => {
     const start = Temporal.Instant.from('2026-01-01T00:00:00Z');
+
     const measures = Array.from({ length: 7 }, (_, index) =>
       createMockedMeasure(
         `${index}`,
@@ -121,6 +126,7 @@ describe('weather dashboard utilities', () => {
         [3, 1, 2, 6, 4, 5, 7][index],
       ),
     );
+
     expect(
       downsampleMeasures({
         measures,

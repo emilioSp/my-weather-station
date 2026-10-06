@@ -85,6 +85,7 @@ describe('shared schemas', () => {
     });
 
     expect(result.success).toBe(true);
+
     if (result.success) expect(result.data.deviceName).toBe('garden');
     expect(
       measureSchema.safeParse({ ...reading, id: 'not-a-uuid' }).success,

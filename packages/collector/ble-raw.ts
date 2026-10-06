@@ -2,6 +2,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import noble, { type AdapterState, type Peripheral } from '@stoprocent/noble';
 
 const devices = new Set<string>();
+
 const packets = new Set<string>();
 
 function formatServiceData(

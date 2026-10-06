@@ -19,6 +19,7 @@ import { OutdoorMeter } from '#meters/OutdoorMeter.ts';
 import type { Advertisement } from '#types.ts';
 
 const sensor = vi.hoisted(() => ({ getAdvertisement: vi.fn() }));
+
 vi.mock('#api/sensor.api.ts', () => sensor);
 
 const indoor = {
@@ -27,12 +28,14 @@ const indoor = {
   deviceId: 'indoor-device',
   address: 'aa:bb',
 };
+
 const outdoor = {
   type: 'outdoor' as const,
   deviceName: 'outdoor meter',
   deviceId: 'outdoor-device',
   address: 'cc:dd',
 };
+
 const advertisement = (
   overrides: Partial<Advertisement> = {},
 ): Advertisement => ({

@@ -87,6 +87,7 @@ test.describe('Site icons', () => {
     const response = await page.request.get(
       await getLinkHref(page, 'head link[rel="icon"]'),
     );
+
     expect(response.ok()).toBe(true);
     expect(response.headers()['content-type']).toContain('image/svg+xml');
     await expect(response.text()).resolves.toContain(
@@ -115,16 +116,19 @@ test.describe('Site icons', () => {
       page,
       'head link[rel="apple-touch-icon"]',
     );
+
     await expect(getPngHeader(page, appleTouchIconHref)).resolves.toEqual({
       contentType: 'image/png',
       height: 180,
       ok: true,
       width: 180,
     });
+
     const appleTouchIconColors = await getPngColorCounts(
       page,
       appleTouchIconHref,
     );
+
     expect(appleTouchIconColors.dark).toBeGreaterThan(0);
     expect(appleTouchIconColors.lime).toBeGreaterThan(0);
 

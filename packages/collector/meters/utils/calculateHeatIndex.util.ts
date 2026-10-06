@@ -24,6 +24,7 @@ export const calculateHeatIndex = ({
       61 +
       (temperatureFahrenheit - 68) * 1.2 +
       humidity * 0.094);
+
   let heatIndexFahrenheit = (simpleHeatIndex + temperatureFahrenheit) / 2;
 
   if (heatIndexFahrenheit >= 80) {

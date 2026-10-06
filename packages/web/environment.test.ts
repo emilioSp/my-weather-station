@@ -19,6 +19,7 @@ describe('web environment', () => {
     );
 
     expect(result.success).toBe(true);
+
     if (result.success) {
       expect(result.data.VITE_DEVICES).toEqual([
         { deviceName: 'garden', icon: 'FaSeedling' },

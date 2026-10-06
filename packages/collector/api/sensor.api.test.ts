@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const noble = await vi.hoisted(async () => {
   const { EventEmitter } = await import('node:events');
   const emitter = new EventEmitter();
+
   return Object.assign(emitter, {
     waitForPoweredOnAsync: vi.fn(),
     startScanningAsync: vi.fn(),
@@ -11,6 +12,7 @@ const noble = await vi.hoisted(async () => {
 });
 
 vi.mock('@stoprocent/noble', () => ({ default: noble }));
+
 vi.mock('#environment.ts', () => ({
   environment: { BLE_TIMEOUT_MS: 0 },
 }));
@@ -22,12 +24,14 @@ const meter = {
   deviceId: 'device-id',
   address: 'aa:bb',
 };
+
 const peripheral = {
   id: 'DEVICE-ID',
   address: '11:22',
   rssi: -45,
   advertisement: { manufacturerData: Buffer.from([1]), serviceData: [] },
 };
+
 const nonMatchingPeripheral = {
   ...peripheral,
   id: 'other-device',

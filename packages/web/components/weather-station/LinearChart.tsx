@@ -71,16 +71,20 @@ export const LinearChart = ({
   temperatureUnit,
 }: LinearChartProps) => {
   const chartColor = meterTheme.chartColor;
+
   const [touchTooltipActive, setTouchTooltipActive] = React.useState<
     boolean | null
   >(null);
+
   const [touchMeasure, setTouchMeasure] = React.useState<ChartDatum | null>(
     null,
   );
+
   const chartMeasures = React.useMemo(
     () => downsampleMeasures({ measures, metric }),
     [measures, metric],
   );
+
   const chartData = React.useMemo<ChartDatum[]>(
     () =>
       chartMeasures.map((measure) => ({
@@ -89,10 +93,12 @@ export const LinearChart = ({
       })),
     [chartMeasures],
   );
+
   const extrema = React.useMemo(
     () => getRangeExtrema({ measures, metric }),
     [measures, metric],
   );
+
   const details = chartMetricDetails[metric];
 
   if (extrema === null) {
@@ -144,6 +150,7 @@ export const LinearChart = ({
             onTouchMove={({ activeIndex }: MouseHandlerDataParam) => {
               if (activeIndex === null || activeIndex === undefined) {
                 setTouchMeasure(null);
+
                 return;
               }
 

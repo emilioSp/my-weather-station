@@ -29,6 +29,7 @@ const isApplicationScript = (url: string): boolean => {
 
 const getScriptPath = (url: string): string => {
   const pathname = new URL(url).pathname;
+
   return resolve(process.cwd(), pathname.slice(applicationBasePath.length));
 };
 
@@ -46,6 +47,7 @@ export const saveCoverage = async ({
     const converter = v8ToIstanbul(getScriptPath(entry.url), 0, {
       source: entry.source,
     });
+
     await converter.load();
     converter.applyCoverage(entry.functions);
     coverageMap.merge(converter.toIstanbul());

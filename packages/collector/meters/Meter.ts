@@ -58,6 +58,7 @@ export abstract class Meter implements MeterInterface {
           advertisement,
           reading,
         });
+
         if (completeReading) {
           const measure = await storeMeasure({
             type: this.meter.type,
@@ -105,6 +106,7 @@ export abstract class Meter implements MeterInterface {
     }
 
     const result = weatherReadingSchema.safeParse(reading);
+
     return result.success ? result.data : null;
   }
 }

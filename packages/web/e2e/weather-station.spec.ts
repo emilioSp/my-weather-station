@@ -29,10 +29,12 @@ type ChartMetric = 'temperature' | 'humidity' | 'dewPoint';
 const configuredDevices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
 ) as ConfiguredDevice[];
+
 const deviceNames = configuredDevices.map(({ deviceName }) => deviceName);
 
 const deviceNameAt = (index: number): string => {
   const device = configuredDevices[index];
+
   if (device === undefined) {
     throw new Error(`No configured device exists at index ${index}.`);
   }
@@ -74,6 +76,7 @@ const initialReadings: ReadingValues[] = [
     signal_power_dbm: -62,
   },
 ];
+
 const changedTemperatures = [25, 24, 23, 20];
 
 const getInitialReadings = (index: number): ReadingValues =>
@@ -110,6 +113,7 @@ const createMeasureMap = (
   Object.fromEntries(
     configuredDevices.map((_, deviceIndex) => {
       const row = createRow(deviceIndex);
+
       return [row.device_name, row];
     }),
   );
@@ -117,8 +121,10 @@ const createMeasureMap = (
 const initialMeasures = createMeasureMap((deviceIndex) =>
   createMeasure({ deviceIndex, id: deviceIndex + 1 }),
 );
+
 const changedMeasures = createMeasureMap((deviceIndex) => {
   const readings = getInitialReadings(deviceIndex);
+
   return createMeasure({
     deviceIndex,
     id: deviceIndex + 5,
@@ -133,16 +139,19 @@ const changedMeasures = createMeasureMap((deviceIndex) => {
 const configuredHistory: Record<string, MeasureRow[]> = Object.fromEntries(
   configuredDevices.map((_, deviceIndex) => {
     const deviceName = deviceNameAt(deviceIndex);
+
     return [
       deviceName,
       [initialMeasures[deviceName], changedMeasures[deviceName]],
     ];
   }),
 );
+
 const history = {
   ...configuredHistory,
   'unconfigured-device': [initialMeasures[deviceNameAt(0)]],
 };
+
 const emptyHistory: Record<string, MeasureRow[]> = Object.fromEntries(
   deviceNames.map((deviceName) => [deviceName, []]),
 );
@@ -159,6 +168,7 @@ const getMeasureForRequest = (
   measures: Record<string, MeasureRow>,
 ): MeasureRow => {
   const deviceName = getRequestedDeviceName(route);
+
   if (deviceName === undefined || measures[deviceName] === undefined) {
     throw new Error(`No fixture exists for requested device ${deviceName}.`);
   }
@@ -179,6 +189,7 @@ const getChart = ({
   metric?: ChartMetric;
 }): Locator => {
   const metricLabel = metric === 'dewPoint' ? 'dew point' : metric;
+
   return page.getByLabel(
     new RegExp(
       `Interactive ${metricLabel} chart for ${escapeRegExp(deviceName)} measurements`,
@@ -203,10 +214,12 @@ const expectDesktopChartReadout = async ({
   await chart.scrollIntoViewIfNeeded();
   const plot = chart.locator('.recharts-cartesian-grid');
   await expect(plot).toBeVisible({ timeout: 5_000 });
+
   const [chartBox, plotBox] = await Promise.all([
     chart.boundingBox(),
     plot.boundingBox(),
   ]);
+
   if (chartBox === null || plotBox === null) {
     throw new Error('The chart plot is not rendered.');
   }
@@ -219,6 +232,7 @@ const expectDesktopChartReadout = async ({
   });
 
   const tooltip = page.getByTestId(tooltipTestId);
+
   for (const expectedValue of expectedValues) {
     await expect(tooltip).toContainText(expectedValue, { timeout: 5_000 });
   }
@@ -247,6 +261,7 @@ test.describe('Weather station', () => {
 
     const cards = page.getByLabel('Current readings').locator('article');
     await expect(cards).toHaveCount(configuredDevices.length);
+
     for (const deviceName of deviceNames) {
       await expect(page.getByTestId(`${deviceName}-icon`)).toBeVisible();
       await expect(
@@ -256,6 +271,7 @@ test.describe('Weather station', () => {
         page.getByRole('button', { name: deviceName }),
       ).toBeVisible();
     }
+
     await expect(getChart({ page, deviceName: deviceNameAt(0) })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Zoom out' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Zoom in' })).toBeVisible();
@@ -299,6 +315,7 @@ test.describe('Weather station', () => {
       { columns: 2, height: 1024, width: 768 },
       { columns: 1, height: 844, width: 390 },
     ];
+
     const readings = page.getByLabel('Current readings');
 
     for (const viewport of targetViewports) {
@@ -330,6 +347,7 @@ test.describe('Weather station', () => {
             ),
           })),
         );
+
       expect(new Set(cardDetails.map(({ accent }) => accent)).size).toBe(
         configuredDevices.length,
       );
@@ -354,6 +372,7 @@ test.describe('Weather station', () => {
             ),
           ),
         );
+
       expect(historyHeadingDetails).toEqual(
         deviceNames.map((deviceName) => [
           { testId: `${deviceName}-history-indicator`, text: '' },
@@ -397,9 +416,11 @@ test.describe('Weather station', () => {
   }) => {
     await page.coverage.startJSCoverage();
     let releaseHistory!: () => void;
+
     const historyReady = new Promise<void>((resolve) => {
       releaseHistory = resolve;
     });
+
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
         body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
@@ -528,6 +549,7 @@ test.describe('Weather station', () => {
     await expect(page.getByText('No readings available.')).toHaveCount(
       configuredDevices.length,
     );
+
     for (const deviceName of deviceNames) {
       await expect(page.getByRole('button', { name: deviceName })).toHaveCount(
         0,
@@ -552,6 +574,7 @@ test.describe('Weather station', () => {
         latestResponses[
           Math.min(latestResponseIndex, latestResponses.length - 1)
         ];
+
       const measure = getMeasureForRequest(route, response);
       await route.fulfill({
         body: JSON.stringify([measure]),
@@ -559,9 +582,11 @@ test.describe('Weather station', () => {
       });
 
       const deviceName = getRequestedDeviceName(route);
+
       if (deviceName !== undefined) {
         answeredDeviceNames.add(deviceName);
       }
+
       if (answeredDeviceNames.size === configuredDevices.length) {
         latestResponseIndex += 1;
         answeredDeviceNames.clear();
@@ -602,6 +627,7 @@ test.describe('Weather station', () => {
     const refreshReadings = page.getByRole('button', {
       name: 'Refresh readings',
     });
+
     await refreshReadings.click();
     await expect(refreshReadings).toBeDisabled();
     await expect(page.getByLabel('Current readings')).toContainText(
@@ -671,6 +697,7 @@ test.describe('Weather station', () => {
     await page.coverage.startJSCoverage();
     const firstDeviceName = deviceNameAt(0);
     const secondDeviceName = deviceNameAt(1);
+
     const weakMeasures = {
       ...initialMeasures,
       [firstDeviceName]: {
@@ -682,6 +709,7 @@ test.describe('Weather station', () => {
         signal_power_dbm: -75,
       },
     };
+
     const strongMeasures = {
       ...changedMeasures,
       [firstDeviceName]: {
@@ -693,6 +721,7 @@ test.describe('Weather station', () => {
         signal_power_dbm: -75,
       },
     };
+
     const latestResponses = [weakMeasures, strongMeasures, strongMeasures];
     let latestResponseIndex = 0;
     const answeredDeviceNames = new Set<string>();
@@ -701,6 +730,7 @@ test.describe('Weather station', () => {
         latestResponses[
           Math.min(latestResponseIndex, latestResponses.length - 1)
         ];
+
       const measure = getMeasureForRequest(route, response);
       await route.fulfill({
         body: JSON.stringify([measure]),
@@ -708,9 +738,11 @@ test.describe('Weather station', () => {
       });
 
       const deviceName = getRequestedDeviceName(route);
+
       if (deviceName !== undefined) {
         answeredDeviceNames.add(deviceName);
       }
+
       if (answeredDeviceNames.size === configuredDevices.length) {
         latestResponseIndex += 1;
         answeredDeviceNames.clear();
@@ -761,23 +793,28 @@ test.describe('Weather station', () => {
       const primaryDeviceName = deviceNameAt(0);
       const primaryChangedMeasure = changedMeasures[primaryDeviceName];
       const touchChart = getChart({ page, deviceName: primaryDeviceName });
+
       const touchReadout = page.getByTestId(
         `${primaryDeviceName}-temperature-touch-readout`,
       );
+
       await expect(touchReadout.getByText('Touch and drag.')).toBeVisible();
       await touchChart.scrollIntoViewIfNeeded();
       const plot = touchChart.locator('.recharts-cartesian-grid');
       await expect(plot).toBeVisible({ timeout: 5_000 });
       const plotBox = await plot.boundingBox();
+
       if (plotBox === null) {
         throw new Error(
           'The configured temperature chart plot is not rendered.',
         );
       }
+
       const touchPosition = {
         x: plotBox.x + plotBox.width - 1,
         y: plotBox.y + plotBox.height / 2,
       };
+
       await touchChart.evaluate((chartWrapper, position) => {
         const dispatchTouchEvent = (type: string) => {
           const event = new Event(type, { bubbles: true });
@@ -786,6 +823,7 @@ test.describe('Weather station', () => {
           });
           chartWrapper.parentElement?.dispatchEvent(event);
         };
+
         dispatchTouchEvent('touchstart');
         dispatchTouchEvent('touchmove');
       }, touchPosition);
@@ -826,6 +864,7 @@ test.describe('Weather station', () => {
         p_end: string;
         p_start: string;
       };
+
       requestedRanges.push({
         end: parameters.p_end,
         start: parameters.p_start,
@@ -842,10 +881,12 @@ test.describe('Weather station', () => {
     const primaryInitialMeasure = initialMeasures[primaryDeviceName];
     const primaryChangedMeasure = changedMeasures[primaryDeviceName];
     const secondaryChangedMeasure = changedMeasures[secondaryDeviceName];
+
     const primaryTemperatureChart = getChart({
       page,
       deviceName: primaryDeviceName,
     }).first();
+
     await expectDesktopChartReadout({
       chart: primaryTemperatureChart,
       expectedValues: [
@@ -860,6 +901,7 @@ test.describe('Weather station', () => {
     const deviceAccordion = page.getByRole('button', {
       name: secondaryDeviceName,
     });
+
     await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'false');
     await deviceAccordion.click();
     await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'true');
@@ -928,6 +970,7 @@ test.describe('Weather station', () => {
         tooltipTestId: getChartTestId(primaryDeviceName, 'temperature'),
       });
     }
+
     await expect(zoomOut).toBeDisabled();
 
     for (const label of [
@@ -951,6 +994,7 @@ test.describe('Weather station', () => {
         tooltipTestId: getChartTestId(primaryDeviceName, 'temperature'),
       });
     }
+
     await expect(zoomIn).toBeDisabled();
 
     const lastRange = requestedRanges.at(-1);

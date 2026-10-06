@@ -33,6 +33,7 @@ const findPeripheral = async (meter: Meter): Promise<Peripheral | null> => {
   await noble.waitForPoweredOnAsync();
 
   const abortController = new AbortController();
+
   const peripheralEvents = on(noble, 'discover', {
     signal: abortController.signal,
   }) as AsyncIterable<[Peripheral]>;
@@ -53,6 +54,7 @@ const findPeripheral = async (meter: Meter): Promise<Peripheral | null> => {
         peripheral.address.toLowerCase() === meter.address
       ) {
         abortController.abort();
+
         return peripheral;
       }
     }
@@ -70,6 +72,7 @@ export const getAdvertisement = async (
   meter: Meter,
 ): Promise<Advertisement | null> => {
   const peripheral = await findPeripheral(meter);
+
   if (!peripheral) return null;
 
   return advertisementSchema.parse({

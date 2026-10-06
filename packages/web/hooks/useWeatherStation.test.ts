@@ -2,12 +2,14 @@ import type { Measure } from '@wx/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const state = vi.hoisted(() => ({ values: [] as unknown[] }));
+
 const configuredDevices = vi.hoisted(() => [
   { deviceName: 'device-alpha', icon: 'FaSeedling' },
   { deviceName: 'device-beta', icon: 'FaKitchenSet' },
   { deviceName: 'device-gamma', icon: 'FaCouch' },
   { deviceName: 'device-delta', icon: 'FaBed' },
 ]);
+
 const weatherApi = vi.hoisted(() => ({
   getLatestMeasure: vi.fn(),
   getChartHistory: vi.fn(),
@@ -16,9 +18,12 @@ const weatherApi = vi.hoisted(() => ({
 vi.mock('#environment.ts', () => ({
   environment: { DEVICES: configuredDevices },
 }));
+
 vi.mock('#supabase.api.ts', () => weatherApi);
+
 vi.mock('react', async (importOriginal) => {
   const React = await importOriginal<typeof import('react')>();
+
   return {
     ...React,
     useEffect: (effect: () => unknown) => effect(),
