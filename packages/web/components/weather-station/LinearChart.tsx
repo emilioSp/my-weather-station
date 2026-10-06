@@ -20,7 +20,6 @@ import {
 import {
   type ChartRange,
   chartMetricDetails,
-  downsampleMeasures,
   formatChartTime,
   formatMeasuredAt,
   formatMeasureValue,
@@ -82,18 +81,13 @@ export const LinearChart = ({
     null,
   );
 
-  const chartMeasures = React.useMemo(
-    () => downsampleMeasures({ measures, metric }),
-    [measures, metric],
-  );
-
   const chartData = React.useMemo<ChartDatum[]>(
     () =>
-      chartMeasures.map((measure) => ({
+      measures.map((measure) => ({
         ...measure,
         timestamp: new Date(measure.measuredAt).getTime(),
       })),
-    [chartMeasures],
+    [measures],
   );
 
   const extrema = React.useMemo(
@@ -288,7 +282,10 @@ const Extrema = ({
       <span className="font-mono text-[11px] tracking-[0.1em] text-[#9bad9e] uppercase">
         {label}
       </span>
-      <b className="text-[15px] tracking-[-0.05em]">
+      <b
+        className="text-[15px] tracking-[-0.05em]"
+        data-testid={`${label.toLowerCase()}-value`}
+      >
         {value === null
           ? '—'
           : formatMeasureValue({ value, metric, temperatureUnit })}

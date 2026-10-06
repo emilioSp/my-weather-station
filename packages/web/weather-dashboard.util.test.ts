@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   CHART_RANGES,
   chartRanges,
-  downsampleMeasures,
   filterMeasuresForRange,
   formatChartTime,
   formatMeasuredAt,
@@ -121,7 +120,7 @@ describe('weather dashboard utilities', () => {
     expect(getRangeExtrema({ measures: [], metric: 'temperature' })).toBeNull();
   });
 
-  it('compares original values before rounding and selects the earliest available ties before sampling', () => {
+  it('compares original values before rounding and selects the earliest available ties', () => {
     const later = createMockedMeasure(
       'later',
       Temporal.Instant.from('2026-10-06T08:00:00Z'),
@@ -146,16 +145,8 @@ describe('weather dashboard utilities', () => {
     const repeatedMeasures = [
       later,
       { ...earlier, temperature: later.temperature },
-      later,
     ];
 
-    const samples = downsampleMeasures({
-      measures: repeatedMeasures,
-      metric: 'temperature',
-      maximumBuckets: 1,
-    });
-
-    expect(samples).toEqual([later]);
     expect(
       getRangeExtrema({ measures: repeatedMeasures, metric: 'temperature' }),
     ).toEqual({
@@ -164,34 +155,6 @@ describe('weather dashboard utilities', () => {
       lowMeasuredAt: earlier.measuredAt,
       highMeasuredAt: earlier.measuredAt,
     });
-  });
-
-  it('keeps small measure lists and downsampled bucket extrema', () => {
-    const start = Temporal.Instant.from('2026-01-01T00:00:00Z');
-
-    const measures = Array.from({ length: 7 }, (_, index) =>
-      createMockedMeasure(
-        `${index}`,
-        start.add({ seconds: index }),
-        [3, 1, 2, 6, 4, 5, 7][index],
-      ),
-    );
-
-    expect(
-      downsampleMeasures({
-        measures,
-        metric: 'temperature',
-        maximumBuckets: 3,
-      }).map(({ id }) => id),
-    ).toEqual(['0', '1', '3', '4', '6']);
-    const smallMeasures = measures.slice(0, 5);
-    expect(
-      downsampleMeasures({
-        measures: smallMeasures,
-        metric: 'temperature',
-        maximumBuckets: 3,
-      }),
-    ).toBe(smallMeasures);
   });
 
   it('constrains signal percentages', () => {

@@ -274,7 +274,7 @@ test('AC5: changing from Last day to Last 6 hours replaces the older minimum dat
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await expect(page.getByText('Last 6 hours', { exact: true })).toBeVisible();
   await expect(summary.locator('time').first()).toHaveText('06 Oct · 10:00');
-  await expect(summary.locator('b').first()).toHaveText('18.0°C');
+  await expect(summary.getByTestId('low-value')).toHaveText('18.0°C');
 });
 
 test('AC6: refreshing changed latest readings and history replaces the high date', async ({
@@ -295,7 +295,7 @@ test('AC6: refreshing changed latest readings and history replaces the high date
   await mockDashboard({ page, fixture: readFixture('after-refresh') });
   await page.getByRole('button', { name: 'Refresh readings' }).click();
   await expect(summary.locator('time').last()).toHaveText('06 Oct · 14:00');
-  await expect(summary.locator('b').last()).toHaveText('26.0°C');
+  await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
 });
 
 test('AC7: switching to Fahrenheit changes values but preserves all six dates', async ({
@@ -311,14 +311,18 @@ test('AC7: switching to Fahrenheit changes values but preserves all six dates', 
   }
 
   await expect(
-    getSummary({ page, deviceName: primaryDevice, metric: 'temperature' })
-      .locator('b')
-      .first(),
+    getSummary({
+      page,
+      deviceName: primaryDevice,
+      metric: 'temperature',
+    }).getByTestId('low-value'),
   ).toHaveText('18.0°C');
   await expect(
-    getSummary({ page, deviceName: primaryDevice, metric: 'dewPoint' })
-      .locator('b')
-      .first(),
+    getSummary({
+      page,
+      deviceName: primaryDevice,
+      metric: 'dewPoint',
+    }).getByTestId('low-value'),
   ).toHaveText('8.0°C');
   await page.getByLabel('Temperature unit').getByText('°F').click();
 
@@ -328,7 +332,7 @@ test('AC7: switching to Fahrenheit changes values but preserves all six dates', 
       '06 Oct · 08:00',
       '06 Oct · 12:00',
     ]);
-    await expect(summary.locator('b').first()).toHaveText(
+    await expect(summary.getByTestId('low-value')).toHaveText(
       { temperature: '64.4°F', dewPoint: '46.4°F', humidity: '40%' }[metric],
     );
   }
@@ -348,7 +352,8 @@ test('AC8: empty history keeps all three empty charts and placeholders without d
   for (const metric of metrics) {
     const summary = getSummary({ page, deviceName: primaryDevice, metric });
     await expect(summary).toContainText('No measurements in this range.');
-    await expect(summary.locator('b')).toHaveText(['—', '—']);
+    await expect(summary.getByTestId('low-value')).toHaveText('—');
+    await expect(summary.getByTestId('high-value')).toHaveText('—');
     await expect(summary.locator('time')).toHaveCount(0);
   }
 });

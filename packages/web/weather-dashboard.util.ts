@@ -170,43 +170,5 @@ export const getRangeExtrema = ({
   };
 };
 
-export const downsampleMeasures = ({
-  measures,
-  metric,
-  maximumBuckets = 900,
-}: {
-  measures: Measure[];
-  metric: WeatherMetric;
-  maximumBuckets?: number;
-}): Measure[] => {
-  if (measures.length <= maximumBuckets * 2) {
-    return measures;
-  }
-
-  const bucketSize = Math.ceil(measures.length / maximumBuckets);
-  const samples = new Map<string, Measure>();
-
-  for (let start = 0; start < measures.length; start += bucketSize) {
-    const bucket = measures.slice(start, start + bucketSize);
-
-    const lowest = bucket.reduce((result, measure) =>
-      measure[metric] < result[metric] ? measure : result,
-    );
-
-    const highest = bucket.reduce((result, measure) =>
-      measure[metric] > result[metric] ? measure : result,
-    );
-
-    samples.set(lowest.id, lowest);
-    samples.set(highest.id, highest);
-  }
-
-  return [...samples.values()].sort(
-    (first, second) =>
-      new Date(first.measuredAt).getTime() -
-      new Date(second.measuredAt).getTime(),
-  );
-};
-
 export const getSignalPercentage = (signalPowerDBM: number): number =>
   Math.round(Math.max(0, Math.min(100, ((signalPowerDBM + 100) / 50) * 100)));
