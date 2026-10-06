@@ -20,11 +20,11 @@ import {
 import {
   type ChartRange,
   chartMetricDetails,
-  downsampleMeasures,
   formatChartTime,
   formatMeasuredAt,
   formatMeasureValue,
   getRangeExtrema,
+  type RangeExtrema,
   type WeatherMetric,
 } from '#weather-dashboard.util.ts';
 
@@ -81,18 +81,13 @@ export const LinearChart = ({
     null,
   );
 
-  const chartMeasures = React.useMemo(
-    () => downsampleMeasures({ measures, metric }),
-    [measures, metric],
-  );
-
   const chartData = React.useMemo<ChartDatum[]>(
     () =>
-      chartMeasures.map((measure) => ({
+      measures.map((measure) => ({
         ...measure,
         timestamp: new Date(measure.measuredAt).getTime(),
       })),
-    [chartMeasures],
+    [measures],
   );
 
   const extrema = React.useMemo(
@@ -224,7 +219,7 @@ export const LinearChart = ({
 
 type ChartCardProps = {
   metric: WeatherMetric;
-  extrema: { low: number; high: number } | null;
+  extrema: RangeExtrema | null;
   children: React.ReactNode;
   temperatureUnit: TemperatureUnit;
 };
@@ -245,17 +240,19 @@ const ChartCard = ({
             {details.label}
           </div>
         </div>
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 sm:justify-end">
+        <div className="grid grid-cols-[max-content_max-content] gap-4 sm:justify-end">
           <Extrema
             label="Low"
             metric={metric}
             value={extrema?.low ?? null}
+            measuredAt={extrema?.lowMeasuredAt ?? null}
             temperatureUnit={temperatureUnit}
           />
           <Extrema
             label="High"
             metric={metric}
             value={extrema?.high ?? null}
+            measuredAt={extrema?.highMeasuredAt ?? null}
             temperatureUnit={temperatureUnit}
           />
         </div>
@@ -269,19 +266,39 @@ type ExtremaProps = {
   label: string;
   metric: WeatherMetric;
   value: number | null;
+  measuredAt: string | null;
   temperatureUnit: TemperatureUnit;
 };
 
-const Extrema = ({ label, metric, value, temperatureUnit }: ExtremaProps) => (
-  <div className="flex items-baseline gap-1 whitespace-nowrap">
-    <span className="font-mono text-[11px] tracking-[0.1em] text-[#9bad9e] uppercase">
-      {label}
-    </span>
-    <b className="text-[15px] tracking-[-0.05em]">
-      {value === null
-        ? '—'
-        : formatMeasureValue({ value, metric, temperatureUnit })}
-    </b>
+const Extrema = ({
+  label,
+  metric,
+  value,
+  measuredAt,
+  temperatureUnit,
+}: ExtremaProps) => (
+  <div className="grid gap-[5px]">
+    <div className="flex items-baseline gap-1 whitespace-nowrap">
+      <span className="font-mono text-[11px] tracking-[0.1em] text-[#9bad9e] uppercase">
+        {label}
+      </span>
+      <b
+        className="text-[15px] tracking-[-0.05em]"
+        data-testid={`${label.toLowerCase()}-value`}
+      >
+        {value === null
+          ? '—'
+          : formatMeasureValue({ value, metric, temperatureUnit })}
+      </b>
+    </div>
+    {measuredAt !== null && (
+      <time
+        className="font-mono text-[13px] whitespace-nowrap text-[#9bad9e]"
+        dateTime={measuredAt}
+      >
+        {formatChartTime(new Date(measuredAt).getTime()).join(' · ')}
+      </time>
+    )}
   </div>
 );
 

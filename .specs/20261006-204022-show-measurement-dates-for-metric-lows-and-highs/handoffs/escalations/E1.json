@@ -1,0 +1,37 @@
+{
+  "question": "Should Maestro spec artifacts be excluded from repository lint, or should the approved HTML prototype be corrected through the spec workflow?",
+  "context": "The implementation and all AC1 through AC9 probes pass. The required npm run check fails in its Biome step solely on two existing useIterableCallbackReturn errors in .specs/20261006-204022-show-measurement-dates-for-metric-lows-and-highs/prototypes/index.html, lines 186 and 187. Those forEach arrow callbacks return addEventListener/setAttribute expressions. The prototype is unchanged, and builder instructions prohibit editing prototypes directly. The current biome.json includes .specs artifacts. npm run typecheck, npm run test:coverage (43 unit tests and 29 browser tests across all workspaces), npx biome check packages/web, and git diff --check pass. Changing lint scope requires authorization beyond this web-only feature; changing the prototype requires the spec workflow.",
+  "options": [
+    {
+      "id": "exclude-spec-artifacts",
+      "description": "Approve excluding .specs/** from Biome checks.",
+      "consequences": "Approved prototypes and generated workflow artifacts no longer block product lint. This changes repository-wide lint scope, but not application behavior.",
+      "nextStep": "Record authorization for a minimal biome.json exclusion, then resume the builder and rerun npm run check and every acceptance probe."
+    },
+    {
+      "id": "correct-approved-prototype",
+      "description": "Correct the two prototype callbacks through the authorized spec workflow while preserving its behavior and layout.",
+      "consequences": "Repository lint scope stays unchanged. Maestro must arrange an authorized prototype update because the builder cannot edit it directly.",
+      "nextStep": "Update the prototype through the spec workflow, then resume the builder and rerun npm run check and every acceptance probe."
+    }
+  ],
+  "recommendation": {
+    "optionId": "exclude-spec-artifacts",
+    "reason": "Spec artifacts are review and protocol inputs, not product source. Excluding them avoids coupling product validation to prototype code and generated artifacts without changing the approved visual design."
+  },
+  "notes": [
+    "Implementation remains entirely within packages/web. Extreme selection compares original values and uses chronological timestamp comparison for ties before client chart sampling. Existing numeric value formatting and other date displays are unchanged.",
+    "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts passed all 11 tests covering AC1 through AC9, including the approved examples, all three metrics, both sensors, and single/empty states. The full browser suite repeated these probes successfully during npm run test:coverage.",
+    "AC1 and AC9 screenshots at 1280 × 700, 768 × 1024, and 390 × 844 were inspected against the three approved static prototypes. Muted 13px dates appear below values; desktop/tablet summaries remain beside titles and smartphone summaries appear below titles. Browser geometry checks confirmed no clipping or horizontal overflow. Temporary screenshots were removed.",
+    "No dependencies, database files, API contracts, range boundaries, or sampling behavior changed. Required npm run check has not passed because of the untouched prototype lint errors."
+  ],
+  "version": "1.0.0",
+  "specId": "20261006-204022-show-measurement-dates-for-metric-lows-and-highs",
+  "revision": 5,
+  "id": "E1",
+  "resolution": {
+    "selectedOptionId": "exclude-spec-artifacts",
+    "decision": "The owner chose to fix Biome configuration directly and committed 94d1d6e. That commit excludes .specs and the entire .pi directory from Biome. Keep the approved feature spec and prototypes unchanged. Resume the builder to rerun npm run check and every acceptance probe against the updated checkout.",
+    "reason": "The owner reports that npm run check now passes after the Biome configuration fix and explicitly states that no spec change is needed. The approved UI requirements remain unchanged."
+  }
+}

@@ -1,0 +1,220 @@
+<!doctype html>
+<!-- Preview Low and High measurement dates in the existing history layout. Used only for design review, not by the app. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Low and High dates · UI prototype</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    :root { color: #eaf0e9; background: #10191b; font-family: Manrope, sans-serif; }
+    body { margin: 0; }
+    button, select { font: inherit; }
+    button, select { color: #eaf0e9; background: #15201f; border: 1px solid #53675e; border-radius: 8px; padding: 8px 12px; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 2px solid #83d2e5; outline-offset: 3px; }
+    .review { padding: 20px; }
+    .review h1 { font-size: 18px; margin: 0 0 8px; }
+    .review p { color: #9bad9e; font-size: 13px; margin: 0 0 16px; line-height: 1.6; }
+    .review-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .review-controls label { display: grid; gap: 5px; font-size: 12px; }
+    .preview-space { margin-inline: auto; }
+    iframe { display: block; border: 1px solid #53675e; border-radius: 12px; transform-origin: top left; background: #10191b; }
+    .canvas { min-width: 320px; background: radial-gradient(circle at 86% 0%, #294033 0, transparent 26rem), #10191b; }
+    main { max-width: 1440px; margin: auto; padding: 22px 12px 48px; }
+    .app-header { display: grid; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid #2b3a38; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand svg { width: 28px; height: 32px; color: #b9e53b; }
+    .brand h1 { font-size: 17px; font-weight: 700; letter-spacing: -.035em; margin: 0; }
+    .header-actions { display: grid; grid-auto-flow: column; align-items: center; justify-content: start; gap: 12px; }
+    .mono { font-family: 'DM Mono', monospace; }
+    .eyebrow { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #9bad9e; }
+    .latest b { display: block; margin-top: 4px; font-size: 13px; }
+    .units { display: flex; gap: 2px; border: 1px solid #2b3a38; padding: 2px; background: #15201f; border-radius: 8px; }
+    .units button { font: 500 13px 'DM Mono', monospace; border: 0; border-radius: 5px; padding: 8px 11px; color: #9bad9e; }
+    .units button[aria-pressed="true"] { background: #b9e53b; color: #10191b; }
+    .range { min-height: 56px; display: flex; align-items: center; justify-content: end; gap: 12px; margin-top: 16px; }
+    .range b { font-size: 16px; }
+    .range-icons { padding: 4px; display: flex; gap: 4px; border: 1px solid #2b3a38; border-radius: 10px; background: #15201f; }
+    .range-icons span { display: grid; width: 40px; height: 40px; place-items: center; font-size: 22px; }
+    .sensor { margin-top: 16px; border: 1px solid #2b3a38; border-radius: 16px; background: #15201f; }
+    .sensor summary { list-style: none; cursor: pointer; min-height: 67px; padding: 20px; display: grid; grid-template-columns: 1fr auto; align-items: center; font-size: 14px; font-weight: 700; }
+    .sensor summary::-webkit-details-marker { display: none; }
+    .sensor summary .chevron { transform: rotate(0); }
+    .sensor[open] summary .chevron { transform: rotate(180deg); }
+    .sensor-name { display: flex; align-items: center; gap: 8px; }
+    .indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+    .sensor-name svg { width: 16px; height: 16px; }
+    .charts { display: grid; gap: 16px; padding: 0 12px 12px; }
+    .chart-card { min-width: 0; padding: 12px; border: 1px solid #2b3a38; border-radius: 16px; background: #192524d1; }
+    .chart-heading { display: grid; gap: 16px; align-items: center; }
+    .extremes { display: grid; grid-template-columns: repeat(2, max-content); gap: 16px; }
+    .extreme { display: grid; gap: 5px; }
+    .extreme-value { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+    .extreme-label { font: 11px 'DM Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: #9bad9e; }
+    .extreme-value b { font-size: 15px; letter-spacing: -.05em; }
+    .extreme time { font: 13px 'DM Mono', monospace; color: #9bad9e; white-space: nowrap; }
+    .touch-readout { display: grid; align-items: center; min-height: 76px; margin-top: 16px; padding: 10px 12px; border: 1px solid #53675e; background: #10191b; border-radius: 6px; font-size: 12px; color: #9bad9e; }
+    .plot { margin-top: 16px; height: 380px; }
+    .plot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .empty { display: grid; place-items: center; height: 310px; font-size: 14px; color: #9bad9e; }
+    @media (min-width: 640px) {
+      main { padding-inline: clamp(20px, 4vw, 64px); }
+      .app-header { grid-template-columns: 1fr auto; align-items: center; }
+      .header-actions { justify-content: end; }
+      .latest { text-align: right; }
+      .charts { padding: 0 23px 23px; }
+      .chart-card { padding: 23px; }
+      .chart-heading { grid-template-columns: 1fr auto; }
+      .extremes { justify-content: end; }
+      .touch-readout { display: none; }
+      .plot { margin-top: 18px; }
+    }
+    @media (max-width: 639px) {
+      main { padding-inline: clamp(20px, 4vw, 64px); }
+      .sensor summary { min-height: 64px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="review" id="review" lang="it">
+    <h1>Prototipo: date di Low e High</h1>
+    <p>Anteprima dello storico con dati di esempio. Date sempre visibili sotto i valori. La pagina non usa API.<br>La cornice riproduce la risoluzione scelta. Se manca spazio, viene ridotta in scala. Scorri dentro la cornice per vedere tutte le metriche.</p>
+    <div class="review-controls">
+      <label>Schermo
+        <select id="viewport">
+          <option value="1280,700">Desktop · 1280 × 700</option>
+          <option value="768,1024">Tablet · 768 × 1024</option>
+          <option value="390,844">Smartphone · 390 × 844</option>
+        </select>
+      </label>
+      <label>Stato
+        <select id="scenario">
+          <option value="normal">Misure disponibili</option>
+          <option value="single">Una sola misura</option>
+          <option value="empty">Nessuna misura</option>
+        </select>
+      </label>
+      <button id="open-preview" type="button">Apri anteprima a dimensione reale</button>
+    </div>
+    <div class="preview-space" id="preview-space">
+      <iframe id="preview" title="Anteprima dello storico"></iframe>
+    </div>
+  </section>
+  <main id="app" hidden>
+    <header class="app-header">
+      <div class="brand">
+        <svg viewBox="0 0 24 32" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M9 20V6a4 4 0 0 1 8 0v14a7 7 0 1 1-8 0Z"/><path d="M13 11v15"/></svg>
+        <h1>Weather station</h1>
+      </div>
+      <div class="header-actions">
+        <div class="latest"><div class="eyebrow">Latest available measurement</div><b>06 Oct · 14:35:20</b></div>
+        <div class="units" aria-label="Temperature unit">
+          <button type="button" data-unit="celsius" aria-pressed="true">°C</button>
+          <button type="button" data-unit="fahrenheit" aria-pressed="false">°F</button>
+        </div>
+      </div>
+    </header>
+    <section aria-label="Measurement history">
+      <div class="range"><b>Last day</b><div class="range-icons" aria-hidden="true"><span>⊖</span><span>⊕</span></div></div>
+      <details class="sensor" open style="--accent: #b9e53b">
+        <summary><span class="sensor-name"><span class="indicator"></span>Garden<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21V10M12 15C3 15 3 5 3 5s9 0 9 10ZM12 11C21 11 21 2 21 2s-9 0-9 9Z"/></svg></span><span class="chevron" aria-hidden="true">⌄</span></summary>
+        <div class="charts" id="charts"></div>
+      </details>
+    </section>
+  </main>
+  <script type="module">
+    // Render illustrative states and viewport presets for owner review only.
+    const parameters = new URLSearchParams(window.location.search);
+    const isCanvas = parameters.has('canvas');
+    const metrics = [
+      { label: 'Temperature', low: 18, high: 25, lowAt: '2026-10-06T06:15:42Z', highAt: '2026-10-06T12:35:20Z', points: [21, 20, 19, 18, 18.5, 21, 23, 22, 24, 25], ticks: [26, 22, 18] },
+      { label: 'Humidity', low: 40, high: 70, lowAt: '2026-10-06T12:35:20Z', highAt: '2026-10-06T06:15:42Z', points: [55, 60, 64, 70, 65, 57, 52, 55, 45, 40], ticks: [75, 55, 35] },
+      { label: 'Dew point', low: 8, high: 12, lowAt: '2026-10-06T12:35:20Z', highAt: '2026-10-06T06:15:42Z', points: [10, 10.5, 11, 12, 11.5, 10, 9.5, 10, 9, 8], ticks: [13, 10, 7] },
+    ];
+    const formatDate = (value) => new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Rome',
+    }).format(new Date(value)).replace(',', ' ·');
+    const formatValue = ({ value, metric, unit }) => {
+      if (metric.label === 'Humidity') return `${value.toFixed(0)}%`;
+      if (unit === 'fahrenheit') return `${(value * 9 / 5 + 32).toFixed(1)}°F`;
+      return `${value.toFixed(1)}°C`;
+    };
+    const extremeMarkup = ({ label, value, at, metric, unit, empty }) => `
+      <div class="extreme">
+        <div class="extreme-value"><span class="extreme-label">${label}</span><b>${empty ? '—' : formatValue({ value, metric, unit })}</b></div>
+        ${empty ? '' : `<time datetime="${at}">${formatDate(at)}</time>`}
+      </div>`;
+    const plotMarkup = ({ metric, unit, single }) => {
+      const width = window.innerWidth < 640 ? 230 : window.innerWidth - 220;
+      const left = 58;
+      const right = width - 18;
+      const top = 20;
+      const bottom = 300;
+      const points = metric.points.map((value, index) => `${left + (right - left) * index / (metric.points.length - 1)},${bottom - (value - metric.ticks[2]) / (metric.ticks[0] - metric.ticks[2]) * (bottom - top)}`).join(' ');
+      const grid = metric.ticks.map((value, index) => {
+        const y = top + index * (bottom - top) / 2;
+        return `<line x1="${left}" y1="${y}" x2="${right}" y2="${y}" stroke="#2b3a38"/><text x="${left - 9}" y="${y + 4}" text-anchor="end">${formatValue({ value, metric, unit })}</text>`;
+      }).join('');
+      const ticks = [0, .5, 1].map((fraction, index) => {
+        const x = left + (right - left) * fraction;
+        return `<line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="#2b3a38"/><text x="${x}" y="330" text-anchor="middle">06 Oct</text><text x="${x}" y="348" text-anchor="middle">${['02:00', '08:15', '14:35'][index]}</text>`;
+      }).join('');
+      return `<div class="plot"><svg viewBox="0 0 ${width} 380" role="img" aria-label="Illustrative ${metric.label.toLowerCase()} chart"><g fill="#82948a" font-family="monospace" font-size="11">${grid}${ticks}</g>${single ? `<circle cx="${(left + right) / 2}" cy="160" r="3" fill="#b9e53b"/>` : `<polyline points="${points}" fill="none" stroke="#b9e53b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`}</svg></div>`;
+    };
+    if (isCanvas) {
+      document.getElementById('review').remove();
+      document.getElementById('app').hidden = false;
+      document.body.classList.add('canvas');
+      const scenario = parameters.get('scenario') ?? 'normal';
+      const renderCharts = (unit) => {
+        document.getElementById('charts').innerHTML = metrics.map((metric) => {
+          const single = scenario === 'single';
+          const empty = scenario === 'empty';
+          const high = single ? metric.low : metric.high;
+          const highAt = single ? metric.lowAt : metric.highAt;
+          return `<section class="chart-card" aria-label="${metric.label}">
+            <div class="chart-heading"><div class="eyebrow">${metric.label}</div><div class="extremes">
+              ${extremeMarkup({ label: 'Low', value: metric.low, at: metric.lowAt, metric, unit, empty })}
+              ${extremeMarkup({ label: 'High', value: high, at: highAt, metric, unit, empty })}
+            </div></div>
+            ${empty ? '<div class="empty">No measurements in this range.</div>' : `<div class="touch-readout">Touch and drag.</div>${plotMarkup({ metric, unit, single })}`}
+          </section>`;
+        }).join('');
+      };
+      document.querySelectorAll('[data-unit]').forEach((button) => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-unit]').forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
+        renderCharts(button.dataset.unit);
+      }));
+      window.addEventListener('resize', () => renderCharts(document.querySelector('[aria-pressed="true"]').dataset.unit));
+      renderCharts('celsius');
+    } else {
+      const viewport = document.getElementById('viewport');
+      const scenario = document.getElementById('scenario');
+      const frame = document.getElementById('preview');
+      const space = document.getElementById('preview-space');
+      const getPreviewUrl = () => {
+        const url = new URL(window.location.href);
+        url.search = new URLSearchParams({ canvas: '1', scenario: scenario.value }).toString();
+        return url.href;
+      };
+      const resizePreview = () => {
+        const [width, height] = viewport.value.split(',').map(Number);
+        const scale = Math.min(1, (document.getElementById('review').clientWidth - 40) / width);
+        frame.style.width = `${width}px`;
+        frame.style.height = `${height}px`;
+        frame.style.transform = `scale(${scale})`;
+        space.style.width = `${width * scale}px`;
+        space.style.height = `${height * scale}px`;
+      };
+      viewport.addEventListener('change', resizePreview);
+      scenario.addEventListener('change', () => { frame.src = getPreviewUrl(); });
+      document.getElementById('open-preview').addEventListener('click', () => window.open(getPreviewUrl(), '_blank', 'noopener'));
+      window.addEventListener('resize', resizePreview);
+      frame.src = getPreviewUrl();
+      resizePreview();
+    }
+  </script>
+</body>
+</html>

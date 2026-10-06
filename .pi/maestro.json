@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "specDirectory": ".specs",
   "builder": {
-    "model": "openai-codex/gpt-5.6-luna",
+    "model": "openai-codex/gpt-6.1-sol",
     "thinking": "high",
     "timeoutMinutes": 60
   },

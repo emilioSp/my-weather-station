@@ -118,58 +118,56 @@ export const getLatestTimestamp = (measures: Measure[]): number | null => {
   return timestamps.length === 0 ? null : Math.max(...timestamps);
 };
 
+export type RangeExtrema = {
+  low: number;
+  high: number;
+  lowMeasuredAt: string;
+  highMeasuredAt: string;
+};
+
 export const getRangeExtrema = ({
   measures,
   metric,
 }: {
   measures: Measure[];
   metric: WeatherMetric;
-}): { low: number; high: number } | null => {
+}): RangeExtrema | null => {
   if (measures.length === 0) {
     return null;
   }
 
-  const values = measures.map((measure) => measure[metric]);
+  const { low, high } = measures.reduce(
+    (result, measure) => {
+      const isEarlierThanLow =
+        new Date(measure.measuredAt).getTime() <
+        new Date(result.low.measuredAt).getTime();
 
-  return { low: Math.min(...values), high: Math.max(...values) };
-};
+      const isEarlierThanHigh =
+        new Date(measure.measuredAt).getTime() <
+        new Date(result.high.measuredAt).getTime();
 
-export const downsampleMeasures = ({
-  measures,
-  metric,
-  maximumBuckets = 900,
-}: {
-  measures: Measure[];
-  metric: WeatherMetric;
-  maximumBuckets?: number;
-}): Measure[] => {
-  if (measures.length <= maximumBuckets * 2) {
-    return measures;
-  }
-
-  const bucketSize = Math.ceil(measures.length / maximumBuckets);
-  const samples = new Map<string, Measure>();
-
-  for (let start = 0; start < measures.length; start += bucketSize) {
-    const bucket = measures.slice(start, start + bucketSize);
-
-    const lowest = bucket.reduce((result, measure) =>
-      measure[metric] < result[metric] ? measure : result,
-    );
-
-    const highest = bucket.reduce((result, measure) =>
-      measure[metric] > result[metric] ? measure : result,
-    );
-
-    samples.set(lowest.id, lowest);
-    samples.set(highest.id, highest);
-  }
-
-  return [...samples.values()].sort(
-    (first, second) =>
-      new Date(first.measuredAt).getTime() -
-      new Date(second.measuredAt).getTime(),
+      return {
+        low:
+          measure[metric] < result.low[metric] ||
+          (measure[metric] === result.low[metric] && isEarlierThanLow)
+            ? measure
+            : result.low,
+        high:
+          measure[metric] > result.high[metric] ||
+          (measure[metric] === result.high[metric] && isEarlierThanHigh)
+            ? measure
+            : result.high,
+      };
+    },
+    { low: measures[0], high: measures[0] },
   );
+
+  return {
+    low: low[metric],
+    high: high[metric],
+    lowMeasuredAt: low.measuredAt,
+    highMeasuredAt: high.measuredAt,
+  };
 };
 
 export const getSignalPercentage = (signalPowerDBM: number): number =>

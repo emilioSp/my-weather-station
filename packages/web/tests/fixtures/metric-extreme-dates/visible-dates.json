@@ -1,0 +1,44 @@
+{
+  "history": [
+    [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "device_name": "Sensor A",
+        "device_type": "outdoor",
+        "measured_at": "2026-10-06T06:15:42Z",
+        "temperature": 18,
+        "humidity": 70,
+        "dew_point": 12,
+        "heat_index": 18,
+        "battery": 80,
+        "signal_power_dbm": -55
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "device_name": "Sensor A",
+        "device_type": "outdoor",
+        "measured_at": "2026-10-06T12:35:20Z",
+        "temperature": 25,
+        "humidity": 40,
+        "dew_point": 8,
+        "heat_index": 25,
+        "battery": 80,
+        "signal_power_dbm": -55
+      }
+    ]
+  ],
+  "latest": [
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "device_name": "Sensor A",
+      "device_type": "outdoor",
+      "measured_at": "2026-10-06T12:35:20Z",
+      "temperature": 25,
+      "humidity": 40,
+      "dew_point": 8,
+      "heat_index": 25,
+      "battery": 80,
+      "signal_power_dbm": -55
+    }
+  ]
+}
