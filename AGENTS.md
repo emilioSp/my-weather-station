@@ -40,3 +40,13 @@ npm run check
 
 This command runs lint, TypeScript checks, tests, and coverage across all workspaces, including the web browser tests.
 It does not replace task-specific checks. If it fails, report the failure and do not claim that validation passed.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as GitHub issues, using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Domain docs use a single-context layout. See `docs/agents/domain.md`.
