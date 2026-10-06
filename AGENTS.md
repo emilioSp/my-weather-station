@@ -29,3 +29,14 @@ npm run <script> -w <workspace-name>
 4. Shared code must not contain browser or Node platform types and APIs.
 5. Types that describe stored rows belong in `packages/shared/types.ts`. Types used by one workspace stay in that workspace.
 6. Use Zod inference for shared schema types.
+
+## Validation
+
+After task-specific checks, run this additional validation from the repository root before reporting completion:
+
+```sh
+npm run check
+```
+
+This command runs lint, TypeScript checks, tests, and coverage across all workspaces, including the web browser tests.
+It does not replace task-specific checks. If it fails, report the failure and do not claim that validation passed.
