@@ -1,3 +1,4 @@
+// Prepare measurement values and chart ranges for the weather dashboard.
 import type { Measure } from '@wx/shared';
 import {
   formatTemperature,
@@ -25,9 +26,11 @@ export const chartRanges = {
 } as const;
 
 export type ChartRangeKey = (typeof CHART_RANGES)[keyof typeof CHART_RANGES];
+
 export type ChartRange = (typeof chartRanges)[ChartRangeKey];
 
-export const chartRangeKeys = Object.values(CHART_RANGES) as ChartRangeKey[];
+export const chartRangeKeys = Object.values(CHART_RANGES);
+
 export type WeatherMetric = 'temperature' | 'humidity' | 'dewPoint';
 
 export const chartMetricDetails: Record<
@@ -61,6 +64,7 @@ export const formatChartTime = (measuredAt: number): [string, string] => {
     hour12: false,
     timeZone: 'Europe/Rome',
   }).formatToParts(new Date(measuredAt));
+
   const getPart = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((part) => part.type === type)?.value ?? '';
 
@@ -100,6 +104,7 @@ export const filterMeasuresForRange = ({
   end: number;
 }): Measure[] => {
   const start = end - range.hours * 60 * 60 * 1_000;
+
   return measures.filter(
     (measure) => new Date(measure.measuredAt).getTime() >= start,
   );
@@ -125,6 +130,7 @@ export const getRangeExtrema = ({
   }
 
   const values = measures.map((measure) => measure[metric]);
+
   return { low: Math.min(...values), high: Math.max(...values) };
 };
 
@@ -146,9 +152,11 @@ export const downsampleMeasures = ({
 
   for (let start = 0; start < measures.length; start += bucketSize) {
     const bucket = measures.slice(start, start + bucketSize);
+
     const lowest = bucket.reduce((result, measure) =>
       measure[metric] < result[metric] ? measure : result,
     );
+
     const highest = bucket.reduce((result, measure) =>
       measure[metric] > result[metric] ? measure : result,
     );

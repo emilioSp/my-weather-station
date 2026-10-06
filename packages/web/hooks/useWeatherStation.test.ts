@@ -1,13 +1,16 @@
+// Verify weather station state and API calls with controlled React hook mocks.
 import type { Measure } from '@wx/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const state = vi.hoisted(() => ({ values: [] as unknown[] }));
+const state = vi.hoisted<{ values: unknown[] }>(() => ({ values: [] }));
+
 const configuredDevices = vi.hoisted(() => [
   { deviceName: 'device-alpha', icon: 'FaSeedling' },
   { deviceName: 'device-beta', icon: 'FaKitchenSet' },
   { deviceName: 'device-gamma', icon: 'FaCouch' },
   { deviceName: 'device-delta', icon: 'FaBed' },
 ]);
+
 const weatherApi = vi.hoisted(() => ({
   getLatestMeasure: vi.fn(),
   getChartHistory: vi.fn(),
@@ -16,9 +19,12 @@ const weatherApi = vi.hoisted(() => ({
 vi.mock('#environment.ts', () => ({
   environment: { DEVICES: configuredDevices },
 }));
+
 vi.mock('#supabase.api.ts', () => weatherApi);
+
 vi.mock('react', async (importOriginal) => {
   const React = await importOriginal<typeof import('react')>();
+
   return {
     ...React,
     useEffect: (effect: () => unknown) => effect(),
@@ -102,9 +108,7 @@ describe('useWeatherStation', () => {
       configuredDevices.length,
     );
     expect(
-      weatherApi.getLatestMeasure.mock.calls.map(
-        ([input]) => (input as { deviceName: string }).deviceName,
-      ),
+      weatherApi.getLatestMeasure.mock.calls.map(([input]) => input.deviceName),
     ).toEqual(deviceNames);
   });
 

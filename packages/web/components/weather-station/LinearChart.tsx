@@ -1,3 +1,4 @@
+// Render measurement charts and pointer readouts in the weather dashboard.
 import type { Measure } from '@wx/shared';
 import * as React from 'react';
 import {
@@ -71,16 +72,20 @@ export const LinearChart = ({
   temperatureUnit,
 }: LinearChartProps) => {
   const chartColor = meterTheme.chartColor;
+
   const [touchTooltipActive, setTouchTooltipActive] = React.useState<
     boolean | null
   >(null);
+
   const [touchMeasure, setTouchMeasure] = React.useState<ChartDatum | null>(
     null,
   );
+
   const chartMeasures = React.useMemo(
     () => downsampleMeasures({ measures, metric }),
     [measures, metric],
   );
+
   const chartData = React.useMemo<ChartDatum[]>(
     () =>
       chartMeasures.map((measure) => ({
@@ -89,10 +94,12 @@ export const LinearChart = ({
       })),
     [chartMeasures],
   );
+
   const extrema = React.useMemo(
     () => getRangeExtrema({ measures, metric }),
     [measures, metric],
   );
+
   const details = chartMetricDetails[metric];
 
   if (extrema === null) {
@@ -144,6 +151,7 @@ export const LinearChart = ({
             onTouchMove={({ activeIndex }: MouseHandlerDataParam) => {
               if (activeIndex === null || activeIndex === undefined) {
                 setTouchMeasure(null);
+
                 return;
               }
 
@@ -283,6 +291,9 @@ type ChartTooltipProps = TooltipContentProps & {
   temperatureUnit: TemperatureUnit;
 };
 
+const isNumericLabel = (label: unknown): label is number =>
+  typeof label === 'number';
+
 const ChartTooltip = ({
   active,
   label,
@@ -291,9 +302,10 @@ const ChartTooltip = ({
   sensor,
   temperatureUnit,
 }: ChartTooltipProps) => {
+  // JUSTIFICATION: Recharts returns an entry from this chart's ChartDatum data array in the tooltip payload.
   const measure = payload[0]?.payload as ChartDatum | undefined;
 
-  if (!active || measure === undefined || typeof label !== 'number') {
+  if (!active || measure === undefined || !isNumericLabel(label)) {
     return null;
   }
 

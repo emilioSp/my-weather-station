@@ -32,6 +32,7 @@ describe('environment', () => {
     );
 
     expect(result.success).toBe(true);
+
     if (result.success) {
       expect(result.data.DEVICES.map(({ deviceName }) => deviceName)).toEqual([
         'Kitchen',

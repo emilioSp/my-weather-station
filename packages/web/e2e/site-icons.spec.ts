@@ -1,3 +1,4 @@
+// Verify the declared site icons and their rendered assets in browser tests.
 import { expect, type Page, test } from '@playwright/test';
 import { saveCoverage } from './utils/save-coverage';
 
@@ -71,6 +72,7 @@ const getLinkHref = async (page: Page, selector: string): Promise<string> => {
   const href = await page.locator(selector).getAttribute('href');
   expect(href).not.toBeNull();
 
+  // JUSTIFICATION: The preceding assertion rejects null, but Playwright's expect does not narrow the type.
   return new URL(href as string, page.url()).href;
 };
 
@@ -87,6 +89,7 @@ test.describe('Site icons', () => {
     const response = await page.request.get(
       await getLinkHref(page, 'head link[rel="icon"]'),
     );
+
     expect(response.ok()).toBe(true);
     expect(response.headers()['content-type']).toContain('image/svg+xml');
     await expect(response.text()).resolves.toContain(
@@ -115,16 +118,19 @@ test.describe('Site icons', () => {
       page,
       'head link[rel="apple-touch-icon"]',
     );
+
     await expect(getPngHeader(page, appleTouchIconHref)).resolves.toEqual({
       contentType: 'image/png',
       height: 180,
       ok: true,
       width: 180,
     });
+
     const appleTouchIconColors = await getPngColorCounts(
       page,
       appleTouchIconHref,
     );
+
     expect(appleTouchIconColors.dark).toBeGreaterThan(0);
     expect(appleTouchIconColors.lime).toBeGreaterThan(0);
 

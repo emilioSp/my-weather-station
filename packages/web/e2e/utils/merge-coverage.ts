@@ -1,3 +1,4 @@
+// Merge unit and browser coverage and enforce thresholds after web tests.
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { coverageThresholds } from '@wx/shared';
@@ -7,11 +8,13 @@ import reportLib from 'istanbul-lib-report';
 import reports from 'istanbul-reports';
 
 const coverageDirectory = join(process.cwd(), 'coverage'); // directory for final coverage
+
 const vitestCoveragePath = join(
   coverageDirectory,
   'vitest',
   'coverage-final.json',
 );
+
 const playwrightCoverageDirectory = join(coverageDirectory, 'playwright');
 
 const readCoverage = async (path: string): Promise<CoverageMapData> =>
@@ -46,6 +49,7 @@ const isAnonymousFunction = (name: string): boolean =>
 const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
   for (const path of coverageMap.files()) {
     const coverage = coverageMap.fileCoverageFor(path).data;
+
     const namedDeclarationPositions = new Set(
       Object.values(coverage.fnMap)
         .filter(
@@ -73,9 +77,12 @@ const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
 
 const checkCoverageThresholds = (coverageMap: CoverageMap): void => {
   const summary = coverageMap.getCoverageSummary();
+
+  // JUSTIFICATION: The shared thresholds object contains only the coverage metric keys used by Istanbul.
   const metrics = Object.keys(coverageThresholds) as Array<
     keyof typeof coverageThresholds
   >;
+
   const failures = metrics.filter(
     (metric) => summary[metric].pct < coverageThresholds[metric],
   );

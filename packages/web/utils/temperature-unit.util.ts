@@ -1,3 +1,4 @@
+// Validate and format temperature units for dashboard display and browser storage.
 export const TEMPERATURE_UNITS = {
   CELSIUS: 'celsius',
   FAHRENHEIT: 'fahrenheit',
@@ -11,7 +12,7 @@ export const temperatureUnits = [
 export type TemperatureUnit = (typeof temperatureUnits)[number];
 
 export const isTemperatureUnit = (value: unknown): value is TemperatureUnit =>
-  temperatureUnits.includes(value as TemperatureUnit);
+  temperatureUnits.some((unit) => unit === value);
 
 export const convertTemperature = ({
   celsius,

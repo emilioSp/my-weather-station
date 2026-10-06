@@ -1,3 +1,4 @@
+// Verify temperature unit selection and persistence in browser tests.
 import { expect, type Page, test } from '@playwright/test';
 import { loadEnv } from 'vite';
 import { saveCoverage } from './utils/save-coverage';
@@ -24,11 +25,14 @@ type ReadingValues = Omit<
   'id' | 'device_name' | 'device_type' | 'measured_at'
 >;
 
+// JUSTIFICATION: The repository's development configuration lists devices with string deviceName fields.
 const configuredDevices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
 ) as ConfiguredDevice[];
+
 const deviceNameAt = (index: number): string => {
   const device = configuredDevices[index];
+
   if (device === undefined) {
     throw new Error(`No configured device exists at index ${index}.`);
   }
@@ -70,7 +74,9 @@ const latestReadings: ReadingValues[] = [
     signal_power_dbm: -55,
   },
 ];
+
 const historyTemperatures = [18, 19, 20, 17];
+
 const historyHeatIndices = [17.7, 18.7, 19.8, 16.8];
 
 const getLatestReadings = (index: number): ReadingValues =>
@@ -102,13 +108,16 @@ const createMeasure = ({
 const latestMeasures: Record<string, MeasureRow> = Object.fromEntries(
   configuredDevices.map((_, deviceIndex) => {
     const measure = createMeasure({ deviceIndex, id: deviceIndex + 1 });
+
     return [measure.device_name, measure];
   }),
 );
+
 const history: Record<string, MeasureRow[]> = Object.fromEntries(
   configuredDevices.map((_, deviceIndex) => {
     const deviceName = deviceNameAt(deviceIndex);
     const latestMeasure = latestMeasures[deviceName];
+
     return [
       deviceName,
       [
@@ -137,6 +146,7 @@ const getLatestMeasureForRequest = (route: {
   request: () => { url: () => string };
 }): MeasureRow => {
   const deviceName = getRequestedDeviceName(route);
+
   if (deviceName === undefined || latestMeasures[deviceName] === undefined) {
     throw new Error(`No fixture exists for requested device ${deviceName}.`);
   }
@@ -183,6 +193,7 @@ test.describe('Temperature units', () => {
         toFahrenheit(measure.temperature),
       );
     }
+
     for (const measures of Object.values(history)) {
       for (const measure of measures) {
         await expect(page.getByLabel('Measurement history')).toContainText(

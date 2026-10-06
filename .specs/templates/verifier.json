@@ -1,9 +1,0 @@
-[
-  {
-    "ac": "AC1",
-    "severity": "high | medium | low",
-    "confidence": 0.0,
-    "observations": "<executed command and observed output>",
-    "rejection": null
-  }
-]

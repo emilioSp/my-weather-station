@@ -1,3 +1,4 @@
+// Validate Vite configuration and resolve device icons at web app startup.
 import type { IconType } from 'react-icons';
 import { FaBed, FaCouch, FaKitchenSet, FaSeedling } from 'react-icons/fa6';
 import { z } from 'zod';
@@ -11,6 +12,7 @@ export const deviceIconMap = {
 
 export type DeviceIconName = keyof typeof deviceIconMap;
 
+// JUSTIFICATION: This non-empty local object has only DeviceIconName keys; Object.keys loses their literal types.
 const deviceIconNames = Object.keys(deviceIconMap) as [
   DeviceIconName,
   ...DeviceIconName[],
@@ -31,6 +33,7 @@ const devicesSchema = z
         code: 'custom',
         message: 'VITE_DEVICES must be valid JSON',
       });
+
       return z.NEVER;
     }
   })

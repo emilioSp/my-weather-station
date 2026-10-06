@@ -10,9 +10,11 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
   assertDevelopment();
 
   const { environment } = await import('#environment.ts');
+
   const meterPlaceholders = environment.DEVICES.map(
     () => '(?::text, ?::text, ?::text, ?::text, ?::integer)',
   ).join(', ');
+
   const meterBindings = environment.DEVICES.flatMap((meter, index) => [
     meter.deviceId,
     meter.address,
@@ -228,6 +230,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
     );
 
     const [{ count }] = await transaction('measures').count('id as count');
+
     return count;
   });
 };

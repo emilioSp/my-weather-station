@@ -52,6 +52,7 @@ describe('Supabase API', () => {
     await seedMeasures();
 
     const latest = await getLatestMeasure({ deviceName: 'kitchen' });
+
     const history = await getChartHistory({
       measuredAfter: new Date('2020-01-01T00:00:00Z'),
       measuredBefore: new Date('2020-01-02T00:00:00Z'),
@@ -108,6 +109,7 @@ describe('Supabase API', () => {
 
   it('queries an empty local database through the real Supabase client', async () => {
     const latest = await getLatestMeasure({ deviceName: 'kitchen' });
+
     const history = await getChartHistory({
       measuredAfter: new Date('2020-01-01T00:00:00Z'),
       measuredBefore: new Date('2020-01-02T00:00:00Z'),

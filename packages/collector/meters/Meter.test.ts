@@ -1,3 +1,4 @@
+// Verify meter decoding and factory rejection with controlled sensor advertisements.
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
@@ -19,6 +20,7 @@ import { OutdoorMeter } from '#meters/OutdoorMeter.ts';
 import type { Advertisement } from '#types.ts';
 
 const sensor = vi.hoisted(() => ({ getAdvertisement: vi.fn() }));
+
 vi.mock('#api/sensor.api.ts', () => sensor);
 
 const indoor = {
@@ -27,12 +29,14 @@ const indoor = {
   deviceId: 'indoor-device',
   address: 'aa:bb',
 };
+
 const outdoor = {
   type: 'outdoor' as const,
   deviceName: 'outdoor meter',
   deviceId: 'outdoor-device',
   address: 'cc:dd',
 };
+
 const advertisement = (
   overrides: Partial<Advertisement> = {},
 ): Advertisement => ({
@@ -121,6 +125,7 @@ describe('meters', () => {
     expect(createMeter(indoor)).toBeInstanceOf(IndoorMeter);
     expect(createMeter(outdoor)).toBeInstanceOf(OutdoorMeter);
     expect(() =>
+      // JUSTIFICATION: This test deliberately passes an invalid runtime type to exercise the factory's rejection branch.
       createMeter({ ...indoor, type: 'unknown' as 'indoor' }),
     ).toThrow('Unknown meter type unknown');
     expect(new IndoorMeter(indoor).getMeter()).toEqual(indoor);

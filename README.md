@@ -54,12 +54,6 @@ Install every workspace at once, from the repository root:
 npm install
 ```
 
-Activate the versioned pre-commit hook once for this clone:
-
-```sh
-git config core.hooksPath .githooks
-```
-
 ### Collector
 
 Create `packages/collector/.env`:
@@ -148,7 +142,6 @@ npm run supabase:status  # show local endpoints
 npm run lint             # read-only Biome check, whole repository
 npm run lint:fix         # apply Biome fixes, whole repository
 npm run typecheck        # TypeScript check for every workspace
-npm run precommit        # lint, type check, tests, and coverage in every workspace
 npm run build            # type check, plus the production build of the web app
 npm run test:unit        # run Vitest tests in every workspace
 npm run test:e2e         # run Playwright end-to-end tests
@@ -279,7 +272,3 @@ thermometer can take longer or time out.
 Distance, walls, metal objects, battery condition, and radio interference change the value.
 Move the computer or the Bluetooth adapter closer to improve reception. The value is measured
 when the packet is received, so it changes between readings.
-
-## CONTRIBUTING
-
-Contributions are based on spec driven development with AI agents. See [CONTRIBUTING.md](CONTRIBUTING.md)

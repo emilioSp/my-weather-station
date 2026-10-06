@@ -11,6 +11,7 @@ const devicesSchema = z
         code: 'custom',
         message: 'DEVICES must be valid JSON',
       });
+
       return z.NEVER;
     }
   })

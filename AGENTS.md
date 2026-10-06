@@ -4,32 +4,18 @@
 
 My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, and shows them in a web app.
 
-## General principles
-
-- Keep code simple and readable.
-- Solve only the current problem.
-- Do not add future features, abstractions, or dependencies without a need.
-- Avoid comments unless they add necessary clarity.
-- Use descriptive names.
-- Remove every temporary file you create.
-
-## Communication
-
-- Ask for confirmation on design decisions.
-- Ask for clarification when requirements are unclear.
-- Do not add or update dependencies without confirmation.
-
 ## Workspaces
 
 This repository is an npm workspaces monorepo:
 
-- `packages/collector` (`@wx/collector`) reads meters and stores measurements. Specific instructions [collector AGENTS.md](./packages/collector/AGENTS.md)
-- `packages/web` (`@wx/web`) is the React and Vite web app. Specific instructions [web AGENTS.md](./packages/web/AGENTS.md)
-- `packages/shared` (`@wx/shared`) contains code used by both apps.
+1. `packages/collector` (`@wx/collector`) reads meters and stores measurements. See [collector AGENTS.md](./packages/collector/AGENTS.md).
+2. `packages/web` (`@wx/web`) is the React and Vite web app. See [web AGENTS.md](./packages/web/AGENTS.md).
+3. `packages/shared` (`@wx/shared`) contains code used by both apps.
 
-The root `package.json` contains workspace globs, root scripts, development tools, and the install-script policy. Add runtime dependencies to the workspace that uses them. Keep `allowScripts` in the root `package.json`.
+The root `package.json` contains workspace globs, root scripts, development tools, and the install-script policy.
+Add runtime dependencies to the workspace that uses them. Keep `allowScripts` in the root `package.json`.
 
-A workspace script runs with its workspace name:
+Run a workspace script with its workspace name:
 
 ```sh
 npm run <script> -w <workspace-name>
@@ -37,51 +23,20 @@ npm run <script> -w <workspace-name>
 
 ## Imports and shared code
 
-- Import code from another workspace by package name. Declare the dependency in the consumer workspace.
-- Inside a workspace, use its `imports` field. Do not use relative paths that leave the workspace.
-- `packages/shared` owns stored-row domain schemas, case mapping, and UUID normalization.
-- Shared code must not contain browser or Node platform types and APIs.
-- Types that describe stored rows belong in `packages/shared/types.ts`. Types used by one workspace stay in that workspace.
-- Keep utility modules under a `utils` folder.
+1. Import code from another workspace by package name. Declare the dependency in the consumer workspace.
+2. Inside a workspace, use its `imports` field. Do not use relative paths that leave the workspace.
+3. `packages/shared` owns stored-row domain schemas, case mapping, and UUID normalization.
+4. Shared code must not contain browser or Node platform types and APIs.
+5. Types that describe stored rows belong in `packages/shared/types.ts`. Types used by one workspace stay in that workspace.
+6. Use Zod inference for shared schema types.
 
-## Code conventions
+## Validation
 
-- Use ESM only. Do not use CommonJS.
-- Prefer `type` over `interface`.
-- Use Zod inference for shared schema types.
-- Prefer named exports. Use a default export only when a tool requires it or for a single application entrypoint or singleton.
-- Prefer pure functions.
-- Use early returns.
-- Prefer arrow functions. Use classes only for strategies or objects with internal state.
-- Keep functions small. Split a function when it becomes hard to read.
-- Use `async` and `await`. Do not introduce callback APIs.
-- Use named parameters for functions with multiple inputs. Define the input type close to the function.
-- Use explicit methods. Do not use property accessors.
-- Do not use `--experimental-strip-types`. We run on node version that support TypeScript stripping by default.
-- Use named domain constants instead of repeated string literals.
+After task-specific checks, run this additional validation from the repository root before reporting completion:
 
-## Testing and checks
+```sh
+npm run check
+```
 
-- Test complex pure logic with unit tests.
-- Prefer integration tests for feature flows.
-- Use one clear fixture for one scenario. Make the scenario clear from the file name.
-- Do not write clever test helpers.
-- Make test setup explicit. Load a fixture inside a test when possible. Do not hide default fixtures in `beforeEach`.
-- Use test names that state the given condition and result.
-- Keep each assertion meaningful. Remove redundant assertions, except explicit exclusion checks.
-- Do not add tests without behavior value. Check coverage before removing tests and fixtures.
-
-## Documentation
-
-The root `README.md` must describe:
-
-1. What the software does.
-2. Prerequisites.
-3. Local development setup.
-4. Local testing instructions.
-5. Deployment instructions when deployment exists.
-
-Bear in mind: the root `README.md` is not a changelog. Document stable user and operator workflows, not every feature.
-
-## Workflow
-IMPORTANT: you work strictly following this [workflow](AGENTS_CONTRIBUTING.md)
+This command runs lint, TypeScript checks, tests, and coverage across all workspaces, including the web browser tests.
+It does not replace task-specific checks. If it fails, report the failure and do not claim that validation passed.

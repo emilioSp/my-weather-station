@@ -79,11 +79,14 @@ const getMeasures = (currentMeasures: CurrentMeasures | null): Measure[] =>
 export const useWeatherStation = () => {
   const [currentMeasures, setCurrentMeasures] =
     React.useState<CurrentMeasures | null>(null);
+
   const [measureHistory, setMeasureHistory] =
     React.useState<ChartHistory | null>(null);
+
   const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(
     CHART_RANGES.LAST_DAY,
   );
+
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const currentRange: ChartRange = chartRanges[rangeKey];
   const rangeIndex = chartRangeKeys.indexOf(rangeKey);
@@ -114,6 +117,7 @@ export const useWeatherStation = () => {
 
     if (latestMeasuredAt === null) {
       setMeasureHistory({ history: {}, error: null });
+
       return;
     }
 
@@ -122,9 +126,11 @@ export const useWeatherStation = () => {
 
     const loadHistory = async () => {
       const placeholderDeadline = Date.now() + 100;
+
       const measuredAfter = new Date(
         latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000,
       );
+
       const history = await getChartHistory({
         measuredAfter,
         measuredBefore: new Date(latestMeasuredAt),
@@ -148,6 +154,7 @@ export const useWeatherStation = () => {
     setIsRefreshing(true);
     const spinnerDeadline = Date.now() + 1_000;
     const latestRows = await loadLatestMeasures();
+
     const isUnchanged =
       latestRows.error === null &&
       environment.DEVICES.every(
@@ -179,6 +186,7 @@ export const useWeatherStation = () => {
     measureHistory === null
       ? null
       : getLatestTimestamp(Object.values(measureHistory.history).flat());
+
   const measuresByDeviceName = React.useMemo(
     () =>
       measureHistory === null
