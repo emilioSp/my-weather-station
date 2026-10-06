@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
   "specId": "20261006-204022-show-measurement-dates-for-metric-lows-and-highs",
-  "revision": 6,
-  "phase": "builder-running"
+  "revision": 7,
+  "phase": "ready-for-verifier"
 }

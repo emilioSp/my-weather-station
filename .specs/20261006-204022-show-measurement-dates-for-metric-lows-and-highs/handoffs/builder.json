@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "specId": "20261006-204022-show-measurement-dates-for-metric-lows-and-highs",
+  "revision": 7,
+  "status": "done",
+  "summary": "Confirmed the existing metric extreme date implementation after the recorded Biome configuration resolution. All acceptance probes and npm run check pass. No additional product changes were needed.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: AC1 AC9 tests at 1280 × 700, 768 × 1024, and 390 × 844. Inspected generated history screenshots against desktop.png, tablet.png, and smartphone.png prototypes. All three metrics show dates below values without clipping or horizontal overflow.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: winter-midnight and summer-midnight tests show 07 Jan · 00:35 and 07 Jul · 01:35 for all metrics.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: two-sensors-and-single-measurement test asserts each metric's Low/High dates and both dates for the single-row sensor using the approved examples.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: unordered-ties test asserts 06 Oct · 08:00 and 06 Oct · 11:00 for each metric's repeated extremes.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC5",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: range-change test switches Last day through Last 12 hours to Last 6 hours and asserts Low changes from 05 Oct · 22:00 to 06 Oct · 10:00, with 18.0°C.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC6",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: refresh test returns changed latest readings and history, then asserts High changes from 06 Oct · 12:00 to 06 Oct · 14:00, with 26.0°C.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC7",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: unit-change test asserts all six dates remain unchanged and Low values become 64.4°F, 46.4°F, and 40%.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC8",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: empty-history test selects Last 6 hours and asserts all three empty messages, Low/High placeholders, and zero measurement dates.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC9",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: AC1 AC9 tests assert all six extreme dates and header date have computed font-size 13px at each approved viewport.",
+      "probeStatus": "passed"
+    }
+  ],
+  "notes": [
+    "Followed E1 resolution: retained the owner-committed Biome exclusions and kept the approved spec and prototypes unchanged. The existing implementation from df0c82a required no further edits.",
+    "npm run check passed lint, TypeScript checks, coverage, 43 unit tests across all workspaces, and 29 browser tests. The targeted acceptance suite separately passed all 11 tests.",
+    "Screenshot comparison confirmed muted dates below values, summaries beside metric titles on desktop/tablet, and summaries below titles on smartphone. Illustrative prototype charts differ from the controlled two-row fixtures, as permitted by the spec.",
+    "The utility unit test executed by npm run check also confirms original-value comparisons before rounding and earliest available tie selection before client sampling. No dependencies, APIs, database files, sampling behavior, range boundaries, or other date displays changed.",
+    "Removed generated verification screenshots and coverage files before recording this outcome."
+  ]
+}
