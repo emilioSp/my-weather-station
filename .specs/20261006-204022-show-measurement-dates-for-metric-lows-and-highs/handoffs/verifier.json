@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "specId": "20261006-204022-show-measurement-dates-for-metric-lows-and-highs",
+  "revision": 9,
+  "summary": "Independently regenerated AC1 through AC9 evidence at candidate b234861. All acceptance probes and npm run check passed. No technical findings.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: AC1 AC9 tests at 1280 × 700, 768 × 1024, and 390 × 844 passed for all three metrics. Inspected generated history screenshots against prototypes/desktop.png, tablet.png, and smartphone.png. Both dates appear below values without interaction, clipping, or horizontal page overflow.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: winter-midnight and summer-midnight scenarios passed for all metrics with 07 Jan · 00:35 and 07 Jul · 01:35.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: two-sensors-and-single-measurement scenario passed. Sensor A temperature dates were 06 Oct · 08:00 / 06 Oct · 10:00, humidity and dew point reversed them, and all Sensor B dates were 06 Oct · 11:00.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: unordered-ties scenario passed with Low 06 Oct · 08:00 and High 06 Oct · 11:00 for all metrics. Additional node --input-type=module assertions verified original-value comparisons and earliest dates from 1801 pre-sampling rows for temperature, humidity, and dew point.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC5",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: range-change scenario passed. Switched Last day through Last 12 hours to Last 6 hours; temperature Low changed from 05 Oct · 22:00 to 06 Oct · 10:00 with 18.0°C.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC6",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: before-refresh and after-refresh scenarios passed. Refresh with changed latest readings and history changed temperature High from 06 Oct · 12:00 to 06 Oct · 14:00 with 26.0°C.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC7",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: unit-change scenario passed. Fahrenheit switch preserved all six dates and changed temperature and dew point Low to 64.4°F and 46.4°F; humidity remained 40%.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC8",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: empty-history scenario passed at Last 6 hours. All three charts retained No measurements in this range., both placeholders, and no time elements.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC9",
+      "probe": "npm run test:e2e -w @wx/web -- metric-extreme-dates.spec.ts: AC1 AC9 tests passed at all three target sizes. All six extreme dates and the header date had computed font-size 13px.",
+      "probeStatus": "passed"
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Confirmed exact candidate HEAD and verifier-running workflow before verification. Read approved spec, HTML and static prototypes, applicable instructions, builder handoff, and E1 resolution.",
+    "Inspected executable probes and fixtures against the approved examples. Targeted suite passed 11 tests. npm run check independently passed lint, TypeScript checks, coverage, 43 unit tests, and 29 browser tests.",
+    "npm run check includes oxlint --fix. It made no tracked file changes; results did not depend on repairs.",
+    "Visual comparison confirmed muted dates below values, summaries beside titles on desktop/tablet, and below titles on smartphone. Illustrative prototype chart drawings differ from controlled fixture charts as allowed by the spec.",
+    "Removed generated coverage and screenshot directories. Staged and unstaged files matched the supplied candidate; no untracked verification files remained. Existing ignored files were preserved."
+  ]
+}
