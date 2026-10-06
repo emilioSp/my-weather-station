@@ -27,7 +27,11 @@
   ],
   "version": "1.0.0",
   "specId": "20261006-204022-show-measurement-dates-for-metric-lows-and-highs",
-  "revision": 4,
+  "revision": 5,
   "id": "E1",
-  "resolution": null
+  "resolution": {
+    "selectedOptionId": "exclude-spec-artifacts",
+    "decision": "The owner chose to fix Biome configuration directly and committed 94d1d6e. That commit excludes .specs and the entire .pi directory from Biome. Keep the approved feature spec and prototypes unchanged. Resume the builder to rerun npm run check and every acceptance probe against the updated checkout.",
+    "reason": "The owner reports that npm run check now passes after the Biome configuration fix and explicitly states that no spec change is needed. The approved UI requirements remain unchanged."
+  }
 }
