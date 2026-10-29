@@ -35,7 +35,8 @@ const seedMeasures = async () => {
       ('00000000-0000-0000-0000-000000000001', 'kitchen-device', 'kitchen', 'indoor', 'aa:bb', 10.0, 5.0, 11.0, 50, 80, -60, '2020-01-01T00:00:00Z'),
       ('00000000-0000-0000-0000-000000000002', 'kitchen-device', 'kitchen', 'indoor', 'aa:bb', 20.0, 15.0, 21.0, 60, 90, -50, '2020-01-01T12:00:00Z'),
       ('00000000-0000-0000-0000-000000000003', 'office-device', 'office', 'indoor', 'ee:ff', 15.0, 10.0, 16.0, 55, 85, -55, '2020-01-01T06:00:00Z'),
-      ('00000000-0000-0000-0000-000000000004', 'garden-device', 'garden', 'outdoor', 'cc:dd', 5.0, 0.0, 6.0, 70, 70, -70, '2020-01-01T06:00:00Z')
+      ('00000000-0000-0000-0000-000000000004', 'garden-device', 'garden', 'outdoor', 'cc:dd', 5.0, 0.0, 6.0, 70, 70, -70, '2020-01-01T06:00:00Z'),
+      ('00000000-0000-0000-0000-000000000005', 'living-room-device', 'living room', 'indoor', 'aa:cc', 18.0, 12.0, 19.0, 60, 80, -60, '2020-01-01T06:00:00Z')
   `);
 };
 
@@ -95,7 +96,7 @@ describe('Supabase API', () => {
     ]);
   });
 
-  it('returns configured latest measures in device order', async () => {
+  it('given stored readings including kitchen when fetching configured meters then returns garden and living room in order without kitchen', async () => {
     await seedMeasures();
 
     const latest = await getLatestMeasures();
@@ -103,7 +104,7 @@ describe('Supabase API', () => {
     expect(latest.error).toBeNull();
     expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual([
       'garden',
-      'kitchen',
+      'living room',
     ]);
   });
 
