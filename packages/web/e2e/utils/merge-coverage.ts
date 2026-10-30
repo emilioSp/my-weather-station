@@ -1,6 +1,7 @@
 // Merge unit and browser coverage and enforce thresholds after web tests.
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { coverageThresholds } from '@wx/shared';
 import type { CoverageMap, CoverageMapData } from 'istanbul-lib-coverage';
 import coverageLib from 'istanbul-lib-coverage';
@@ -9,11 +10,7 @@ import reports from 'istanbul-reports';
 
 const coverageDirectory = join(process.cwd(), 'coverage'); // directory for final coverage
 
-const vitestCoveragePath = join(
-  coverageDirectory,
-  'vitest',
-  'coverage-final.json',
-);
+const vitestCoveragePath = join(coverageDirectory, 'vitest', 'coverage-final.json');
 
 const playwrightCoverageDirectory = join(coverageDirectory, 'playwright');
 
@@ -31,8 +28,7 @@ const getE2ECoveragePaths = async (): Promise<string[]> => {
     .sort();
 };
 
-const isAnonymousFunction = (name: string): boolean =>
-  name.startsWith('(anonymous_');
+const isAnonymousFunction = (name: string): boolean => name.startsWith('(anonymous_');
 
 /*
  * `coverage-final.json` can have two entries for one arrow function.
@@ -52,9 +48,7 @@ const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
 
     const namedDeclarationPositions = new Set(
       Object.values(coverage.fnMap)
-        .filter(
-          (functionCoverage) => !isAnonymousFunction(functionCoverage.name),
-        )
+        .filter((functionCoverage) => !isAnonymousFunction(functionCoverage.name))
         .map(
           (functionCoverage) =>
             `${functionCoverage.decl.start.line}:${functionCoverage.decl.start.column}`,
@@ -79,13 +73,9 @@ const checkCoverageThresholds = (coverageMap: CoverageMap): void => {
   const summary = coverageMap.getCoverageSummary();
 
   // JUSTIFICATION: The shared thresholds object contains only the coverage metric keys used by Istanbul.
-  const metrics = Object.keys(coverageThresholds) as Array<
-    keyof typeof coverageThresholds
-  >;
+  const metrics = Object.keys(coverageThresholds) as Array<keyof typeof coverageThresholds>;
 
-  const failures = metrics.filter(
-    (metric) => summary[metric].pct < coverageThresholds[metric],
-  );
+  const failures = metrics.filter((metric) => summary[metric].pct < coverageThresholds[metric]);
 
   if (failures.length === 0) {
     return;
@@ -93,18 +83,13 @@ const checkCoverageThresholds = (coverageMap: CoverageMap): void => {
 
   throw new Error(
     failures
-      .map(
-        (metric) =>
-          `${metric}: ${summary[metric].pct}% is below ${coverageThresholds[metric]}%`,
-      )
+      .map((metric) => `${metric}: ${summary[metric].pct}% is below ${coverageThresholds[metric]}%`)
       .join('\n'),
   );
 };
 
 export const mergeCoverage = async (): Promise<void> => {
-  const coverageMap = coverageLib.createCoverageMap(
-    await readCoverage(vitestCoveragePath),
-  );
+  const coverageMap = coverageLib.createCoverageMap(await readCoverage(vitestCoveragePath));
 
   for (const path of await getE2ECoveragePaths()) {
     coverageMap.merge(await readCoverage(path));

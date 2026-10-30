@@ -1,6 +1,7 @@
 // Verify temperature unit selection and persistence in browser tests.
 import { expect, type Page, test } from '@playwright/test';
 import { loadEnv } from 'vite';
+
 import { saveCoverage } from './utils/save-coverage';
 
 type ConfiguredDevice = {
@@ -20,10 +21,7 @@ type MeasureRow = {
   signal_power_dbm: number;
 };
 
-type ReadingValues = Omit<
-  MeasureRow,
-  'id' | 'device_name' | 'device_type' | 'measured_at'
->;
+type ReadingValues = Omit<MeasureRow, 'id' | 'device_name' | 'device_type' | 'measured_at'>;
 
 // JUSTIFICATION: The repository's development configuration lists devices with string deviceName fields.
 const configuredDevices = JSON.parse(
@@ -124,10 +122,8 @@ const history: Record<string, MeasureRow[]> = Object.fromEntries(
         {
           ...latestMeasure,
           id: `00000000-0000-0000-0000-${String(deviceIndex + 5).padStart(12, '0')}`,
-          temperature:
-            historyTemperatures[deviceIndex] ?? latestMeasure.temperature - 2,
-          heat_index:
-            historyHeatIndices[deviceIndex] ?? latestMeasure.heat_index - 2,
+          temperature: historyTemperatures[deviceIndex] ?? latestMeasure.temperature - 2,
+          heat_index: historyHeatIndices[deviceIndex] ?? latestMeasure.heat_index - 2,
         },
         latestMeasure,
       ],
@@ -138,9 +134,7 @@ const history: Record<string, MeasureRow[]> = Object.fromEntries(
 const getRequestedDeviceName = (route: {
   request: () => { url: () => string };
 }): string | undefined =>
-  new URL(route.request().url()).searchParams
-    .get('device_name')
-    ?.replace(/^eq\./, '');
+  new URL(route.request().url()).searchParams.get('device_name')?.replace(/^eq\./, '');
 
 const getLatestMeasureForRequest = (route: {
   request: () => { url: () => string };
@@ -154,21 +148,17 @@ const getLatestMeasureForRequest = (route: {
   return latestMeasures[deviceName];
 };
 
-const toFahrenheit = (celsius: number): string =>
-  `${((celsius * 9) / 5 + 32).toFixed(1)}°F`;
+const toFahrenheit = (celsius: number): string => `${((celsius * 9) / 5 + 32).toFixed(1)}°F`;
 
-const escapeRegExp = (value: string): string =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const getTemperatureChart = (page: Page, deviceName: string) =>
   page.getByLabel(
-    new RegExp(
-      `Interactive temperature chart for ${escapeRegExp(deviceName)} measurements`,
-    ),
+    new RegExp(`Interactive temperature chart for ${escapeRegExp(deviceName)} measurements`),
   );
 
 test.describe('Temperature units', () => {
-  test('switches current readings and chart temperature displays to Fahrenheit', async ({
+  test('given Celsius readings when selecting Fahrenheit then converts current readings chart values and tooltips', async ({
     page,
   }) => {
     await page.coverage.startJSCoverage();
@@ -207,12 +197,10 @@ test.describe('Temperature units', () => {
     const primaryHistory = history[primaryDeviceName];
     const temperatureChart = getTemperatureChart(page, primaryDeviceName);
     await temperatureChart.hover({ position: { x: 200, y: 200 } });
-    await expect(
-      page.getByTestId(`${primaryDeviceName}-temperature-chart-tooltip`),
-    ).toContainText(toFahrenheit(primaryHistory[0].heat_index));
-    await expect(page.getByLabel('Measurement history')).not.toContainText(
-      '20.0°C',
+    await expect(page.getByTestId(`${primaryDeviceName}-temperature-chart-tooltip`)).toContainText(
+      toFahrenheit(primaryHistory[0].heat_index),
     );
+    await expect(page.getByLabel('Measurement history')).not.toContainText('20.0°C');
 
     const jsCoverage = await page.coverage.stopJSCoverage();
     await saveCoverage({
@@ -221,7 +209,9 @@ test.describe('Temperature units', () => {
     });
   });
 
-  test('persists Fahrenheit after reload', async ({ page }) => {
+  test('given Fahrenheit is selected when reloading then preserves the selection readings and stored preference', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
@@ -259,7 +249,7 @@ test.describe('Temperature units', () => {
     });
   });
 
-  test('defaults safely to Celsius without valid browser storage', async ({
+  test('given missing invalid or unavailable browser storage when loading then selects Celsius and displays Celsius readings', async ({
     page,
   }) => {
     await page.coverage.startJSCoverage();
@@ -282,9 +272,7 @@ test.describe('Temperature units', () => {
       `${latestMeasures[deviceNameAt(0)].temperature.toFixed(1)}°C`,
     );
 
-    await page.evaluate(() =>
-      window.localStorage.setItem('temperature-unit', 'kelvin'),
-    );
+    await page.evaluate(() => window.localStorage.setItem('temperature-unit', 'kelvin'));
     await page.reload();
     await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
 

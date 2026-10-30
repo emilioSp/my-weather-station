@@ -1,5 +1,8 @@
+// Verify measure queries and response mapping against local Supabase during integration checks.
+
 import { Client } from 'pg';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
+
 import {
   getChartHistory,
   getLatestMeasure,
@@ -41,7 +44,7 @@ const seedMeasures = async () => {
 };
 
 describe('Supabase API', () => {
-  it('normalizes empty responses into empty results', () => {
+  it('given null API responses when normalizing measures and history then returns empty rows and history', () => {
     expect(toMeasureResult({ data: null, error: null })).toEqual({
       rows: [],
       error: null,
@@ -49,7 +52,7 @@ describe('Supabase API', () => {
     expect(toMeasureHistory(null)).toEqual({});
   });
 
-  it('selects the latest measure by name and returns name-keyed chart history', async () => {
+  it('given stored readings when fetching a named device and chart history then returns its latest reading and history keyed by name', async () => {
     await seedMeasures();
 
     const latest = await getLatestMeasure({ deviceName: 'kitchen' });
@@ -102,13 +105,10 @@ describe('Supabase API', () => {
     const latest = await getLatestMeasures();
 
     expect(latest.error).toBeNull();
-    expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual([
-      'garden',
-      'living room',
-    ]);
+    expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual(['garden', 'living room']);
   });
 
-  it('queries an empty local database through the real Supabase client', async () => {
+  it('given an empty database when querying latest measures and history then returns empty results without errors', async () => {
     const latest = await getLatestMeasure({ deviceName: 'kitchen' });
 
     const history = await getChartHistory({

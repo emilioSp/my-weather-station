@@ -1,8 +1,4 @@
-import {
-  deviceIdentifiersSchema,
-  type Measure,
-  meterTypeSchema,
-} from '@wx/shared';
+import { deviceIdentifiersSchema, type Measure, meterTypeSchema } from '@wx/shared';
 import { z } from 'zod';
 
 const serviceDataSchema = z.object({

@@ -1,5 +1,8 @@
+// Verify date formatting, range filtering, extrema, and signal values during dashboard checks.
+
 import type { Measure } from '@wx/shared';
 import { describe, expect, it } from 'vitest';
+
 import {
   CHART_RANGES,
   chartRanges,
@@ -32,14 +35,11 @@ const createMockedMeasure = (
 });
 
 describe('weather dashboard utilities', () => {
-  it('formats dates and metric values', () => {
+  it('given a UTC timestamp humidity and temperature when formatting dashboard values then returns local times percent and Fahrenheit', () => {
     const measuredAt = Temporal.Instant.from('2026-01-01T12:34:56Z');
 
     expect(formatMeasuredAt(measuredAt.toString())).toBe('01 Jan · 13:34:56');
-    expect(formatChartTime(measuredAt.epochMilliseconds)).toEqual([
-      '01 Jan',
-      '13:34',
-    ]);
+    expect(formatChartTime(measuredAt.epochMilliseconds)).toEqual(['01 Jan', '13:34']);
     expect(formatMeasureValue({ value: 50.4, metric: 'humidity' })).toBe('50%');
     expect(
       formatMeasureValue({
@@ -50,22 +50,13 @@ describe('weather dashboard utilities', () => {
     ).toBe('68.0°F');
   });
 
-  it('filters values at and within the selected range', () => {
+  it('given readings before at and within the last day when filtering then includes only boundary and later readings', () => {
     const end = Temporal.Instant.from('2026-01-02T00:00:00Z');
 
     const measures = [
-      createMockedMeasure(
-        'outside',
-        Temporal.Instant.from('2025-12-31T23:59:59Z'),
-      ),
-      createMockedMeasure(
-        'edge',
-        Temporal.Instant.from('2026-01-01T00:00:00Z'),
-      ),
-      createMockedMeasure(
-        'inside',
-        Temporal.Instant.from('2026-01-01T12:00:00Z'),
-      ),
+      createMockedMeasure('outside', Temporal.Instant.from('2025-12-31T23:59:59Z')),
+      createMockedMeasure('edge', Temporal.Instant.from('2026-01-01T00:00:00Z')),
+      createMockedMeasure('inside', Temporal.Instant.from('2026-01-01T12:00:00Z')),
     ];
 
     expect(
@@ -77,30 +68,14 @@ describe('weather dashboard utilities', () => {
     ).toEqual(['edge', 'inside']);
   });
 
-  it('gets latest timestamps and extrema including empty data', () => {
-    const oldest = createMockedMeasure(
-      'oldest',
-      Temporal.Instant.from('2026-01-01T00:00:00Z'),
-      10,
-    );
+  it('given unsorted or empty readings when finding timestamps and extrema then returns the latest time dated extremes or null', () => {
+    const oldest = createMockedMeasure('oldest', Temporal.Instant.from('2026-01-01T00:00:00Z'), 10);
 
-    const older = createMockedMeasure(
-      'older',
-      Temporal.Instant.from('2026-01-01T06:00:00Z'),
-      25,
-    );
+    const older = createMockedMeasure('older', Temporal.Instant.from('2026-01-01T06:00:00Z'), 25);
 
-    const newer = createMockedMeasure(
-      'newer',
-      Temporal.Instant.from('2026-01-02T00:00:00Z'),
-      30,
-    );
+    const newer = createMockedMeasure('newer', Temporal.Instant.from('2026-01-02T00:00:00Z'), 30);
 
-    const newest = createMockedMeasure(
-      'newest',
-      Temporal.Instant.from('2026-01-02T06:00:00Z'),
-      15,
-    );
+    const newest = createMockedMeasure('newest', Temporal.Instant.from('2026-01-02T06:00:00Z'), 15);
 
     expect(getLatestTimestamp([oldest, older, newer, newest])).toBe(
       Temporal.Instant.from(newest.measuredAt).epochMilliseconds,
@@ -120,7 +95,7 @@ describe('weather dashboard utilities', () => {
     expect(getRangeExtrema({ measures: [], metric: 'temperature' })).toBeNull();
   });
 
-  it('compares original values before rounding and selects the earliest available ties', () => {
+  it('given close temperatures and tied readings when finding extrema then compares unrounded values and selects earliest ties', () => {
     const later = createMockedMeasure(
       'later',
       Temporal.Instant.from('2026-10-06T08:00:00Z'),
@@ -133,23 +108,16 @@ describe('weather dashboard utilities', () => {
       18.04,
     );
 
-    expect(
-      getRangeExtrema({ measures: [earlier, later], metric: 'temperature' }),
-    ).toEqual({
+    expect(getRangeExtrema({ measures: [earlier, later], metric: 'temperature' })).toEqual({
       low: 18.01,
       high: 18.04,
       lowMeasuredAt: later.measuredAt,
       highMeasuredAt: earlier.measuredAt,
     });
 
-    const repeatedMeasures = [
-      later,
-      { ...earlier, temperature: later.temperature },
-    ];
+    const repeatedMeasures = [later, { ...earlier, temperature: later.temperature }];
 
-    expect(
-      getRangeExtrema({ measures: repeatedMeasures, metric: 'temperature' }),
-    ).toEqual({
+    expect(getRangeExtrema({ measures: repeatedMeasures, metric: 'temperature' })).toEqual({
       low: 18.01,
       high: 18.01,
       lowMeasuredAt: earlier.measuredAt,
@@ -157,7 +125,7 @@ describe('weather dashboard utilities', () => {
     });
   });
 
-  it('constrains signal percentages', () => {
+  it('given weak medium and strong signals when calculating percentages then returns zero fifty and one hundred', () => {
     expect(getSignalPercentage(-125)).toBe(0);
     expect(getSignalPercentage(-75)).toBe(50);
     expect(getSignalPercentage(-10)).toBe(100);

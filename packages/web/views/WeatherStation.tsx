@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { CurrentReadings } from '#components/weather-station/CurrentReadings.tsx';
 import { MeasurementHistory } from '#components/weather-station/MeasurementHistory.tsx';
 import { WeatherStationHeader } from '#components/weather-station/WeatherStationHeader.tsx';
@@ -26,9 +27,8 @@ const getSavedTemperatureUnit = (): TemperatureUnit => {
 };
 
 export const WeatherStation = () => {
-  const [temperatureUnit, setTemperatureUnit] = React.useState<TemperatureUnit>(
-    getSavedTemperatureUnit,
-  );
+  const [temperatureUnit, setTemperatureUnit] =
+    React.useState<TemperatureUnit>(getSavedTemperatureUnit);
 
   const {
     currentMeasures,

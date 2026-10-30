@@ -7,11 +7,7 @@ type AccordionProps = {
   title: React.ReactNode;
 };
 
-export const Accordion = ({
-  children,
-  defaultOpen = false,
-  title,
-}: AccordionProps) => {
+export const Accordion = ({ children, defaultOpen = false, title }: AccordionProps) => {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
   const contentId = React.useId();
 

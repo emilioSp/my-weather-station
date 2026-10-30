@@ -1,12 +1,11 @@
 // Verify metric extreme dates using controlled history rows and the approved viewport sizes.
 import { readFileSync } from 'node:fs';
+
 import { expect, type Page, test } from '@playwright/test';
 import { loadEnv } from 'vite';
+
 import { saveCoverage } from '#e2e/utils/save-coverage.ts';
-import {
-  chartMetricDetails,
-  type WeatherMetric,
-} from '#weather-dashboard.util.ts';
+import { chartMetricDetails, type WeatherMetric } from '#weather-dashboard.util.ts';
 
 type MeasureRow = {
   id: string;
@@ -27,18 +26,16 @@ type Fixture = {
 };
 
 // JUSTIFICATION: Development devices have string deviceName fields, as required by environment.ts.
-const devices = JSON.parse(
-  loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
-) as { deviceName: string }[];
+const devices = JSON.parse(loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]') as {
+  deviceName: string;
+}[];
 
 const primaryDevice = devices[0].deviceName;
 
 const secondaryDevice = devices[1].deviceName;
 
 const readFixture = (name: string): Fixture =>
-  JSON.parse(
-    readFileSync(`tests/fixtures/metric-extreme-dates/${name}.json`, 'utf8'),
-  );
+  JSON.parse(readFileSync(`tests/fixtures/metric-extreme-dates/${name}.json`, 'utf8'));
 
 type MockDashboardInput = {
   page: Page;
@@ -51,17 +48,13 @@ const mockDashboard = async ({ page, fixture }: MockDashboardInput) => {
       .get('device_name')
       ?.replace(/^eq\./, '');
 
-    const deviceIndex = devices.findIndex(
-      ({ deviceName }) => deviceName === requestedName,
-    );
+    const deviceIndex = devices.findIndex(({ deviceName }) => deviceName === requestedName);
 
     const row = fixture.latest[deviceIndex];
 
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify(
-        row === undefined ? [] : [{ ...row, device_name: requestedName }],
-      ),
+      body: JSON.stringify(row === undefined ? [] : [{ ...row, device_name: requestedName }]),
     });
   });
   await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
@@ -108,7 +101,7 @@ for (const viewport of [
   { width: 768, height: 1024 },
   { width: 390, height: 844 },
 ]) {
-  test(`AC1 AC9: dates are visible, unclipped, and 13px at ${viewport.width} × ${viewport.height}`, async ({
+  test(`given dated extrema at ${viewport.width} × ${viewport.height} when viewing history then shows unclipped 13px dates`, async ({
     page,
   }, testInfo) => {
     await page.coverage.startJSCoverage();
@@ -128,17 +121,14 @@ for (const viewport of [
       );
 
       for (const date of await dates.all()) {
-        await date.evaluate((element) =>
-          element.scrollIntoView({ block: 'center' }),
-        );
+        await date.evaluate((element) => element.scrollIntoView({ block: 'center' }));
         await expect(date).toBeVisible();
         await expect(date).toHaveCSS('font-size', '13px');
         expect(
           await date.evaluate((element) => {
             const box = element.getBoundingClientRect();
 
-            const valueBox =
-              element.previousElementSibling?.getBoundingClientRect();
+            const valueBox = element.previousElementSibling?.getBoundingClientRect();
 
             const ancestors = [];
 
@@ -183,9 +173,7 @@ for (const viewport of [
 
     expect(
       await page.evaluate(
-        () =>
-          document.documentElement.scrollWidth <=
-          document.documentElement.clientWidth,
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
       ),
     ).toBe(true);
     await page.getByLabel('Measurement history').screenshot({
@@ -202,7 +190,7 @@ for (const scenario of [
   { fixture: 'winter-midnight', date: '07 Jan · 00:35' },
   { fixture: 'summer-midnight', date: '07 Jul · 01:35' },
 ]) {
-  test(`AC2: ${scenario.fixture} uses Rome time without seconds or year`, async ({
+  test(`given ${scenario.fixture} readings when viewing extreme dates then shows Rome time without seconds or year`, async ({
     page,
   }) => {
     await mockDashboard({ page, fixture: readFixture(scenario.fixture) });
@@ -216,7 +204,7 @@ for (const scenario of [
   });
 }
 
-test('AC3: each sensor and metric uses its own extreme row, including a single measurement', async ({
+test('given two sensors including a single reading when viewing extrema then shows dates for each sensor and metric', async ({
   page,
 }) => {
   await mockDashboard({
@@ -224,9 +212,7 @@ test('AC3: each sensor and metric uses its own extreme row, including a single m
     fixture: readFixture('two-sensors-and-single-measurement'),
   });
   await page.goto('/');
-  await page
-    .getByRole('button', { name: secondaryDevice, exact: true })
-    .click();
+  await page.getByRole('button', { name: secondaryDevice, exact: true }).click();
 
   for (const metric of metrics) {
     await expect(
@@ -242,7 +228,7 @@ test('AC3: each sensor and metric uses its own extreme row, including a single m
   }
 });
 
-test('AC4: unordered repeated extremes use the earliest available row for every metric', async ({
+test('given unordered tied extrema when viewing history then shows the earliest dates for every metric', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('unordered-ties') });
@@ -255,7 +241,7 @@ test('AC4: unordered repeated extremes use the earliest available row for every 
   }
 });
 
-test('AC5: changing from Last day to Last 6 hours replaces the older minimum date', async ({
+test('given an older daily minimum when zooming to six hours then replaces its date and value', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('range-change') });
@@ -277,7 +263,7 @@ test('AC5: changing from Last day to Last 6 hours replaces the older minimum dat
   await expect(summary.getByTestId('low-value')).toHaveText('18.0°C');
 });
 
-test('AC6: refreshing changed latest readings and history replaces the high date', async ({
+test('given newer readings and history when refreshing then updates the maximum date and value', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('before-refresh') });
@@ -298,7 +284,7 @@ test('AC6: refreshing changed latest readings and history replaces the high date
   await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
 });
 
-test('AC7: switching to Fahrenheit changes values but preserves all six dates', async ({
+test('given Celsius extrema when selecting Fahrenheit then converts temperatures and preserves all six dates', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('unit-change') });
@@ -328,17 +314,14 @@ test('AC7: switching to Fahrenheit changes values but preserves all six dates', 
 
   for (const metric of metrics) {
     const summary = getSummary({ page, deviceName: primaryDevice, metric });
-    await expect(summary.locator('time')).toHaveText([
-      '06 Oct · 08:00',
-      '06 Oct · 12:00',
-    ]);
+    await expect(summary.locator('time')).toHaveText(['06 Oct · 08:00', '06 Oct · 12:00']);
     await expect(summary.getByTestId('low-value')).toHaveText(
       { temperature: '64.4°F', dewPoint: '46.4°F', humidity: '40%' }[metric],
     );
   }
 });
 
-test('AC8: empty history keeps all three empty charts and placeholders without dates', async ({
+test('given empty history when zooming in then shows three empty charts and placeholders without dates', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('empty-history') });

@@ -1,5 +1,7 @@
 import { setTimeout } from 'node:timers/promises';
+
 import type { Measure } from '@wx/shared';
+
 import { closeDatabaseConnection } from './db/db.ts';
 import { environment } from './environment.ts';
 import NoCompleteReadingError from './errors/NoCompleteReadingError.ts';
@@ -16,9 +18,7 @@ const run = async (): Promise<void> => {
   const measures: Measure[] = [];
 
   console.log(
-    Temporal.Now.instant()
-      .toZonedDateTimeISO('Europe/Rome')
-      .toString({ smallestUnit: 'seconds' }),
+    Temporal.Now.instant().toZonedDateTimeISO('Europe/Rome').toString({ smallestUnit: 'seconds' }),
   );
 
   for (const meter of environment.DEVICES) {

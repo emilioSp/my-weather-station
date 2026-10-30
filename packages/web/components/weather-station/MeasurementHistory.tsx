@@ -1,4 +1,5 @@
 import type { Measure } from '@wx/shared';
+
 import { MeterAccordion } from '#components/weather-station/MeterAccordion.tsx';
 import { RangeControls } from '#components/weather-station/RangeControls.tsx';
 import { getMeterTheme } from '#components/weather-station/WeatherCard.tsx';
@@ -29,10 +30,7 @@ export const MeasurementHistory = ({
     device,
     index,
   }))
-    .filter(
-      ({ device }) =>
-        isLoading || Object.hasOwn(measuresByDeviceName, device.deviceName),
-    )
+    .filter(({ device }) => isLoading || Object.hasOwn(measuresByDeviceName, device.deviceName))
     .map(({ device, index }) => ({
       device,
       icon: deviceIconMap[device.icon],
@@ -51,21 +49,19 @@ export const MeasurementHistory = ({
       {error !== null ? (
         <HistoryError message={error} />
       ) : (
-        historyDevices.map(
-          ({ device, icon, meterTheme, measures }, historyIndex) => (
-            <MeterAccordion
-              key={device.deviceName}
-              defaultOpen={historyIndex === 0}
-              icon={icon}
-              isLoading={isLoading}
-              measures={measures}
-              meterTheme={meterTheme}
-              range={range}
-              sensor={device.deviceName}
-              temperatureUnit={temperatureUnit}
-            />
-          ),
-        )
+        historyDevices.map(({ device, icon, meterTheme, measures }, historyIndex) => (
+          <MeterAccordion
+            key={device.deviceName}
+            defaultOpen={historyIndex === 0}
+            icon={icon}
+            isLoading={isLoading}
+            measures={measures}
+            meterTheme={meterTheme}
+            range={range}
+            sensor={device.deviceName}
+            temperatureUnit={temperatureUnit}
+          />
+        ))
       )}
     </section>
   );

@@ -1,5 +1,6 @@
 import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
+
 import { Accordion } from '#components/primitives/Accordion.tsx';
 import { LinearChart } from '#components/weather-station/LinearChart.tsx';
 import type { MeterTheme } from '#components/weather-station/WeatherCard.tsx';
@@ -49,9 +50,7 @@ export const MeterAccordion = ({
   >
     <div className="grid gap-4 px-3 pb-3 sm:px-[23px] sm:pb-[23px]">
       {isLoading
-        ? chartMetrics.map((metric) => (
-            <ChartLoadingPlaceholder key={`${sensor}-${metric}`} />
-          ))
+        ? chartMetrics.map((metric) => <ChartLoadingPlaceholder key={`${sensor}-${metric}`} />)
         : chartMetrics.map((metric) => (
             <LinearChart
               key={`${sensor}-${metric}`}

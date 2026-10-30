@@ -1,11 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { type Measure, toCamelCaseKeys } from '@wx/shared';
+
 import { environment } from '#environment.ts';
 
-const supabase = createClient(
-  environment.SUPABASE_URL,
-  environment.SUPABASE_PUBLISHABLE_KEY,
-);
+const supabase = createClient(environment.SUPABASE_URL, environment.SUPABASE_PUBLISHABLE_KEY);
 
 export type MeasureQueryResult = {
   rows: Measure[];
@@ -57,9 +55,7 @@ export const getLatestMeasure = async ({
 
 export const getLatestMeasures = async (): Promise<MeasureQueryResult> => {
   const results = await Promise.all(
-    environment.DEVICES.map(({ deviceName }) =>
-      getLatestMeasure({ deviceName }),
-    ),
+    environment.DEVICES.map(({ deviceName }) => getLatestMeasure({ deviceName })),
   );
 
   return {

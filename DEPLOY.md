@@ -30,8 +30,7 @@ Build the ARM64 image and push it:
 npm run docker-build-and-push -w @wx/collector
 ```
 
-The build context is the repository root, not `packages/collector`, because the lockfile and
-`packages/shared` live there. The script passes `../..` for that reason.
+The build context is the repository root, not `packages/collector`, because the lockfile and `packages/shared` live there. The script passes `../..` for that reason.
 
 Check the published image:
 
@@ -136,7 +135,8 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=replace-this-password
 ```
 
-Replace the Bluetooth addresses and database password. Use the `address` value from `packages/collector/ble-raw.ts`. Keep the colons in each address. On macOS, use `deviceId` instead of `address`. Protect the file:
+Replace the Bluetooth addresses and database password. Use the `address` value from `packages/collector/ble-raw.ts`. Keep the colons in each address. On macOS, use
+`deviceId` instead of `address`. Protect the file:
 
 ```sh
 chmod 600 .env
@@ -152,7 +152,8 @@ docker pull espatola/my-weather-station:latest
 docker logout
 ```
 
-Use a Docker Hub access token when Docker asks for a password. `docker logout` removes the Docker Hub credential from the Raspberry Pi. The downloaded image stays available for container starts and restarts.
+Use a Docker Hub access token when Docker asks for a password. `docker logout` removes the Docker Hub credential from the Raspberry Pi. The downloaded image stays
+available for container starts and restarts.
 
 ## Run the collector
 
@@ -196,4 +197,3 @@ vcgencmd measure_temp
 ```
 
 A temperature below `80°C` is safe.
-

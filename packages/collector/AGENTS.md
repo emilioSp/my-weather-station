@@ -16,7 +16,8 @@ This workspace owns:
 
 ## Architecture
 
-`index.ts` is the startup and presentation layer. It reads validated configuration, creates each meter strategy, calls `read()`, and prints stored measures. Do not put meter protocol or BLE logic in `index.ts`.
+`index.ts` is the startup and presentation layer. It reads validated configuration, creates each meter strategy, calls `read()`, and prints stored measures. Do not put
+meter protocol or BLE logic in `index.ts`.
 
 ```text
 index.ts

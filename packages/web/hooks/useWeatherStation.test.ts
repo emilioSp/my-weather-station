@@ -12,8 +12,8 @@ const configuredDevices = vi.hoisted(() => [
 ]);
 
 const weatherApi = vi.hoisted(() => ({
-  getLatestMeasure: vi.fn(),
-  getChartHistory: vi.fn(),
+  getLatestMeasure: vi.fn<typeof import('#supabase.api.ts').getLatestMeasure>(),
+  getChartHistory: vi.fn<typeof import('#supabase.api.ts').getChartHistory>(),
 }));
 
 vi.mock('#environment.ts', () => ({
@@ -32,7 +32,7 @@ vi.mock('react', async (importOriginal) => {
     useState: <T>(value: T) =>
       [
         state.values.length > 0 ? state.values.shift() : value,
-        vi.fn(),
+        vi.fn<React.Dispatch<React.SetStateAction<T>>>(),
       ] as const,
   };
 });
@@ -79,10 +79,7 @@ const measuresByDeviceName: Record<string, Measure> = Object.fromEntries(
 );
 
 const historyByDeviceName: Record<string, Measure[]> = Object.fromEntries(
-  configuredDevices.map(({ deviceName }) => [
-    deviceName,
-    [measuresByDeviceName[deviceName]],
-  ]),
+  configuredDevices.map(({ deviceName }) => [deviceName, [measuresByDeviceName[deviceName]]]),
 );
 
 const emptyCurrentMeasures = Object.fromEntries(
@@ -96,7 +93,7 @@ afterEach(() => {
 });
 
 describe('useWeatherStation', () => {
-  it('loads current measures when initial state is empty', async () => {
+  it('given empty initial state when loading the station then requests current measures for every configured device', async () => {
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
     state.values = [null, null, 'LAST_DAY', false];
 
@@ -104,22 +101,15 @@ describe('useWeatherStation', () => {
     await Promise.resolve();
 
     expect(result.currentMeasures).toBeNull();
-    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(
-      configuredDevices.length,
+    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length);
+    expect(weatherApi.getLatestMeasure.mock.calls.map(([input]) => input.deviceName)).toEqual(
+      deviceNames,
     );
-    expect(
-      weatherApi.getLatestMeasure.mock.calls.map(([input]) => input.deviceName),
-    ).toEqual(deviceNames);
   });
 
-  it('sets empty history when current measures have no readings', async () => {
+  it('given current measures without readings when loading the station then does not request chart history', async () => {
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
-    state.values = [
-      { byDeviceName: emptyCurrentMeasures, error: null },
-      null,
-      'LAST_DAY',
-      false,
-    ];
+    state.values = [{ byDeviceName: emptyCurrentMeasures, error: null }, null, 'LAST_DAY', false];
 
     const result = useWeatherStation();
     await Promise.resolve();
@@ -128,7 +118,7 @@ describe('useWeatherStation', () => {
     expect(weatherApi.getChartHistory).not.toHaveBeenCalled();
   });
 
-  it('loads name-keyed history and refreshes a complete current state', async () => {
+  it('given a complete current state when loading and refreshing then preserves name-keyed readings and fetches history once', async () => {
     vi.useFakeTimers();
     weatherApi.getLatestMeasure.mockImplementation(
       async ({ deviceName }: { deviceName: string }) => ({
@@ -164,9 +154,7 @@ describe('useWeatherStation', () => {
       error: null,
     });
     expect(weatherApi.getChartHistory).toHaveBeenCalledOnce();
-    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(
-      configuredDevices.length * 2,
-    );
+    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length * 2);
     result.changeRange(1);
     result.changeRange(99);
   });

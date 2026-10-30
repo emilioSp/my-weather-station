@@ -1,3 +1,5 @@
+// Verify advertisement matching, scan timeouts, and startup failures during collector checks.
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const noble = await vi.hoisted(async () => {
@@ -5,9 +7,10 @@ const noble = await vi.hoisted(async () => {
   const emitter = new EventEmitter();
 
   return Object.assign(emitter, {
-    waitForPoweredOnAsync: vi.fn(),
-    startScanningAsync: vi.fn(),
-    stopScanningAsync: vi.fn(),
+    waitForPoweredOnAsync:
+      vi.fn<typeof import('@stoprocent/noble').default.waitForPoweredOnAsync>(),
+    startScanningAsync: vi.fn<typeof import('@stoprocent/noble').default.startScanningAsync>(),
+    stopScanningAsync: vi.fn<typeof import('@stoprocent/noble').default.stopScanningAsync>(),
   });
 });
 
@@ -46,7 +49,7 @@ beforeEach(() => {
 });
 
 describe('getAdvertisement', () => {
-  it('returns a matching device advertisement and stops scanning', async () => {
+  it('given matching and unrelated peripherals when scanning then returns the matching advertisement and stops scanning', async () => {
     noble.startScanningAsync.mockImplementation(async () => {
       queueMicrotask(() => {
         noble.emit('discover', nonMatchingPeripheral);
@@ -62,12 +65,12 @@ describe('getAdvertisement', () => {
     expect(noble.stopScanningAsync).toHaveBeenCalledOnce();
   });
 
-  it('returns null when no device matches before timeout', async () => {
+  it('given no matching peripheral when scanning times out then returns null and stops scanning', async () => {
     await expect(getAdvertisement(meter)).resolves.toBeNull();
     expect(noble.stopScanningAsync).toHaveBeenCalledOnce();
   });
 
-  it('propagates scan startup failures', async () => {
+  it('given a scan startup failure when requesting an advertisement then rejects without stopping scanning', async () => {
     noble.startScanningAsync.mockRejectedValue(new Error('scan failed'));
     await expect(getAdvertisement(meter)).rejects.toThrow('scan failed');
     expect(noble.stopScanningAsync).not.toHaveBeenCalled();

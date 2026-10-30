@@ -1,8 +1,5 @@
-import {
-  type Measure,
-  type WeatherReading,
-  weatherReadingSchema,
-} from '@wx/shared';
+import { type Measure, type WeatherReading, weatherReadingSchema } from '@wx/shared';
+
 import { getAdvertisement } from '#api/sensor.api.ts';
 import { storeMeasure } from '#db/measure.repository.ts';
 import { environment } from '#environment.ts';
@@ -13,6 +10,7 @@ import {
   type MeterInterface,
   meterSchema,
 } from '#types.ts';
+
 import { calculateDewPoint } from './utils/calculateDewPoint.util.ts';
 import { calculateHeatIndex } from './utils/calculateHeatIndex.util.ts';
 import { formatMeasure } from './utils/formatMeasure.util.ts';
@@ -42,11 +40,7 @@ export abstract class Meter implements MeterInterface {
   public async read(): Promise<Measure> {
     const reading: Partial<WeatherReading> = {};
 
-    for (
-      let scanAttempt = 0;
-      scanAttempt < environment.SCAN_RETRIES;
-      scanAttempt += 1
-    ) {
+    for (let scanAttempt = 0; scanAttempt < environment.SCAN_RETRIES; scanAttempt += 1) {
       console.log(
         `Device type: ${this.meter.type}, device ID: ${this.meter.deviceId}, device name: ${this.meter.deviceName}, address: ${this.meter.address}, scan attempt ${scanAttempt + 1}`,
       );
@@ -79,14 +73,9 @@ export abstract class Meter implements MeterInterface {
     );
   }
 
-  protected abstract decodeAdvertisement(
-    advertisement: Advertisement,
-  ): DecodedAdvertisement;
+  protected abstract decodeAdvertisement(advertisement: Advertisement): DecodedAdvertisement;
 
-  protected updateReading({
-    advertisement,
-    reading,
-  }: UpdateReadingInput): WeatherReading | null {
+  protected updateReading({ advertisement, reading }: UpdateReadingInput): WeatherReading | null {
     const decodedAdvertisement = this.decodeAdvertisement(advertisement);
 
     reading.temperature ??= decodedAdvertisement.temperature;

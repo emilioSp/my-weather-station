@@ -4,10 +4,7 @@ export const TEMPERATURE_UNITS = {
   FAHRENHEIT: 'fahrenheit',
 } as const;
 
-export const temperatureUnits = [
-  TEMPERATURE_UNITS.CELSIUS,
-  TEMPERATURE_UNITS.FAHRENHEIT,
-] as const;
+export const temperatureUnits = [TEMPERATURE_UNITS.CELSIUS, TEMPERATURE_UNITS.FAHRENHEIT] as const;
 
 export type TemperatureUnit = (typeof temperatureUnits)[number];
 
@@ -20,8 +17,7 @@ export const convertTemperature = ({
 }: {
   celsius: number;
   unit: TemperatureUnit;
-}): number =>
-  unit === TEMPERATURE_UNITS.FAHRENHEIT ? celsius * 1.8 + 32 : celsius;
+}): number => (unit === TEMPERATURE_UNITS.FAHRENHEIT ? celsius * 1.8 + 32 : celsius);
 
 export const formatTemperature = ({
   celsius,

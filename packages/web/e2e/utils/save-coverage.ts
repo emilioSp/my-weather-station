@@ -1,14 +1,13 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+
 import type { Page } from '@playwright/test';
 import coverageLib from 'istanbul-lib-coverage';
 import v8ToIstanbul from 'v8-to-istanbul';
 
 const applicationBasePath = '/my-weather-station/';
 
-type JavaScriptCoverage = Awaited<
-  ReturnType<Page['coverage']['stopJSCoverage']>
->;
+type JavaScriptCoverage = Awaited<ReturnType<Page['coverage']['stopJSCoverage']>>;
 
 type SaveCoverageInput = {
   jsCoverage: JavaScriptCoverage;
@@ -33,10 +32,7 @@ const getScriptPath = (url: string): string => {
   return resolve(process.cwd(), pathname.slice(applicationBasePath.length));
 };
 
-export const saveCoverage = async ({
-  jsCoverage,
-  name,
-}: SaveCoverageInput): Promise<void> => {
+export const saveCoverage = async ({ jsCoverage, name }: SaveCoverageInput): Promise<void> => {
   const coverageMap = coverageLib.createCoverageMap({});
 
   for (const entry of jsCoverage) {
@@ -55,8 +51,5 @@ export const saveCoverage = async ({
 
   const outputDirectory = join(process.cwd(), 'coverage', 'playwright');
   await mkdir(outputDirectory, { recursive: true });
-  await writeFile(
-    join(outputDirectory, `${name}.json`),
-    JSON.stringify(coverageMap.toJSON()),
-  );
+  await writeFile(join(outputDirectory, `${name}.json`), JSON.stringify(coverageMap.toJSON()));
 };

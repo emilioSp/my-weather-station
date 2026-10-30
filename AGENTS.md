@@ -12,8 +12,8 @@ This repository is an npm workspaces monorepo:
 2. `packages/web` (`@wx/web`) is the React and Vite web app. See [web AGENTS.md](./packages/web/AGENTS.md).
 3. `packages/shared` (`@wx/shared`) contains code used by both apps.
 
-The root `package.json` contains workspace globs, root scripts, development tools, and the install-script policy.
-Add runtime dependencies to the workspace that uses them. Keep `allowScripts` in the root `package.json`.
+The root `package.json` contains workspace globs, root scripts, development tools, and the install-script policy. Add runtime dependencies to the workspace that uses
+them. Keep `allowScripts` in the root `package.json`.
 
 Run a workspace script with its workspace name:
 
@@ -38,8 +38,8 @@ After task-specific checks, run this additional validation from the repository r
 npm run check
 ```
 
-This command runs lint, TypeScript checks, tests, and coverage across all workspaces, including the web browser tests.
-It does not replace task-specific checks. If it fails, report the failure and do not claim that validation passed.
+This command runs lint, TypeScript checks, tests, and coverage across all workspaces, including the web browser tests. It does not replace task-specific checks. If it
+fails, report the failure and do not claim that validation passed.
 
 ## Agent skills
 

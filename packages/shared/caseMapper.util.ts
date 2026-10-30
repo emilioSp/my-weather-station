@@ -14,8 +14,7 @@ type MapKeysInput = {
   mapKey: (key: string) => string;
 };
 
-const isObject = (value: unknown): value is object =>
-  value !== null && typeof value === 'object';
+const isObject = (value: unknown): value is object => value !== null && typeof value === 'object';
 
 const mapKeys = ({ value, mapKey }: MapKeysInput): unknown => {
   if (Array.isArray(value)) {
@@ -24,10 +23,7 @@ const mapKeys = ({ value, mapKey }: MapKeysInput): unknown => {
 
   if (isObject(value)) {
     return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [
-        mapKey(key),
-        mapKeys({ value: entry, mapKey }),
-      ]),
+      Object.entries(value).map(([key, entry]) => [mapKey(key), mapKeys({ value: entry, mapKey })]),
     );
   }
 
