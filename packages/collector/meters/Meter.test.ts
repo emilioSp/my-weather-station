@@ -56,6 +56,23 @@ describe('meters', () => {
     });
   });
 
+  it('given no advertisement followed by a complete advertisement when reading the meter then retries and stores the complete reading', async () => {
+    sensor.getAdvertisement
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(indoorReading.advertisement);
+
+    const measure = await new IndoorMeter(indoorReading.meter).read();
+
+    expect(sensor.getAdvertisement).toHaveBeenCalledTimes(2);
+    expect(measure).toMatchObject({
+      deviceName: 'indoor meter',
+      temperature: 20.5,
+      humidity: 60,
+      battery: 80,
+    });
+    expect(await database.getClient()('measures').select('id')).toEqual([{ id: measure.id }]);
+  });
+
   it('given separate outdoor advertisements when reading the meter then combines temperature humidity and battery values', async () => {
     sensor.getAdvertisement
       .mockResolvedValueOnce(outdoorReading.advertisements[0])

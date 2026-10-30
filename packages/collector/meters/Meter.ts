@@ -48,24 +48,24 @@ export abstract class Meter implements MeterInterface {
 
       const advertisement = await getAdvertisement(this.meter);
 
-      if (advertisement) {
-        const completeReading = this.updateReading({
-          advertisement,
-          reading,
-        });
+      if (!advertisement) continue;
 
-        if (completeReading) {
-          const measure = await storeMeasure({
-            type: this.meter.type,
-            deviceName: this.meter.deviceName,
-            deviceId: advertisement.deviceId,
-            address: advertisement.address,
-            ...completeReading,
-          });
+      const completeReading = this.updateReading({
+        advertisement,
+        reading,
+      });
 
-          return formatMeasure(measure);
-        }
-      }
+      if (!completeReading) continue;
+
+      const measure = await storeMeasure({
+        type: this.meter.type,
+        deviceName: this.meter.deviceName,
+        deviceId: advertisement.deviceId,
+        address: advertisement.address,
+        ...completeReading,
+      });
+
+      return formatMeasure(measure);
     }
 
     throw new NoCompleteReadingError(

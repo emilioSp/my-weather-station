@@ -35,14 +35,11 @@ type GetYAxisDomainInput = {
 };
 
 const getYAxisDomain = ({ metric, extrema }: GetYAxisDomainInput): [number, number] => {
-  const valuePadding = metric === WEATHER_METRICS.HUMIDITY ? 5 : 1;
+  if (metric === WEATHER_METRICS.HUMIDITY) {
+    return [Math.floor(extrema.low / 5) * 5 - 5, Math.ceil(extrema.high / 5) * 5 + 5];
+  }
 
-  return metric === WEATHER_METRICS.HUMIDITY
-    ? [
-        Math.floor(extrema.low / 5) * 5 - valuePadding,
-        Math.ceil(extrema.high / 5) * 5 + valuePadding,
-      ]
-    : [Math.floor(extrema.low - valuePadding), Math.ceil(extrema.high + valuePadding)];
+  return [Math.floor(extrema.low - 1), Math.ceil(extrema.high + 1)];
 };
 
 type LinearChartProps = {
