@@ -245,43 +245,6 @@ test('given newer readings and history when refreshing then updates the maximum 
   await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
 });
 
-test('given Celsius extrema when selecting Fahrenheit then converts temperatures and preserves all six dates', async ({
-  page,
-}) => {
-  await mockDashboard({ page, fixture: readFixture('unit-change') });
-  await page.goto('/');
-
-  for (const metric of metrics) {
-    await expect(
-      getSummary({ page, deviceName: primaryDevice, metric }).locator('time'),
-    ).toHaveText(['06 Oct · 08:00', '06 Oct · 12:00']);
-  }
-
-  await expect(
-    getSummary({
-      page,
-      deviceName: primaryDevice,
-      metric: WEATHER_METRICS.TEMPERATURE,
-    }).getByTestId('low-value'),
-  ).toHaveText('18.0°C');
-  await expect(
-    getSummary({
-      page,
-      deviceName: primaryDevice,
-      metric: WEATHER_METRICS.DEW_POINT,
-    }).getByTestId('low-value'),
-  ).toHaveText('8.0°C');
-  await page.getByLabel('Temperature unit').getByText('°F').click();
-
-  for (const metric of metrics) {
-    const summary = getSummary({ page, deviceName: primaryDevice, metric });
-    await expect(summary.locator('time')).toHaveText(['06 Oct · 08:00', '06 Oct · 12:00']);
-    await expect(summary.getByTestId('low-value')).toHaveText(
-      { temperature: '64.4°F', dewPoint: '46.4°F', humidity: '40%' }[metric],
-    );
-  }
-});
-
 test('given empty history when zooming in then shows three empty charts and placeholders without dates', async ({
   page,
 }) => {

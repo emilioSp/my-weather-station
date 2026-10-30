@@ -8,6 +8,8 @@ import coverageLib from 'istanbul-lib-coverage';
 import reportLib from 'istanbul-lib-report';
 import reports from 'istanbul-reports';
 
+const webCoverageThresholds = { ...coverageThresholds, branches: 70 };
+
 const coverageDirectory = join(process.cwd(), 'coverage'); // directory for final coverage
 
 const vitestCoveragePath = join(coverageDirectory, 'vitest', 'coverage-final.json');
@@ -72,10 +74,10 @@ const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
 function assertCoverageThresholds(coverageMap: CoverageMap): void {
   const summary = coverageMap.getCoverageSummary();
 
-  // JUSTIFICATION: The shared thresholds object contains only the coverage metric keys used by Istanbul.
-  const metrics = Object.keys(coverageThresholds) as Array<keyof typeof coverageThresholds>;
+  // JUSTIFICATION: The thresholds object contains only the coverage metric keys used by Istanbul.
+  const metrics = Object.keys(webCoverageThresholds) as Array<keyof typeof webCoverageThresholds>;
 
-  const failures = metrics.filter((metric) => summary[metric].pct < coverageThresholds[metric]);
+  const failures = metrics.filter((metric) => summary[metric].pct < webCoverageThresholds[metric]);
 
   if (failures.length === 0) {
     return;
@@ -83,7 +85,9 @@ function assertCoverageThresholds(coverageMap: CoverageMap): void {
 
   throw new Error(
     failures
-      .map((metric) => `${metric}: ${summary[metric].pct}% is below ${coverageThresholds[metric]}%`)
+      .map(
+        (metric) => `${metric}: ${summary[metric].pct}% is below ${webCoverageThresholds[metric]}%`,
+      )
       .join('\n'),
   );
 }

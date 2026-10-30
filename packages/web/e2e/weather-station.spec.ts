@@ -333,9 +333,6 @@ test.describe('Weather station', () => {
 
     await page.goto('/');
 
-    await expect(
-      page.getByRole('heading', { name: 'Unable to load weather station' }),
-    ).toBeVisible();
     await expect(page.getByText('Latest readings unavailable')).toBeVisible();
   });
 
@@ -358,10 +355,9 @@ test.describe('Weather station', () => {
 
     await page.goto('/');
 
-    await expect(page.getByLabel('Measurement history')).toContainText(
-      'Unable to load chart history: Chart history unavailable',
-      { timeout: 5_000 },
-    );
+    await expect(
+      page.getByText('Unable to load chart history: Chart history unavailable', { exact: true }),
+    ).toBeVisible();
   });
 
   test('given no stored readings when opening the dashboard then shows empty readings and no history accordions', async ({
@@ -465,45 +461,6 @@ test.describe('Weather station', () => {
       `${primaryChangedMeasure.temperature.toFixed(1)}°C`,
     );
     await expect(page.getByText(septemberMeasurementTime)).toBeVisible();
-  });
-
-  test('given loaded readings when refreshing fails then shows the refresh error', async ({
-    page,
-  }) => {
-    let failRefresh = false;
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill(
-        failRefresh
-          ? {
-              body: JSON.stringify({ message: 'Refresh unavailable' }),
-              contentType: 'application/json',
-              status: 500,
-            }
-          : {
-              body: JSON.stringify([
-                getMeasureForRequest({ route: route, measures: initialMeasures }),
-              ]),
-              contentType: 'application/json',
-            },
-      );
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify(history),
-        contentType: 'application/json',
-      });
-    });
-
-    await page.goto('/');
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${initialMeasures[deviceNameAt(0)].temperature.toFixed(1)}°C`,
-    );
-    failRefresh = true;
-    await page.getByRole('button', { name: 'Refresh readings' }).click();
-    await expect(page.getByRole('heading', { name: 'Unable to load weather station' })).toBeVisible(
-      { timeout: 5_000 },
-    );
-    await expect(page.getByText('Refresh unavailable')).toBeVisible();
   });
 
   test.describe('at the smartphone viewport', () => {

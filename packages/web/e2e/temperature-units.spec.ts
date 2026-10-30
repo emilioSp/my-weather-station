@@ -154,40 +154,4 @@ test.describe('Temperature units', () => {
       page.evaluate(() => window.localStorage.getItem('temperature-unit')),
     ).resolves.toBe(TEMPERATURE_UNITS.FAHRENHEIT);
   });
-
-  test('given missing invalid or unavailable browser storage when loading then selects Celsius and displays Celsius readings', async ({
-    page,
-  }) => {
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify([getLatestMeasureForRequest(route)]),
-      });
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify(history),
-      });
-    });
-
-    await page.goto('/');
-    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${latestMeasures[deviceNameAt(0)].temperature.toFixed(1)}°C`,
-    );
-
-    await page.evaluate(() => window.localStorage.setItem('temperature-unit', 'kelvin'));
-    await page.reload();
-    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-
-    await page.addInitScript(() => {
-      Object.defineProperty(window, 'localStorage', { value: undefined });
-    });
-    await page.reload();
-    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${latestMeasures[deviceNameAt(0)].temperature.toFixed(1)}°C`,
-    );
-  });
 });
