@@ -12,8 +12,10 @@ Aligned source with the coding conventions: explicit shared utility subpaths, on
 shapes, assertion helpers, and scenario fixtures. Removed redundant tests and branch-built heat-index state. Database schemas and stored measurement shapes are unchanged.
 
 TypeScript API compatibility: import shared functions from `@wx/shared/utils/<module>.ts`; the package root exposes schemas, types, and domain constants. Use the database
-singleton's `getClient()` and `close()` methods and the default Supabase singleton's query methods. History query inputs are now `Temporal.Instant` values. The web app
-requires a browser with native Temporal support.
+singleton's `getClient()` and `close()` methods and the default Supabase singleton's query methods. Web history query inputs use `Date` values.
+
+Replaced Temporal in the web app with native `Date` and `Intl` after Safari failed without Temporal support. Rome date formats and elapsed history ranges are unchanged;
+the collector still uses Temporal. No polyfill or dependency was added. See [ADR-004](ADR.md#adr-004-use-date-and-intl-in-the-web-app-for-safari-compatibility).
 
 Initialized the mission, tech stack, roadmap, changelog, and architecture decision records through an owner interview.
 

@@ -67,7 +67,7 @@ export const LinearChart = ({
     () =>
       measures.map((measure) => ({
         ...measure,
-        timestamp: Temporal.Instant.from(measure.measuredAt).epochMilliseconds,
+        timestamp: Date.parse(measure.measuredAt),
       })),
     [measures],
   );
@@ -237,7 +237,7 @@ const Extrema = ({ label, metric, value, measuredAt, temperatureUnit }: ExtremaP
         className="font-mono text-[13px] whitespace-nowrap text-[#9bad9e]"
         dateTime={measuredAt}
       >
-        {formatChartTime(Temporal.Instant.from(measuredAt).epochMilliseconds).join(' · ')}
+        {formatChartTime(Date.parse(measuredAt)).join(' · ')}
       </time>
     )}
   </div>
@@ -285,7 +285,7 @@ type ChartReadoutProps = {
 const ChartReadout = ({ metric, measure, temperatureUnit }: ChartReadoutProps) => (
   <>
     <div className="mb-2 font-mono text-xs text-[#9bad9e]">
-      {formatMeasuredAt(Temporal.Instant.fromEpochMilliseconds(measure.timestamp).toString())}
+      {formatMeasuredAt(measure.measuredAt)}
     </div>
     <TooltipRow
       label={chartMetricDetails[metric].label}

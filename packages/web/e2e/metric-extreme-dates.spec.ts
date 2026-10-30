@@ -1,10 +1,10 @@
 // Verify metric extreme dates using controlled history rows and the approved viewport sizes.
 import { readFileSync } from 'node:fs';
 
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { loadEnv } from 'vite';
 
-import { saveCoverage } from '#e2e/utils/save-coverage.ts';
+import { test } from '#e2e/utils/test.ts';
 import { WEATHER_METRICS, chartMetricDetails, type WeatherMetric } from '#utils/weather-metrics.ts';
 
 type MeasureRow = {
@@ -104,7 +104,6 @@ for (const viewport of [
   test(`given dated extrema at ${viewport.width} × ${viewport.height} when viewing history then shows unclipped 13px dates`, async ({
     page,
   }, testInfo) => {
-    await page.coverage.startJSCoverage();
     await page.setViewportSize(viewport);
     await mockDashboard({ page, fixture: readFixture('visible-dates') });
     await page.goto('/');
@@ -178,10 +177,6 @@ for (const viewport of [
     ).toBe(true);
     await page.getByLabel('Measurement history').screenshot({
       path: testInfo.outputPath(`history-${viewport.width}.png`),
-    });
-    await saveCoverage({
-      jsCoverage: await page.coverage.stopJSCoverage(),
-      name: `extreme-dates-viewport-${viewport.width}`,
     });
   });
 }

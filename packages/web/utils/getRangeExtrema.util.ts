@@ -25,13 +25,9 @@ export const getRangeExtrema = ({
 
   const { low, high } = measures.reduce(
     (result, measure) => {
-      const isEarlierThanLow =
-        Temporal.Instant.from(measure.measuredAt).epochMilliseconds <
-        Temporal.Instant.from(result.low.measuredAt).epochMilliseconds;
+      const isEarlierThanLow = Date.parse(measure.measuredAt) < Date.parse(result.low.measuredAt);
 
-      const isEarlierThanHigh =
-        Temporal.Instant.from(measure.measuredAt).epochMilliseconds <
-        Temporal.Instant.from(result.high.measuredAt).epochMilliseconds;
+      const isEarlierThanHigh = Date.parse(measure.measuredAt) < Date.parse(result.high.measuredAt);
 
       return {
         low:

@@ -39,7 +39,7 @@ import { createMeter } from '#meters/meter.factory.ts';
 ## Prerequisites
 
 - Node.js 26 or newer, for native TypeScript support
-- A browser with native Temporal support for the web app
+- A modern browser for the web app
 - A Bluetooth adapter, and Bluetooth permission for the terminal or Node.js
 - Docker or another Docker-compatible container runtime
 
@@ -142,6 +142,18 @@ npm run test:unit        # run Vitest tests in every workspace
 npm run test:e2e         # run Playwright end-to-end tests
 npm run test:coverage    # run tests and coverage in every workspace
 npm run dev              # every workspace that defines dev
+```
+
+Browser tests run in Chromium and WebKit, Safari's browser engine. Coverage is collected from Chromium only. Install the browser binaries before running the tests:
+
+```sh
+npx playwright install chromium webkit
+```
+
+To run only the Safari engine tests:
+
+```sh
+npm run test:e2e -w @wx/web -- --project=webkit
 ```
 
 ## Deployment

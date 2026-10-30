@@ -16,7 +16,5 @@ export const filterMeasuresForRange = ({
 }: FilterMeasuresForRangeInput): Measure[] => {
   const start = end - range.hours * 60 * 60 * 1_000;
 
-  return measures.filter(
-    (measure) => Temporal.Instant.from(measure.measuredAt).epochMilliseconds >= start,
-  );
+  return measures.filter((measure) => Date.parse(measure.measuredAt) >= start);
 };
