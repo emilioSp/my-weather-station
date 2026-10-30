@@ -40,3 +40,9 @@ npm run check
 
 This command runs lint, TypeScript checks, tests, and coverage across all workspaces, including the web browser tests. It does not replace task-specific checks. If it
 fails, report the failure and do not claim that validation passed.
+
+If a change on the UI is needed then, regenerate visual snapshots and then test it with
+
+```sh
+npm run test:visual -w @wx/web
+```

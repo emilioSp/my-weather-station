@@ -1,4 +1,4 @@
-// Verify static icon artwork and manifest metadata without starting a browser.
+// Verify icon artwork, PNG dimensions, and manifest metadata without starting a browser.
 import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
@@ -11,6 +11,22 @@ describe('Site icon assets', () => {
     expect(favicon).toContain('fill="#b9e53b"');
     expect(favicon).toContain('fill="#10191b"');
   });
+
+  it.each([
+    { label: 'Apple touch', file: 'apple-touch-icon.png', size: 180 },
+    { label: 'Android 192px', file: 'android-chrome-192x192.png', size: 192 },
+    { label: 'Android 512px', file: 'android-chrome-512x512.png', size: 512 },
+  ])(
+    'given the $label icon when reading its PNG header then matches the declared dimensions',
+    ({ file, size }) => {
+      const image = readFileSync(new URL(`../public/${file}`, import.meta.url));
+
+      expect(image.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+      expect(image.subarray(12, 16).toString('ascii')).toBe('IHDR');
+      expect(image.readUInt32BE(16)).toBe(size);
+      expect(image.readUInt32BE(20)).toBe(size);
+    },
+  );
 
   it('given the web manifest when reading its metadata then declares the station name and Android icon sizes', () => {
     const manifest = JSON.parse(

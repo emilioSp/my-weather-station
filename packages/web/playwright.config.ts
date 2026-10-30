@@ -4,6 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  updateSnapshots: process.env.CI ? 'none' : 'missing',
   use: {
     baseURL: 'http://127.0.0.1:4173/my-weather-station/',
   },

@@ -1,4 +1,4 @@
-// Verify metric extreme dates using controlled history rows and the approved viewport sizes.
+// Verify dated metric extremes when loading history, changing ranges, and refreshing.
 import { readFileSync } from 'node:fs';
 
 import { expect, type Page } from '@playwright/test';
@@ -95,88 +95,6 @@ const getSummary = ({ page, deviceName, metric }: GetSummaryInput) =>
 
 // JUSTIFICATION: chartMetricDetails is keyed only by WeatherMetric.
 const metrics = Object.keys(chartMetricDetails) as WeatherMetric[];
-
-for (const viewport of [
-  { width: 1280, height: 700 },
-  { width: 768, height: 1024 },
-  { width: 390, height: 844 },
-]) {
-  test(`given dated extrema at ${viewport.width} × ${viewport.height} when viewing history then shows unclipped 13px dates`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(viewport);
-    await mockDashboard({ page, fixture: readFixture('visible-dates') });
-    await page.goto('/');
-    await expect(page.locator('header strong')).toHaveText('06 Oct · 14:35:20');
-    await expect(page.locator('header strong')).toHaveCSS('font-size', '13px');
-
-    for (const metric of metrics) {
-      const summary = getSummary({ page, deviceName: primaryDevice, metric });
-      const dates = summary.locator('time');
-      await expect(dates).toHaveText(
-        metric === WEATHER_METRICS.TEMPERATURE
-          ? ['06 Oct · 08:15', '06 Oct · 14:35']
-          : ['06 Oct · 14:35', '06 Oct · 08:15'],
-      );
-
-      for (const date of await dates.all()) {
-        await date.evaluate((element) => element.scrollIntoView({ block: 'center' }));
-        await expect(date).toBeVisible();
-        await expect(date).toHaveCSS('font-size', '13px');
-        expect(
-          await date.evaluate((element) => {
-            const box = element.getBoundingClientRect();
-
-            const valueBox = element.previousElementSibling?.getBoundingClientRect();
-
-            const ancestors = [];
-
-            for (
-              let parent = element.parentElement;
-              parent !== null;
-              parent = parent.parentElement
-            ) {
-              const style = getComputedStyle(parent);
-
-              if (
-                [style.overflowX, style.overflowY].some((overflow) =>
-                  ['hidden', 'clip', 'auto', 'scroll'].includes(overflow),
-                )
-              ) {
-                ancestors.push(parent.getBoundingClientRect());
-              }
-            }
-
-            return (
-              box.width > 0 &&
-              box.height > 0 &&
-              box.left >= 0 &&
-              box.right <= window.innerWidth &&
-              box.top >= 0 &&
-              box.bottom <= window.innerHeight &&
-              valueBox !== undefined &&
-              box.top >= valueBox.bottom &&
-              element.scrollWidth <= element.clientWidth &&
-              ancestors.every(
-                (parent) =>
-                  box.left >= parent.left &&
-                  box.right <= parent.right &&
-                  box.top >= parent.top &&
-                  box.bottom <= parent.bottom,
-              )
-            );
-          }),
-        ).toBe(true);
-      }
-    }
-
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-      ),
-    ).toBe(true);
-  });
-}
 
 test('given two sensors including a single reading when viewing extrema then shows dates for each sensor and metric', async ({
   page,

@@ -11,8 +11,9 @@
     "build": "tsc && vite build --mode prod",
     "preview": "vite preview",
     "test:unit": "rm -rf coverage && vitest run --config vitest.config.ts",
-    "test:e2e": "playwright test",
-    "test:coverage": "rm -rf coverage && vitest run --coverage --config vitest.config.ts && playwright test && node e2e/utils/merge-coverage.ts"
+    "test:e2e": "playwright test --grep-invert @visual",
+    "test:visual": "bash e2e/run-visual.sh",
+    "test:coverage": "rm -rf coverage && vitest run --coverage --config vitest.config.ts && npm run test:e2e && node e2e/utils/merge-coverage.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.4",
