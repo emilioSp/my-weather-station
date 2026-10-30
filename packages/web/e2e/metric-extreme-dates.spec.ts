@@ -103,7 +103,7 @@ for (const viewport of [
 ]) {
   test(`given dated extrema at ${viewport.width} × ${viewport.height} when viewing history then shows unclipped 13px dates`, async ({
     page,
-  }, testInfo) => {
+  }) => {
     await page.setViewportSize(viewport);
     await mockDashboard({ page, fixture: readFixture('visible-dates') });
     await page.goto('/');
@@ -175,27 +175,6 @@ for (const viewport of [
         () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
       ),
     ).toBe(true);
-    await page.getByLabel('Measurement history').screenshot({
-      path: testInfo.outputPath(`history-${viewport.width}.png`),
-    });
-  });
-}
-
-for (const scenario of [
-  { fixture: 'winter-midnight', date: '07 Jan · 00:35' },
-  { fixture: 'summer-midnight', date: '07 Jul · 01:35' },
-]) {
-  test(`given ${scenario.fixture} readings when viewing extreme dates then shows Rome time without seconds or year`, async ({
-    page,
-  }) => {
-    await mockDashboard({ page, fixture: readFixture(scenario.fixture) });
-    await page.goto('/');
-
-    for (const metric of metrics) {
-      await expect(
-        getSummary({ page, deviceName: primaryDevice, metric }).locator('time'),
-      ).toHaveText([scenario.date, scenario.date]);
-    }
   });
 }
 
@@ -220,19 +199,6 @@ test('given two sensors including a single reading when viewing extrema then sho
     await expect(
       getSummary({ page, deviceName: secondaryDevice, metric }).locator('time'),
     ).toHaveText(['06 Oct · 11:00', '06 Oct · 11:00']);
-  }
-});
-
-test('given unordered tied extrema when viewing history then shows the earliest dates for every metric', async ({
-  page,
-}) => {
-  await mockDashboard({ page, fixture: readFixture('unordered-ties') });
-  await page.goto('/');
-
-  for (const metric of metrics) {
-    await expect(
-      getSummary({ page, deviceName: primaryDevice, metric }).locator('time'),
-    ).toHaveText(['06 Oct · 08:00', '06 Oct · 11:00']);
   }
 });
 

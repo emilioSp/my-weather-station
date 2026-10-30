@@ -1,0 +1,58 @@
+[
+  {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "deviceName": "Sensor A",
+    "deviceType": "outdoor",
+    "deviceId": "test-device",
+    "address": null,
+    "measuredAt": "2026-10-06T10:00:00Z",
+    "temperature": 25,
+    "humidity": 70,
+    "dewPoint": 12,
+    "heatIndex": 25,
+    "battery": 80,
+    "signalPowerDBM": -55
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000009",
+    "deviceName": "Sensor A",
+    "deviceType": "outdoor",
+    "deviceId": "test-device",
+    "address": null,
+    "measuredAt": "2026-10-06T08:00:00Z",
+    "temperature": 18,
+    "humidity": 40,
+    "dewPoint": 8,
+    "heatIndex": 18,
+    "battery": 80,
+    "signalPowerDBM": -55
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000010",
+    "deviceName": "Sensor A",
+    "deviceType": "outdoor",
+    "deviceId": "test-device",
+    "address": null,
+    "measuredAt": "2026-10-06T09:00:00Z",
+    "temperature": 25,
+    "humidity": 70,
+    "dewPoint": 12,
+    "heatIndex": 25,
+    "battery": 80,
+    "signalPowerDBM": -55
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000011",
+    "deviceName": "Sensor A",
+    "deviceType": "outdoor",
+    "deviceId": "test-device",
+    "address": null,
+    "measuredAt": "2026-10-06T06:00:00Z",
+    "temperature": 18,
+    "humidity": 40,
+    "dewPoint": 8,
+    "heatIndex": 18,
+    "battery": 80,
+    "signalPowerDBM": -55
+  }
+]
