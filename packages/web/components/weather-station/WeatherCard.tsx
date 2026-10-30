@@ -4,11 +4,9 @@ import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
 
 import { ProgressBar } from '#components/primitives/ProgressBar.tsx';
-import { convertTemperature } from '#utils/convertTemperature.util.ts';
 import { formatTemperature } from '#utils/formatTemperature.util.ts';
 import { getMeterTheme, type MeterTheme } from '#utils/getMeterTheme.util.ts';
 import { getSignalPercentage } from '#utils/getSignalPercentage.util.ts';
-import { TEMPERATURE_UNITS, type TemperatureUnit } from '#utils/temperature-unit.util.ts';
 
 type WeatherCardHeadingProps = {
   deviceName: string;
@@ -44,7 +42,6 @@ type WeatherCardProps = {
   icon: IconType;
   colorIndex: number;
   measure: Measure | null;
-  temperatureUnit: TemperatureUnit;
 };
 
 export const WeatherCard = ({
@@ -53,7 +50,6 @@ export const WeatherCard = ({
   icon: Icon,
   colorIndex,
   measure,
-  temperatureUnit,
 }: WeatherCardProps) => {
   const meterTheme = getMeterTheme(colorIndex);
   const cardClassName = `meter-card ${meterTheme.themeClassName} rounded-2xl border p-5`;
@@ -81,30 +77,13 @@ export const WeatherCard = ({
         meterTheme={meterTheme}
       />
       <div className="meter-temperature mt-7 leading-[0.85] font-semibold tracking-[-0.09em]">
-        {convertTemperature({
-          celsius: measure.temperature,
-          unit: temperatureUnit,
-        }).toFixed(1)}
-        <small className="ml-2 text-[20px] tracking-[-0.04em]">
-          °{temperatureUnit === TEMPERATURE_UNITS.CELSIUS ? 'C' : 'F'}
-        </small>
+        {measure.temperature.toFixed(1)}
+        <small className="ml-2 text-[20px] tracking-[-0.04em]">°C</small>
       </div>
       <div className="mt-7 grid grid-cols-2 gap-x-3 gap-y-[18px]">
         <WeatherCardMetric label="Humidity" value={`${measure.humidity}%`} />
-        <WeatherCardMetric
-          label="Dew point"
-          value={formatTemperature({
-            celsius: measure.dewPoint,
-            unit: temperatureUnit,
-          })}
-        />
-        <WeatherCardMetric
-          label="Heat index"
-          value={formatTemperature({
-            celsius: measure.heatIndex,
-            unit: temperatureUnit,
-          })}
-        />
+        <WeatherCardMetric label="Dew point" value={formatTemperature(measure.dewPoint)} />
+        <WeatherCardMetric label="Heat index" value={formatTemperature(measure.heatIndex)} />
       </div>
       <div className="mt-[19px] border-t border-[#2b3a38] pt-[13px]">
         <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">

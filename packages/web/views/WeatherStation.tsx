@@ -1,35 +1,13 @@
 // Render WeatherStation when displaying the weather dashboard.
 
-import * as React from 'react';
-
 import { CurrentReadings } from '#components/weather-station/CurrentReadings.tsx';
 import { MeasurementHistory } from '#components/weather-station/MeasurementHistory.tsx';
 import { WeatherStationError } from '#components/weather-station/WeatherStationError.tsx';
 import { WeatherStationHeader } from '#components/weather-station/WeatherStationHeader.tsx';
 import { WeatherStationLoading } from '#components/weather-station/WeatherStationLoading.tsx';
 import { useWeatherStation } from '#hooks/useWeatherStation.ts';
-import {
-  isTemperatureUnit,
-  TEMPERATURE_UNITS,
-  type TemperatureUnit,
-} from '#utils/temperature-unit.util.ts';
-
-const temperatureUnitStorageKey = 'temperature-unit';
-
-const getSavedTemperatureUnit = (): TemperatureUnit => {
-  try {
-    const savedUnit = window.localStorage.getItem(temperatureUnitStorageKey);
-
-    return isTemperatureUnit(savedUnit) ? savedUnit : TEMPERATURE_UNITS.CELSIUS;
-  } catch {
-    return TEMPERATURE_UNITS.CELSIUS;
-  }
-};
 
 export const WeatherStation = () => {
-  const [temperatureUnit, setTemperatureUnit] =
-    React.useState<TemperatureUnit>(getSavedTemperatureUnit);
-
   const {
     currentMeasures,
     currentRange,
@@ -41,12 +19,6 @@ export const WeatherStation = () => {
     refreshMeasures,
     changeRange,
   } = useWeatherStation();
-
-  React.useEffect(() => {
-    try {
-      window.localStorage.setItem(temperatureUnitStorageKey, temperatureUnit);
-    } catch {}
-  }, [temperatureUnit]);
 
   if (currentMeasures === null) {
     return <WeatherStationLoading />;
@@ -61,22 +33,16 @@ export const WeatherStation = () => {
       <WeatherStationHeader
         isRefreshing={isRefreshing}
         latestMeasuredAt={latestMeasuredAt}
-        temperatureUnit={temperatureUnit}
         onRefresh={refreshMeasures}
-        onTemperatureUnitChange={setTemperatureUnit}
       />
       <div className="pt-4">
-        <CurrentReadings
-          measuresByDeviceName={currentMeasures.byDeviceName}
-          temperatureUnit={temperatureUnit}
-        />
+        <CurrentReadings measuresByDeviceName={currentMeasures.byDeviceName} />
         <MeasurementHistory
           error={measureHistory?.error ?? null}
           measuresByDeviceName={measuresByDeviceName}
           isLoading={measureHistory === null}
           range={currentRange}
           rangeIndex={rangeIndex}
-          temperatureUnit={temperatureUnit}
           onRangeIndexChange={changeRange}
         />
       </div>

@@ -7,7 +7,6 @@ import { RangeControls } from '#components/weather-station/RangeControls.tsx';
 import { deviceIconMap, environment } from '#environment.ts';
 import type { ChartRange } from '#utils/chart-ranges.ts';
 import { getMeterTheme } from '#utils/getMeterTheme.util.ts';
-import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
 
 type MeasurementHistoryProps = {
   error: string | null;
@@ -15,7 +14,6 @@ type MeasurementHistoryProps = {
   isLoading: boolean;
   range: ChartRange;
   rangeIndex: number;
-  temperatureUnit: TemperatureUnit;
   onRangeIndexChange: (rangeIndex: number) => void;
 };
 
@@ -25,7 +23,6 @@ export const MeasurementHistory = ({
   isLoading,
   range,
   rangeIndex,
-  temperatureUnit,
   onRangeIndexChange,
 }: MeasurementHistoryProps) => {
   const historyDevices = environment.DEVICES.map((device, index) => ({
@@ -61,7 +58,6 @@ export const MeasurementHistory = ({
             meterTheme={meterTheme}
             range={range}
             sensor={device.deviceName}
-            temperatureUnit={temperatureUnit}
           />
         ))
       )}

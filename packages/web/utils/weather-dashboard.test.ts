@@ -13,7 +13,6 @@ import { formatMeasureValue } from '#utils/formatMeasureValue.util.ts';
 import { getLatestTimestamp } from '#utils/getLatestTimestamp.util.ts';
 import { getRangeExtrema } from '#utils/getRangeExtrema.util.ts';
 import { getSignalPercentage } from '#utils/getSignalPercentage.util.ts';
-import { TEMPERATURE_UNITS } from '#utils/temperature-unit.util.ts';
 import { WEATHER_METRICS } from '#utils/weather-metrics.ts';
 
 type ExtremaFixture = {
@@ -29,7 +28,7 @@ type TemperaturePair = {
 };
 
 describe('weather dashboard utilities', () => {
-  it('given a UTC timestamp humidity and temperature when formatting dashboard values then returns local times percent and Fahrenheit', () => {
+  it('given a UTC timestamp humidity and temperature when formatting dashboard values then returns local times percent and Celsius', () => {
     const measuredAt = new Date('2026-01-01T12:34:56Z');
 
     expect(formatMeasuredAt(measuredAt.toISOString())).toBe('01 Jan · 13:34:56');
@@ -39,9 +38,8 @@ describe('weather dashboard utilities', () => {
       formatMeasureValue({
         value: 20,
         metric: WEATHER_METRICS.TEMPERATURE,
-        temperatureUnit: TEMPERATURE_UNITS.FAHRENHEIT,
       }),
-    ).toBe('68.0°F');
+    ).toBe('20.0°C');
   });
 
   it.each([

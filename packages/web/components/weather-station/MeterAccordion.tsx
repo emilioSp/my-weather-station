@@ -7,7 +7,6 @@ import { Accordion } from '#components/primitives/Accordion.tsx';
 import { LinearChart } from '#components/weather-station/LinearChart.tsx';
 import type { ChartRange } from '#utils/chart-ranges.ts';
 import type { MeterTheme } from '#utils/getMeterTheme.util.ts';
-import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
 import { WEATHER_METRICS, type WeatherMetric } from '#utils/weather-metrics.ts';
 
 const chartMetrics: WeatherMetric[] = [
@@ -24,7 +23,6 @@ type MeterAccordionProps = {
   meterTheme: MeterTheme;
   range: ChartRange;
   sensor: string;
-  temperatureUnit: TemperatureUnit;
 };
 
 export const MeterAccordion = ({
@@ -35,7 +33,6 @@ export const MeterAccordion = ({
   meterTheme,
   range,
   sensor,
-  temperatureUnit,
 }: MeterAccordionProps) => (
   <Accordion
     defaultOpen={defaultOpen}
@@ -66,7 +63,6 @@ export const MeterAccordion = ({
               range={range}
               sensor={sensor}
               measures={measures}
-              temperatureUnit={temperatureUnit}
             />
           ))}
     </div>

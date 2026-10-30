@@ -8,7 +8,7 @@ Roadmap items are planning context, not permission to implement. The owner selec
 | ---- | -------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------ |
 | R-01 | [Collect and store meter readings](#r-01-collect-and-store-meter-readings)                         | Completed | Collect readings from indoor and outdoor SwitchBot meters and store them in PostgreSQL.    |
 | R-02 | [Display named meters and history](#r-02-display-named-meters-and-history)                         | Completed | Show current readings and history charts for configured, named meters.                     |
-| R-03 | [Switch temperature units](#r-03-switch-temperature-units)                                         | Completed | Display temperatures in Celsius or Fahrenheit.                                             |
+| R-03 | [Switch temperature units](#r-03-switch-temperature-units)                                         | Removed   | Temperature unit selection was removed; all displays use Celsius.                          |
 | R-04 | [Date chart lows and highs](#r-04-date-chart-lows-and-highs)                                       | Completed | Show the measurement dates associated with chart lows and highs.                           |
 | R-05 | [Monitor Raspberry Pi CPU temperature](#r-05-monitor-raspberry-pi-cpu-temperature)                 | Later     | Display and monitor the Raspberry Pi's CPU temperature in the application.                 |
 | R-06 | [Show chart trends](#r-06-show-chart-trends)                                                       | Later     | Show tendencies on existing charts to make rising and falling measurements easier to spot. |
@@ -40,13 +40,14 @@ The owner confirmed acceptance during the constitution initialization interview.
 
 ### R-03: Switch temperature units
 
-The web app supports Celsius and Fahrenheit and saves the selected unit in browser storage when available.
+Originally completed with Celsius and Fahrenheit selection and browser preference storage. The switch has since been removed at the owner's request; the dashboard now
+always displays Celsius.
 
 #### Evidence
 
 The owner confirmed acceptance during the constitution initialization interview. See the
-[implementation commit](https://github.com/emilioSp/my-weather-station/commit/c41a6f4), [conversion utility](packages/web/utils/convertTemperature.util.ts), and
-[browser tests](packages/web/e2e/temperature-units.spec.ts).
+[original implementation commit](https://github.com/emilioSp/my-weather-station/commit/c41a6f4). The [current dashboard](packages/web/views/WeatherStation.tsx) uses
+Celsius only, without unit selection or conversion.
 
 ### R-04: Date chart lows and highs
 
