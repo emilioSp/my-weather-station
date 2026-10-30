@@ -1,10 +1,12 @@
+// Seed local measurement history when preparing the development database.
+
 import type { Knex } from 'knex';
 
-const assertDevelopment = (): void => {
+function assertDevelopment(): void {
   if (process.env.NODE_ENV !== 'development') {
     throw new Error('The local measure seed requires NODE_ENV=development');
   }
-};
+}
 
 const seedMeasures = async (knex: Knex): Promise<number | string> => {
   assertDevelopment();
@@ -235,7 +237,7 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
   });
 };
 
-export async function seed(knex: Knex): Promise<void> {
+export const seed = async (knex: Knex): Promise<void> => {
   const count = await seedMeasures(knex);
   console.log(`Inserted ${count} measures.`);
-}
+};

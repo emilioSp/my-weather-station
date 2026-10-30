@@ -1,6 +1,13 @@
+// Define validated domain schemas and types used by this workspace.
+
 import { z } from 'zod';
 
-export const meterTypeSchema = z.enum(['outdoor', 'indoor']);
+export const METER_TYPES = {
+  OUTDOOR: 'outdoor',
+  INDOOR: 'indoor',
+} as const;
+
+export const meterTypeSchema = z.enum(METER_TYPES);
 
 export type MeterType = z.infer<typeof meterTypeSchema>;
 
@@ -43,6 +50,4 @@ export const measureSchema = weatherReadingSchema
   })
   .and(deviceIdentifiersSchema);
 
-type ParsedMeasure = z.infer<typeof measureSchema>;
-
-export type Measure = ParsedMeasure;
+export type Measure = z.infer<typeof measureSchema>;

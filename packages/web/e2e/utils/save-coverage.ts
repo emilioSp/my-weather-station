@@ -1,3 +1,5 @@
+// Save browser coverage for merging after end-to-end tests.
+
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
@@ -8,11 +10,6 @@ import v8ToIstanbul from 'v8-to-istanbul';
 const applicationBasePath = '/my-weather-station/';
 
 type JavaScriptCoverage = Awaited<ReturnType<Page['coverage']['stopJSCoverage']>>;
-
-type SaveCoverageInput = {
-  jsCoverage: JavaScriptCoverage;
-  name: string;
-};
 
 // Playwright reports every Chromium script. Keep only application modules.
 const isApplicationScript = (url: string): boolean => {
@@ -30,6 +27,11 @@ const getScriptPath = (url: string): string => {
   const pathname = new URL(url).pathname;
 
   return resolve(process.cwd(), pathname.slice(applicationBasePath.length));
+};
+
+type SaveCoverageInput = {
+  jsCoverage: JavaScriptCoverage;
+  name: string;
 };
 
 export const saveCoverage = async ({ jsCoverage, name }: SaveCoverageInput): Promise<void> => {

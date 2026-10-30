@@ -1,7 +1,7 @@
 // Verify the declared site icons and their rendered assets in browser tests.
 import { expect, type Page, test } from '@playwright/test';
 
-import { saveCoverage } from './utils/save-coverage';
+import { saveCoverage } from '#e2e/utils/save-coverage.ts';
 
 type PngHeader = {
   contentType: string | null;
@@ -15,7 +15,12 @@ type PngColorCounts = {
   lime: number;
 };
 
-const getPngHeader = async (page: Page, href: string): Promise<PngHeader> =>
+type GetPngHeaderInput = {
+  page: Page;
+  href: string;
+};
+
+const getPngHeader = async ({ page, href }: GetPngHeaderInput): Promise<PngHeader> =>
   page.evaluate(async (url) => {
     const response = await fetch(url);
     const bytes = new Uint8Array(await response.arrayBuffer());
@@ -29,16 +34,25 @@ const getPngHeader = async (page: Page, href: string): Promise<PngHeader> =>
     };
   }, href);
 
-const getPngColorCounts = async (page: Page, href: string): Promise<PngColorCounts> =>
+type GetPngColorCountsInput = {
+  page: Page;
+  href: string;
+};
+
+const getPngColorCounts = async ({ page, href }: GetPngColorCountsInput): Promise<PngColorCounts> =>
   page.evaluate(async (url) => {
     const response = await fetch(url);
     const image = await createImageBitmap(await response.blob());
     const canvas = new OffscreenCanvas(image.width, image.height);
     const context = canvas.getContext('2d');
 
-    if (context === null) {
-      throw new Error('A 2D canvas context is required to inspect the icon.');
+    function assertCanvasContext(
+      value: OffscreenCanvasRenderingContext2D | null,
+    ): asserts value is OffscreenCanvasRenderingContext2D {
+      if (value === null) throw new Error('A 2D canvas context is required to inspect the icon.');
     }
+
+    assertCanvasContext(context);
 
     context.drawImage(image, 0, 0);
     const pixels = context.getImageData(0, 0, image.width, image.height).data;
@@ -58,12 +72,20 @@ const getPngColorCounts = async (page: Page, href: string): Promise<PngColorCoun
     return { dark, lime };
   }, href);
 
-const getLinkHref = async (page: Page, selector: string): Promise<string> => {
-  const href = await page.locator(selector).getAttribute('href');
+function assertLinkHref(href: string | null): asserts href is string {
   expect(href).not.toBeNull();
+}
 
-  // JUSTIFICATION: The preceding assertion rejects null, but Playwright's expect does not narrow the type.
-  return new URL(href as string, page.url()).href;
+type GetLinkHrefInput = {
+  page: Page;
+  selector: string;
+};
+
+const getLinkHref = async ({ page, selector }: GetLinkHrefInput): Promise<string> => {
+  const href = await page.locator(selector).getAttribute('href');
+  assertLinkHref(href);
+
+  return new URL(href, page.url()).href;
 };
 
 test.describe('Site icons', () => {
@@ -78,7 +100,9 @@ test.describe('Site icons', () => {
     await expect(favicon).toHaveCount(1);
     await expect(favicon).toHaveAttribute('type', 'image/svg+xml');
 
-    const response = await page.request.get(await getLinkHref(page, 'head link[rel="icon"]'));
+    const response = await page.request.get(
+      await getLinkHref({ page: page, selector: 'head link[rel="icon"]' }),
+    );
 
     expect(response.ok()).toBe(true);
     expect(response.headers()['content-type']).toContain('image/svg+xml');
@@ -104,16 +128,19 @@ test.describe('Site icons', () => {
     await expect(appleTouchIcon).toHaveCount(1);
     await expect(appleTouchIcon).toHaveAttribute('sizes', '180x180');
 
-    const appleTouchIconHref = await getLinkHref(page, 'head link[rel="apple-touch-icon"]');
+    const appleTouchIconHref = await getLinkHref({
+      page: page,
+      selector: 'head link[rel="apple-touch-icon"]',
+    });
 
-    await expect(getPngHeader(page, appleTouchIconHref)).resolves.toEqual({
+    await expect(getPngHeader({ page: page, href: appleTouchIconHref })).resolves.toEqual({
       contentType: 'image/png',
       height: 180,
       ok: true,
       width: 180,
     });
 
-    const appleTouchIconColors = await getPngColorCounts(page, appleTouchIconHref);
+    const appleTouchIconColors = await getPngColorCounts({ page: page, href: appleTouchIconHref });
 
     expect(appleTouchIconColors.dark).toBeGreaterThan(0);
     expect(appleTouchIconColors.lime).toBeGreaterThan(0);
@@ -134,7 +161,7 @@ test.describe('Site icons', () => {
 
     const manifest = page.locator('head link[rel="manifest"]');
     await expect(manifest).toHaveCount(1);
-    const manifestHref = await getLinkHref(page, 'head link[rel="manifest"]');
+    const manifestHref = await getLinkHref({ page: page, selector: 'head link[rel="manifest"]' });
     const manifestResponse = await page.request.get(manifestHref);
     expect(manifestResponse.ok()).toBe(true);
 
@@ -157,13 +184,13 @@ test.describe('Site icons', () => {
     for (const icon of siteManifest.icons) {
       const size = Number.parseInt(icon.sizes, 10);
       const iconHref = new URL(icon.src, manifestHref).href;
-      await expect(getPngHeader(page, iconHref)).resolves.toEqual({
+      await expect(getPngHeader({ page: page, href: iconHref })).resolves.toEqual({
         contentType: 'image/png',
         height: size,
         ok: true,
         width: size,
       });
-      const iconColors = await getPngColorCounts(page, iconHref);
+      const iconColors = await getPngColorCounts({ page: page, href: iconHref });
       expect(iconColors.dark).toBeGreaterThan(0);
       expect(iconColors.lime).toBeGreaterThan(0);
     }

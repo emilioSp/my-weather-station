@@ -1,3 +1,5 @@
+// Render IconButton when displaying the weather dashboard.
+
 import type * as React from 'react';
 
 type IconButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;

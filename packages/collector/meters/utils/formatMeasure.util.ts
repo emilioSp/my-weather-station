@@ -1,3 +1,5 @@
+// Format stored measurement timestamps for collector output.
+
 import type { Measure } from '@wx/shared';
 
 export const formatMeasure = (measure: Measure): Measure => {

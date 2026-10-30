@@ -1,6 +1,8 @@
+// Apply and reverse add chart history function during database migrations.
+
 import type { Knex } from 'knex';
 
-export async function up(knex: Knex): Promise<void> {
+export const up = async (knex: Knex): Promise<void> => {
   await knex.raw(`
     CREATE OR REPLACE FUNCTION public.get_chart_history(
       p_start TIMESTAMP WITH TIME ZONE,
@@ -110,10 +112,10 @@ export async function up(knex: Knex): Promise<void> {
       FROM selected;
     $$;
   `);
-}
+};
 
-export async function down(knex: Knex): Promise<void> {
+export const down = async (knex: Knex): Promise<void> => {
   await knex.raw(
     'DROP FUNCTION IF EXISTS public.get_chart_history(TIMESTAMP WITH TIME ZONE, TIMESTAMP WITH TIME ZONE);',
   );
-}
+};

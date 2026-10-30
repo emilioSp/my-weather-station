@@ -1,6 +1,8 @@
+// Validate application configuration at startup before external resources are used.
+
 import { z } from 'zod';
 
-import { meterSchema } from './types.ts';
+import { meterSchema } from '#types.ts';
 
 const devicesSchema = z
   .string()

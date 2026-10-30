@@ -1,15 +1,12 @@
 // Verify measure queries and response mapping against local Supabase during integration checks.
 
+import { METER_TYPES } from '@wx/shared';
 import { Client } from 'pg';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
-import {
-  getChartHistory,
-  getLatestMeasure,
-  getLatestMeasures,
-  toMeasureHistory,
-  toMeasureResult,
-} from '#supabase.api.ts';
+import supabaseApi from '#supabase.api.ts';
+import { toMeasureHistory } from '#utils/toMeasureHistory.util.ts';
+import { toMeasureResult } from '#utils/toMeasureResult.util.ts';
 
 const database = new Client({
   host: '127.0.0.1',
@@ -55,11 +52,11 @@ describe('Supabase API', () => {
   it('given stored readings when fetching a named device and chart history then returns its latest reading and history keyed by name', async () => {
     await seedMeasures();
 
-    const latest = await getLatestMeasure({ deviceName: 'kitchen' });
+    const latest = await supabaseApi.getLatestMeasure({ deviceName: 'kitchen' });
 
-    const history = await getChartHistory({
-      measuredAfter: new Date('2020-01-01T00:00:00Z'),
-      measuredBefore: new Date('2020-01-02T00:00:00Z'),
+    const history = await supabaseApi.getChartHistory({
+      measuredAfter: Temporal.Instant.from('2020-01-01T00:00:00Z'),
+      measuredBefore: Temporal.Instant.from('2020-01-02T00:00:00Z'),
     });
 
     expect(latest.error).toBeNull();
@@ -68,7 +65,7 @@ describe('Supabase API', () => {
       id: '00000000-0000-0000-0000-000000000002',
       deviceName: 'kitchen',
       temperature: 20,
-      deviceType: 'indoor',
+      deviceType: METER_TYPES.INDOOR,
     });
     expect(history.error).toBeNull();
     expect(history.history.kitchen).toMatchObject([
@@ -102,18 +99,18 @@ describe('Supabase API', () => {
   it('given stored readings including kitchen when fetching configured meters then returns garden and living room in order without kitchen', async () => {
     await seedMeasures();
 
-    const latest = await getLatestMeasures();
+    const latest = await supabaseApi.getLatestMeasures();
 
     expect(latest.error).toBeNull();
     expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual(['garden', 'living room']);
   });
 
   it('given an empty database when querying latest measures and history then returns empty results without errors', async () => {
-    const latest = await getLatestMeasure({ deviceName: 'kitchen' });
+    const latest = await supabaseApi.getLatestMeasure({ deviceName: 'kitchen' });
 
-    const history = await getChartHistory({
-      measuredAfter: new Date('2020-01-01T00:00:00Z'),
-      measuredBefore: new Date('2020-01-02T00:00:00Z'),
+    const history = await supabaseApi.getChartHistory({
+      measuredAfter: Temporal.Instant.from('2020-01-01T00:00:00Z'),
+      measuredBefore: Temporal.Instant.from('2020-01-02T00:00:00Z'),
     });
 
     expect(latest.error).toBeNull();

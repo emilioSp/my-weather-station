@@ -1,5 +1,6 @@
 // Validate static and interpolated Playwright test titles during linting.
 
+// Deliberate limit: recognize test(...) and dot modifiers, not aliases or computed calls.
 const isTestCallee = (callee) => {
   if (callee.type === 'Identifier') return callee.name === 'test';
 

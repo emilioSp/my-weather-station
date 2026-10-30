@@ -1,3 +1,5 @@
+// Configure PostgreSQL migrations and seeds when running the Knex CLI.
+
 /** @type {{ [key: string]: import('knex').Knex.Config }} */
 const config = {
   client: 'postgresql',

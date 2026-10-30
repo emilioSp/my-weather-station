@@ -1,3 +1,5 @@
+// Configure vitest when running builds or automated checks.
+
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({

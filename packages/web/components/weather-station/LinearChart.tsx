@@ -13,23 +13,36 @@ import {
   YAxis,
 } from 'recharts';
 
-import type { MeterTheme } from '#components/weather-station/WeatherCard.tsx';
-import { formatTemperature, type TemperatureUnit } from '#utils/temperature-unit.util.ts';
-import {
-  type ChartRange,
-  chartMetricDetails,
-  formatChartTime,
-  formatMeasuredAt,
-  formatMeasureValue,
-  getRangeExtrema,
-  type RangeExtrema,
-  type WeatherMetric,
-} from '#weather-dashboard.util.ts';
+import { type ChartRange } from '#utils/chart-ranges.ts';
+import { formatChartTime } from '#utils/formatChartTime.util.ts';
+import { formatMeasuredAt } from '#utils/formatMeasuredAt.util.ts';
+import { formatMeasureValue } from '#utils/formatMeasureValue.util.ts';
+import { formatTemperature } from '#utils/formatTemperature.util.ts';
+import type { MeterTheme } from '#utils/getMeterTheme.util.ts';
+import { getRangeExtrema, type RangeExtrema } from '#utils/getRangeExtrema.util.ts';
+import { type TemperatureUnit } from '#utils/temperature-unit.util.ts';
+import { WEATHER_METRICS, chartMetricDetails, type WeatherMetric } from '#utils/weather-metrics.ts';
 
 type Sensor = string;
 
 type ChartDatum = Measure & {
   timestamp: number;
+};
+
+type GetYAxisDomainInput = {
+  metric: WeatherMetric;
+  extrema: { low: number; high: number };
+};
+
+const getYAxisDomain = ({ metric, extrema }: GetYAxisDomainInput): [number, number] => {
+  const valuePadding = metric === WEATHER_METRICS.HUMIDITY ? 5 : 1;
+
+  return metric === WEATHER_METRICS.HUMIDITY
+    ? [
+        Math.floor(extrema.low / 5) * 5 - valuePadding,
+        Math.ceil(extrema.high / 5) * 5 + valuePadding,
+      ]
+    : [Math.floor(extrema.low - valuePadding), Math.ceil(extrema.high + valuePadding)];
 };
 
 type LinearChartProps = {
@@ -41,23 +54,6 @@ type LinearChartProps = {
   temperatureUnit: TemperatureUnit;
 };
 
-const getYAxisDomain = ({
-  metric,
-  extrema,
-}: {
-  metric: WeatherMetric;
-  extrema: { low: number; high: number };
-}): [number, number] => {
-  const valuePadding = metric === 'humidity' ? 5 : 1;
-
-  return metric === 'humidity'
-    ? [
-        Math.floor(extrema.low / 5) * 5 - valuePadding,
-        Math.ceil(extrema.high / 5) * 5 + valuePadding,
-      ]
-    : [Math.floor(extrema.low - valuePadding), Math.ceil(extrema.high + valuePadding)];
-};
-
 export const LinearChart = ({
   meterTheme,
   metric,
@@ -66,8 +62,6 @@ export const LinearChart = ({
   measures,
   temperatureUnit,
 }: LinearChartProps) => {
-  const chartColor = meterTheme.chartColor;
-
   const [touchTooltipActive, setTouchTooltipActive] = React.useState<boolean | null>(null);
 
   const [touchMeasure, setTouchMeasure] = React.useState<ChartDatum | null>(null);
@@ -76,14 +70,12 @@ export const LinearChart = ({
     () =>
       measures.map((measure) => ({
         ...measure,
-        timestamp: new Date(measure.measuredAt).getTime(),
+        timestamp: Temporal.Instant.from(measure.measuredAt).epochMilliseconds,
       })),
     [measures],
   );
 
   const extrema = React.useMemo(() => getRangeExtrema({ measures, metric }), [measures, metric]);
-
-  const details = chartMetricDetails[metric];
 
   if (extrema === null) {
     return (
@@ -94,8 +86,6 @@ export const LinearChart = ({
       </ChartCard>
     );
   }
-
-  const yAxisDomain = getYAxisDomain({ metric, extrema });
 
   return (
     <ChartCard metric={metric} extrema={extrema} temperatureUnit={temperatureUnit}>
@@ -112,7 +102,7 @@ export const LinearChart = ({
       <div className="mt-4 h-[380px] sm:mt-[18px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            aria-label={`Interactive ${details.label.toLowerCase()} chart for ${sensor} measurements in ${range.label.toLowerCase()}.`}
+            aria-label={`Interactive ${chartMetricDetails[metric].label.toLowerCase()} chart for ${sensor} measurements in ${range.label.toLowerCase()}.`}
             data={chartData}
             margin={{ top: 20, right: 20, bottom: 50, left: 20 }}
             onTouchEnd={() => {
@@ -146,7 +136,7 @@ export const LinearChart = ({
               type="number"
             />
             <YAxis
-              domain={yAxisDomain}
+              domain={getYAxisDomain({ metric, extrema })}
               stroke="#82948a"
               tickCount={5}
               tickFormatter={(value: number) =>
@@ -175,7 +165,7 @@ export const LinearChart = ({
               dot={false}
               isAnimationActive={false}
               name={sensor}
-              stroke={chartColor}
+              stroke={meterTheme.chartColor}
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={3}
@@ -250,19 +240,19 @@ const Extrema = ({ label, metric, value, measuredAt, temperatureUnit }: ExtremaP
         className="font-mono text-[13px] whitespace-nowrap text-[#9bad9e]"
         dateTime={measuredAt}
       >
-        {formatChartTime(new Date(measuredAt).getTime()).join(' · ')}
+        {formatChartTime(Temporal.Instant.from(measuredAt).epochMilliseconds).join(' · ')}
       </time>
     )}
   </div>
 );
+
+const isNumericLabel = (label: unknown): label is number => typeof label === 'number';
 
 type ChartTooltipProps = TooltipContentProps & {
   metric: WeatherMetric;
   sensor: Sensor;
   temperatureUnit: TemperatureUnit;
 };
-
-const isNumericLabel = (label: unknown): label is number => typeof label === 'number';
 
 const ChartTooltip = ({
   active,
@@ -298,7 +288,7 @@ type ChartReadoutProps = {
 const ChartReadout = ({ metric, measure, temperatureUnit }: ChartReadoutProps) => (
   <>
     <div className="mb-2 font-mono text-xs text-[#9bad9e]">
-      {formatMeasuredAt(new Date(measure.timestamp).toISOString())}
+      {formatMeasuredAt(Temporal.Instant.fromEpochMilliseconds(measure.timestamp).toString())}
     </div>
     <TooltipRow
       label={chartMetricDetails[metric].label}
@@ -308,7 +298,7 @@ const ChartReadout = ({ metric, measure, temperatureUnit }: ChartReadoutProps) =
         temperatureUnit,
       })}
     />
-    {metric === 'temperature' && (
+    {metric === WEATHER_METRICS.TEMPERATURE && (
       <TooltipRow
         label="Heat index"
         value={formatTemperature({

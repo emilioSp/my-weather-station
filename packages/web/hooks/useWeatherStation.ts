@@ -1,23 +1,24 @@
+// Load current readings and chart history and manage weather dashboard actions.
+
 import type { Measure } from '@wx/shared';
 import * as React from 'react';
 
-import { environment } from '#environment.ts';
+import { type DeviceConfiguration, environment } from '#environment.ts';
+import supabaseApi from '#supabase.api.ts';
 import {
-  getChartHistory,
-  getLatestMeasure,
   type MeasureHistory,
   type MeasureHistoryQueryResult,
   type MeasureQueryResult,
-} from '#supabase.api.ts';
+} from '#types.ts';
 import {
   CHART_RANGES,
   type ChartRange,
   type ChartRangeKey,
   chartRangeKeys,
   chartRanges,
-  filterMeasuresForRange,
-  getLatestTimestamp,
-} from '#weather-dashboard.util.ts';
+} from '#utils/chart-ranges.ts';
+import { filterMeasuresForRange } from '#utils/filterMeasuresForRange.util.ts';
+import { getLatestTimestamp } from '#utils/getLatestTimestamp.util.ts';
 
 type CurrentMeasures = {
   byDeviceName: Record<string, Measure | null>;
@@ -29,33 +30,40 @@ type ChartHistory = {
   error: string | null;
 };
 
+// Browser timers have no native promise API; keep the callback at this boundary.
 const waitUntil = (deadline: number): Promise<void> =>
   new Promise((resolve) => {
-    setTimeout(resolve, Math.max(0, deadline - Date.now()));
+    setTimeout(resolve, Math.max(0, deadline - Temporal.Now.instant().epochMilliseconds));
   });
 
-const getLatestRows = ({ results }: { results: MeasureQueryResult[] }): CurrentMeasures => ({
+type GetLatestRowsInput = {
+  results: MeasureQueryResult[];
+  devices: DeviceConfiguration[];
+};
+
+const getLatestRows = ({ results, devices }: GetLatestRowsInput): CurrentMeasures => ({
   byDeviceName: Object.fromEntries(
-    environment.DEVICES.map(({ deviceName }, index) => [
-      deviceName,
-      results[index].rows[0] ?? null,
-    ]),
+    devices.map(({ deviceName }, index) => [deviceName, results[index].rows[0] ?? null]),
   ),
   error: results.find(({ error }) => error !== null)?.error?.message ?? null,
 });
 
 const loadLatestMeasures = async (): Promise<CurrentMeasures> => {
   const results = await Promise.all(
-    environment.DEVICES.map(({ deviceName }) => getLatestMeasure({ deviceName })),
+    environment.DEVICES.map(({ deviceName }) => supabaseApi.getLatestMeasure({ deviceName })),
   );
 
-  return getLatestRows({ results });
+  return getLatestRows({ results, devices: environment.DEVICES });
 };
 
-const getHistoryRows = ({ history, error }: MeasureHistoryQueryResult): ChartHistory => ({
+type GetHistoryRowsInput = MeasureHistoryQueryResult & {
+  devices: DeviceConfiguration[];
+};
+
+const getHistoryRows = ({ history, error, devices }: GetHistoryRowsInput): ChartHistory => ({
   history: Object.fromEntries(
     Object.entries(history).filter(([deviceName]) =>
-      environment.DEVICES.some((device) => device.deviceName === deviceName),
+      devices.some((device) => device.deviceName === deviceName),
     ),
   ),
   error: error?.message ?? null,
@@ -113,19 +121,21 @@ export const useWeatherStation = () => {
     setMeasureHistory(null);
 
     const loadHistory = async () => {
-      const placeholderDeadline = Date.now() + 100;
+      const placeholderDeadline = Temporal.Now.instant().epochMilliseconds + 100;
 
-      const measuredAfter = new Date(latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000);
+      const measuredAfter = Temporal.Instant.fromEpochMilliseconds(latestMeasuredAt).subtract({
+        hours: currentRange.hours,
+      });
 
-      const history = await getChartHistory({
+      const history = await supabaseApi.getChartHistory({
         measuredAfter,
-        measuredBefore: new Date(latestMeasuredAt),
+        measuredBefore: Temporal.Instant.fromEpochMilliseconds(latestMeasuredAt),
       });
 
       await waitUntil(placeholderDeadline);
 
       if (isMounted) {
-        setMeasureHistory(getHistoryRows(history));
+        setMeasureHistory(getHistoryRows({ ...history, devices: environment.DEVICES }));
       }
     };
 
@@ -138,7 +148,7 @@ export const useWeatherStation = () => {
 
   const refreshMeasures = async () => {
     setIsRefreshing(true);
-    const spinnerDeadline = Date.now() + 1_000;
+    const spinnerDeadline = Temporal.Now.instant().epochMilliseconds + 1_000;
     const latestRows = await loadLatestMeasures();
 
     const isUnchanged =

@@ -1,5 +1,11 @@
+// Define validated domain schemas and types used by this workspace.
+
 import { deviceIdentifiersSchema, type Measure, meterTypeSchema } from '@wx/shared';
 import { z } from 'zod';
+
+export const SWITCHBOT_UUIDS = {
+  METER_SERVICE: 'fd3d',
+} as const;
 
 const serviceDataSchema = z.object({
   uuid: z.string(),

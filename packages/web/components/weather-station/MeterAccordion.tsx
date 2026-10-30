@@ -1,13 +1,20 @@
+// Render MeterAccordion when displaying the weather dashboard.
+
 import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
 
 import { Accordion } from '#components/primitives/Accordion.tsx';
 import { LinearChart } from '#components/weather-station/LinearChart.tsx';
-import type { MeterTheme } from '#components/weather-station/WeatherCard.tsx';
+import type { ChartRange } from '#utils/chart-ranges.ts';
+import type { MeterTheme } from '#utils/getMeterTheme.util.ts';
 import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
-import type { ChartRange, WeatherMetric } from '#weather-dashboard.util.ts';
+import { WEATHER_METRICS, type WeatherMetric } from '#utils/weather-metrics.ts';
 
-const chartMetrics: WeatherMetric[] = ['temperature', 'humidity', 'dewPoint'];
+const chartMetrics: WeatherMetric[] = [
+  WEATHER_METRICS.TEMPERATURE,
+  WEATHER_METRICS.HUMIDITY,
+  WEATHER_METRICS.DEW_POINT,
+];
 
 type MeterAccordionProps = {
   defaultOpen: boolean;

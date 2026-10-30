@@ -15,7 +15,7 @@ packages/shared     @wx/shared     Domain schemas, the camelCase <-> snake_case 
                                   and UUID normalization.
 ```
 
-The root holds only what is shared: the workspace globs, the Biome config, the TypeScript base config and the lockfile.
+The root holds shared tooling: the workspace globs, the Oxlint and Oxfmt configuration, the TypeScript base config and the lockfile.
 
 ### How the workspaces fit together
 
@@ -26,7 +26,7 @@ with its own `package.json` and run `npm install`. The root file does not change
 step:
 
 ```ts
-import { normalizeUuid } from '@wx/shared';
+import { normalizeUuid } from '@wx/shared/utils/normalizeUuid.util.ts';
 ```
 
 Inside a workspace, never climb directories with `../`. Use the `imports` field of that workspace's own `package.json`. These are Node subpath imports, not TypeScript
@@ -39,6 +39,7 @@ import { createMeter } from '#meters/meter.factory.ts';
 ## Prerequisites
 
 - Node.js 26 or newer, for native TypeScript support
+- A browser with native Temporal support for the web app
 - A Bluetooth adapter, and Bluetooth permission for the terminal or Node.js
 - Docker or another Docker-compatible container runtime
 
@@ -99,8 +100,10 @@ DEVICES=[{"deviceId":"new-device-id","type":"indoor","deviceName":"office"}]
 Add the same name to `VITE_DEVICES` in both web environment files, together with a supported React Icons export name:
 
 ```dotenv
-VITE_DEVICES=[{"deviceName":"office","icon":"FaHouse"}]
+VITE_DEVICES=[{"deviceName":"office","icon":"FaCouch"}]
 ```
+
+Supported icons are `FaSeedling`, `FaKitchenSet`, `FaCouch`, and `FaBed`.
 
 Each `VITE_DEVICES.deviceName` must match the collector `DEVICES.deviceName`. Adding a collector device also requires adding its device name and supported React Icons
 export name to the web configuration, then deploying the web app.
@@ -110,7 +113,7 @@ export name to the web configuration, then deploying the web app.
 A script that concerns one workspace lives in that workspace, so run it with `-w`.
 
 ```sh
-npm run store-measure -w @wx/collector              # read the meters once and store
+npm run store-measure -w @wx/collector              # run the collector continuously
 npm run dev -w @wx/web                              # web app in development mode
 npm run new:migration -w @wx/collector -- <name>    # create a migration
 npm run migrate:local -w @wx/collector              # apply migrations to local Supabase
@@ -118,6 +121,8 @@ npm run migrate -w @wx/collector                    # apply migrations to produc
 npm run rollback:local -w @wx/collector             # undo the last local migration
 npm run seed:local -w @wx/collector                 # replace local measures with one year of test data
 ```
+
+The collector reads and stores measurements for each configured meter, then waits five minutes before starting the next cycle.
 
 `seed:local` runs only with `NODE_ENV=development` and uses `packages/collector/.env`. It deletes every row from the local `measures` table before it creates the test
 dataset.
@@ -128,8 +133,9 @@ The root keeps only the scripts that act on every workspace:
 npm run supabase:start   # start the local Supabase stack
 npm run supabase:stop    # stop the local Supabase stack
 npm run supabase:status  # show local endpoints
-npm run lint             # read-only Biome check, whole repository
-npm run lint:fix         # apply Biome fixes, whole repository
+npm run fmt              # apply Oxfmt formatting, whole repository
+npm run lint             # run Oxlint and apply fixes, whole repository
+npm run check            # apply formatting and lint fixes, then run type checks, tests, and coverage
 npm run typecheck        # TypeScript check for every workspace
 npm run build            # type check, plus the production build of the web app
 npm run test:unit        # run Vitest tests in every workspace
@@ -189,12 +195,14 @@ heat index with `meters/utils/`, stores the reading through `db/measure.reposito
 
 ```text
 packages/web/main.tsx
-  └── App.tsx
-      └── supabase.api.ts
-          └── @supabase/supabase-js -> PostgREST -> PostgreSQL
+  └── views/WeatherStation.tsx
+      └── hooks/useWeatherStation.ts
+          └── supabase.api.ts
+              └── @supabase/supabase-js -> PostgREST -> PostgreSQL
 ```
 
-`supabase.api.ts` is the only boundary to Supabase. `environment.ts` validates the two `VITE_` variables with Zod at startup.
+`supabase.api.ts` is the only boundary to Supabase. `environment.ts` validates `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_DEVICES` with Zod at
+startup.
 
 ### Shared
 

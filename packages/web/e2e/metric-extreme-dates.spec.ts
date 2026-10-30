@@ -5,7 +5,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { loadEnv } from 'vite';
 
 import { saveCoverage } from '#e2e/utils/save-coverage.ts';
-import { chartMetricDetails, type WeatherMetric } from '#weather-dashboard.util.ts';
+import { WEATHER_METRICS, chartMetricDetails, type WeatherMetric } from '#utils/weather-metrics.ts';
 
 type MeasureRow = {
   id: string;
@@ -115,7 +115,7 @@ for (const viewport of [
       const summary = getSummary({ page, deviceName: primaryDevice, metric });
       const dates = summary.locator('time');
       await expect(dates).toHaveText(
-        metric === 'temperature'
+        metric === WEATHER_METRICS.TEMPERATURE
           ? ['06 Oct · 08:15', '06 Oct · 14:35']
           : ['06 Oct · 14:35', '06 Oct · 08:15'],
       );
@@ -218,7 +218,7 @@ test('given two sensors including a single reading when viewing extrema then sho
     await expect(
       getSummary({ page, deviceName: primaryDevice, metric }).locator('time'),
     ).toHaveText(
-      metric === 'temperature'
+      metric === WEATHER_METRICS.TEMPERATURE
         ? ['06 Oct · 08:00', '06 Oct · 10:00']
         : ['06 Oct · 10:00', '06 Oct · 08:00'],
     );
@@ -250,7 +250,7 @@ test('given an older daily minimum when zooming to six hours then replaces its d
   const summary = getSummary({
     page,
     deviceName: primaryDevice,
-    metric: 'temperature',
+    metric: WEATHER_METRICS.TEMPERATURE,
   });
 
   await expect(summary.locator('time').first()).toHaveText('05 Oct · 22:00');
@@ -272,7 +272,7 @@ test('given newer readings and history when refreshing then updates the maximum 
   const summary = getSummary({
     page,
     deviceName: primaryDevice,
-    metric: 'temperature',
+    metric: WEATHER_METRICS.TEMPERATURE,
   });
 
   await expect(summary.locator('time').last()).toHaveText('06 Oct · 12:00');
@@ -300,14 +300,14 @@ test('given Celsius extrema when selecting Fahrenheit then converts temperatures
     getSummary({
       page,
       deviceName: primaryDevice,
-      metric: 'temperature',
+      metric: WEATHER_METRICS.TEMPERATURE,
     }).getByTestId('low-value'),
   ).toHaveText('18.0°C');
   await expect(
     getSummary({
       page,
       deviceName: primaryDevice,
-      metric: 'dewPoint',
+      metric: WEATHER_METRICS.DEW_POINT,
     }).getByTestId('low-value'),
   ).toHaveText('8.0°C');
   await page.getByLabel('Temperature unit').getByText('°F').click();

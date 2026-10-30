@@ -125,7 +125,7 @@ cd my-weather-station
 Create `.env` in this directory:
 
 ```dotenv
-DEVICES=[{"address":"AA:BB:CC:DD:EE:FF","type":"outdoor"},{"address":"11:22:33:44:55:66","type":"indoor"}]
+DEVICES=[{"address":"AA:BB:CC:DD:EE:FF","type":"outdoor","deviceName":"garden"},{"address":"11:22:33:44:55:66","type":"indoor","deviceName":"kitchen"}]
 BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
 POSTGRES_HOST=localhost
@@ -135,8 +135,8 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=replace-this-password
 ```
 
-Replace the Bluetooth addresses and database password. Use the `address` value from `packages/collector/ble-raw.ts`. Keep the colons in each address. On macOS, use
-`deviceId` instead of `address`. Protect the file:
+Replace the Bluetooth addresses and database password. Give each device a unique `deviceName` matching its web configuration. Use the `address` value from
+`packages/collector/ble-raw.ts`. Keep the colons in each address. On macOS, use `deviceId` instead of `address`. Protect the file:
 
 ```sh
 chmod 600 .env

@@ -1,5 +1,6 @@
 // Verify stored measure mapping against PostgreSQL during collector integration checks.
 
+import { METER_TYPES } from '@wx/shared';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
@@ -13,19 +14,21 @@ vi.hoisted(() => {
   });
 });
 
-import db, { closeDatabaseConnection } from '#db/db.ts';
+import database from '#db/db.ts';
 import { storeMeasure } from '#db/measure.repository.ts';
 
-afterAll(closeDatabaseConnection);
+afterAll(async () => {
+  await database.close();
+});
 
 afterEach(async () => {
-  await db.raw('TRUNCATE TABLE measures');
+  await database.getClient().raw('TRUNCATE TABLE measures');
 });
 
 describe('storeMeasure', () => {
   it('given a complete measure when storing it then persists snake-case columns and returns a camel-case row', async () => {
     const measure = await storeMeasure({
-      type: 'indoor',
+      type: METER_TYPES.INDOOR,
       deviceName: 'repository meter',
       deviceId: 'repository-device',
       address: 'aa:bb:cc',
@@ -41,7 +44,7 @@ describe('storeMeasure', () => {
       deviceId: 'repository-device',
       deviceName: 'repository meter',
       address: 'aa:bb:cc',
-      deviceType: 'indoor',
+      deviceType: METER_TYPES.INDOOR,
       temperature: 20.5,
       dewPoint: 10.2,
       heatIndex: 21.1,
@@ -51,12 +54,12 @@ describe('storeMeasure', () => {
     });
     expect(measure.measuredAt).toEqual(expect.any(String));
 
-    expect(await db('measures').where({ id: measure.id }).first()).toMatchObject({
+    expect(await database.getClient()('measures').where({ id: measure.id }).first()).toMatchObject({
       id: measure.id,
       device_id: 'repository-device',
       address: 'aa:bb:cc',
       device_name: 'repository meter',
-      device_type: 'indoor',
+      device_type: METER_TYPES.INDOOR,
       temperature: 20.5,
       dew_point: 10.2,
       heat_index: 21.1,

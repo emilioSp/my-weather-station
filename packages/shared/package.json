@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#*": "./*"
+  },
   "exports": {
-    ".": "./index.ts"
+    ".": "./types.ts",
+    "./utils/*": "./utils/*",
+    "./testing/*": "./testing/*"
   },
   "scripts": {
     "build": "tsc",

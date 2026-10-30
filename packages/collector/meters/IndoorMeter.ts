@@ -1,14 +1,17 @@
-import { normalizeUuid } from '@wx/shared';
+// Decode SwitchBot indoor meter advertisements during collector reads.
 
-import type { Advertisement } from '#types.ts';
+import { normalizeUuid } from '@wx/shared/utils/normalizeUuid.util.ts';
 
-import { type DecodedAdvertisement, Meter } from './Meter.ts';
+import { type DecodedAdvertisement, Meter } from '#meters/Meter.ts';
+import { SWITCHBOT_UUIDS, type Advertisement } from '#types.ts';
 
 export class IndoorMeter extends Meter {
   protected decodeAdvertisement({ serviceData }: Advertisement): DecodedAdvertisement {
     const data = serviceData.find(
       ({ uuid, data }) =>
-        normalizeUuid(uuid) === 'fd3d' && data.length >= 6 && (data[0] & 0x7f) === 0x54,
+        normalizeUuid(uuid) === SWITCHBOT_UUIDS.METER_SERVICE &&
+        data.length >= 6 &&
+        (data[0] & 0x7f) === 0x54,
     )?.data;
 
     if (!data) return {};

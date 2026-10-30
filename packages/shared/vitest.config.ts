@@ -1,6 +1,8 @@
+// Configure vitest when running builds or automated checks.
+
 import { defineConfig } from 'vitest/config';
 
-import { coverageThresholds } from './index.ts';
+import { coverageThresholds } from '#testing/coverage-thresholds.ts';
 
 export default defineConfig({
   test: {

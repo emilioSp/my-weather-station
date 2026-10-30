@@ -1,3 +1,5 @@
+// Render ProgressBar when displaying the weather dashboard.
+
 type ProgressBarProps = {
   value: number;
 };

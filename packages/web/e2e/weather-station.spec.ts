@@ -1,8 +1,13 @@
 // Verify weather dashboard behavior in browser tests with controlled API responses.
-import { expect, type Locator, type Page, test } from '@playwright/test';
+
+import { readFileSync } from 'node:fs';
+
+import { expect, type Locator, type Page, type Route, test } from '@playwright/test';
+import { METER_TYPES } from '@wx/shared';
 import { loadEnv } from 'vite';
 
-import { saveCoverage } from './utils/save-coverage';
+import { saveCoverage } from '#e2e/utils/save-coverage.ts';
+import { WEATHER_METRICS, type WeatherMetric } from '#utils/weather-metrics.ts';
 
 type ConfiguredDevice = {
   deviceName: string;
@@ -11,7 +16,7 @@ type ConfiguredDevice = {
 type MeasureRow = {
   id: string;
   device_name: string;
-  device_type: 'outdoor' | 'indoor';
+  device_type: typeof METER_TYPES.OUTDOOR | typeof METER_TYPES.INDOOR;
   measured_at: string;
   temperature: number;
   humidity: number;
@@ -21,9 +26,7 @@ type MeasureRow = {
   signal_power_dbm: number;
 };
 
-type ReadingValues = Omit<MeasureRow, 'id' | 'device_name' | 'device_type' | 'measured_at'>;
-
-type ChartMetric = 'temperature' | 'humidity' | 'dewPoint';
+type ChartMetric = WeatherMetric;
 
 // JUSTIFICATION: The repository's development configuration lists devices with string deviceName fields.
 const configuredDevices = JSON.parse(
@@ -32,109 +35,34 @@ const configuredDevices = JSON.parse(
 
 const deviceNames = configuredDevices.map(({ deviceName }) => deviceName);
 
-const deviceNameAt = (index: number): string => {
-  const device = configuredDevices[index];
+const deviceNameAt = (index: number): string => configuredDevices[index].deviceName;
 
-  if (device === undefined) {
-    throw new Error(`No configured device exists at index ${index}.`);
-  }
+type DashboardFixture = { initial: MeasureRow[]; changed: MeasureRow[] };
 
-  return device.deviceName;
-};
-
-const initialReadings: ReadingValues[] = [
-  {
-    temperature: 20,
-    humidity: 67,
-    dew_point: 12,
-    heat_index: 19.5,
-    battery: 80,
-    signal_power_dbm: -101,
-  },
-  {
-    temperature: 21,
-    humidity: 67,
-    dew_point: 10,
-    heat_index: 20.5,
-    battery: 80,
-    signal_power_dbm: 1,
-  },
-  {
-    temperature: 22,
-    humidity: 54,
-    dew_point: 10,
-    heat_index: 21.5,
-    battery: 80,
-    signal_power_dbm: -45,
-  },
-  {
-    temperature: 19,
-    humidity: 51,
-    dew_point: 9,
-    heat_index: 18.5,
-    battery: 80,
-    signal_power_dbm: -62,
-  },
-];
-
-const changedTemperatures = [25, 24, 23, 20];
-
-const getInitialReadings = (index: number): ReadingValues =>
-  initialReadings[index] ?? {
-    temperature: 20 + index,
-    humidity: 50,
-    dew_point: 10,
-    heat_index: 20 + index,
-    battery: 80,
-    signal_power_dbm: -50,
-  };
-
-const createMeasure = ({
-  deviceIndex,
-  id,
-  measuredAt = '2026-09-01T14:00:00.000Z',
-  readings = getInitialReadings(deviceIndex),
-}: {
-  deviceIndex: number;
-  id: number;
-  measuredAt?: string;
-  readings?: ReadingValues;
-}): MeasureRow => ({
-  id: `00000000-0000-0000-0000-${String(id).padStart(12, '0')}`,
-  device_name: deviceNameAt(deviceIndex),
-  device_type: deviceIndex === 0 ? 'outdoor' : 'indoor',
-  measured_at: measuredAt,
-  ...readings,
-});
-
-const createMeasureMap = (
-  createRow: (deviceIndex: number) => MeasureRow,
-): Record<string, MeasureRow> =>
-  Object.fromEntries(
-    configuredDevices.map((_, deviceIndex) => {
-      const row = createRow(deviceIndex);
-
-      return [row.device_name, row];
-    }),
-  );
-
-const initialMeasures = createMeasureMap((deviceIndex) =>
-  createMeasure({ deviceIndex, id: deviceIndex + 1 }),
+const fixture: DashboardFixture = JSON.parse(
+  readFileSync(
+    new URL(
+      '../tests/fixtures/weather-station/current-and-refreshed-readings.json',
+      import.meta.url,
+    ),
+    'utf8',
+  ),
 );
 
-const changedMeasures = createMeasureMap((deviceIndex) => {
-  const readings = getInitialReadings(deviceIndex);
+// This scenario has four fixture meters; it does not generate data for additional devices.
+const initialMeasures: Record<string, MeasureRow> = Object.fromEntries(
+  configuredDevices.map(({ deviceName }, index) => [
+    deviceName,
+    { ...fixture.initial[index], device_name: deviceName },
+  ]),
+);
 
-  return createMeasure({
-    deviceIndex,
-    id: deviceIndex + 5,
-    measuredAt: '2026-09-01T15:00:00.000Z',
-    readings: {
-      ...readings,
-      temperature: changedTemperatures[deviceIndex] ?? readings.temperature + 5,
-    },
-  });
-});
+const changedMeasures: Record<string, MeasureRow> = Object.fromEntries(
+  configuredDevices.map(({ deviceName }, index) => [
+    deviceName,
+    { ...fixture.changed[index], device_name: deviceName },
+  ]),
+);
 
 const configuredHistory: Record<string, MeasureRow[]> = Object.fromEntries(
   configuredDevices.map((_, deviceIndex) => {
@@ -153,56 +81,82 @@ const emptyHistory: Record<string, MeasureRow[]> = Object.fromEntries(
   deviceNames.map((deviceName) => [deviceName, []]),
 );
 
-const getRequestedDeviceName = (route: {
-  request: () => { url: () => string };
-}): string | undefined =>
+const getRequestedDeviceName = (route: Route): string | undefined =>
   new URL(route.request().url()).searchParams.get('device_name')?.replace(/^eq\./, '');
 
-const getMeasureForRequest = (
-  route: { request: () => { url: () => string } },
-  measures: Record<string, MeasureRow>,
-): MeasureRow => {
-  const deviceName = getRequestedDeviceName(route);
+type MeasureFixtureRequest = {
+  deviceName: string | undefined;
+  measure: MeasureRow | undefined;
+};
 
-  if (deviceName === undefined || measures[deviceName] === undefined) {
-    throw new Error(`No fixture exists for requested device ${deviceName}.`);
+function assertMeasureFixture(
+  request: MeasureFixtureRequest,
+): asserts request is MeasureFixtureRequest & { measure: MeasureRow } {
+  if (request.deviceName === undefined || request.measure === undefined) {
+    throw new Error(`No fixture exists for requested device ${request.deviceName}.`);
   }
+}
 
-  return measures[deviceName];
+type GetMeasureForRequestInput = {
+  route: Route;
+  measures: Record<string, MeasureRow>;
+};
+
+const getMeasureForRequest = ({ route, measures }: GetMeasureForRequestInput): MeasureRow => {
+  const deviceName = getRequestedDeviceName(route);
+  const request = { deviceName, measure: measures[deviceName ?? ''] };
+  assertMeasureFixture(request);
+
+  return request.measure;
 };
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const getChart = ({
-  page,
-  deviceName,
-  metric = 'temperature',
-}: {
+type PlotBox = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
+function assertTouchPlotBox(box: PlotBox | null): asserts box is PlotBox {
+  if (box === null) throw new Error('The configured temperature chart plot is not rendered.');
+}
+
+type GetChartInput = {
   page: Page;
   deviceName: string;
   metric?: ChartMetric;
-}): Locator => {
-  const metricLabel = metric === 'dewPoint' ? 'dew point' : metric;
+};
+
+const getChart = ({
+  page,
+  deviceName,
+  metric = WEATHER_METRICS.TEMPERATURE,
+}: GetChartInput): Locator => {
+  const metricLabel = metric === WEATHER_METRICS.DEW_POINT ? 'dew point' : metric;
 
   return page.getByLabel(
     new RegExp(`Interactive ${metricLabel} chart for ${escapeRegExp(deviceName)} measurements`),
   );
 };
 
-const getChartTestId = (deviceName: string, metric: ChartMetric): string =>
+type GetChartTestIdInput = {
+  deviceName: string;
+  metric: ChartMetric;
+};
+
+const getChartTestId = ({ deviceName, metric }: GetChartTestIdInput): string =>
   `${deviceName}-${metric}-chart-tooltip`;
 
-const expectDesktopChartReadout = async ({
-  chart,
-  expectedValues,
-  page,
-  tooltipTestId,
-}: {
+type AssertDesktopChartReadoutInput = {
   chart: Locator;
   expectedValues: string[];
   page: Page;
   tooltipTestId: string;
-}): Promise<void> => {
+};
+
+async function assertDesktopChartReadout({
+  chart,
+  expectedValues,
+  page,
+  tooltipTestId,
+}: AssertDesktopChartReadoutInput): Promise<void> {
   await chart.scrollIntoViewIfNeeded();
   const plot = chart.locator('.recharts-cartesian-grid');
   await expect(plot).toBeVisible({ timeout: 5_000 });
@@ -225,7 +179,7 @@ const expectDesktopChartReadout = async ({
   for (const expectedValue of expectedValues) {
     await expect(tooltip).toContainText(expectedValue, { timeout: 5_000 });
   }
-};
+}
 
 test.describe('Weather station', () => {
   test('given configured devices with readings when opening the dashboard then shows device icons and history controls without overflow', async ({
@@ -235,7 +189,7 @@ test.describe('Weather station', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
         contentType: 'application/json',
       });
     });
@@ -280,7 +234,7 @@ test.describe('Weather station', () => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
         contentType: 'application/json',
       });
     });
@@ -385,15 +339,11 @@ test.describe('Weather station', () => {
     page,
   }) => {
     await page.coverage.startJSCoverage();
-    let releaseHistory!: () => void;
-
-    const historyReady = new Promise<void>((resolve) => {
-      releaseHistory = resolve;
-    });
+    const { promise: historyReady, resolve: releaseHistory } = Promise.withResolvers<void>();
 
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
         contentType: 'application/json',
       });
     });
@@ -422,7 +372,7 @@ test.describe('Weather station', () => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
         contentType: 'application/json',
       });
     });
@@ -475,7 +425,7 @@ test.describe('Weather station', () => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
         contentType: 'application/json',
       });
     });
@@ -536,7 +486,7 @@ test.describe('Weather station', () => {
     await page.route('**/rest/v1/measures**', async (route) => {
       const response = latestResponses[Math.min(latestResponseIndex, latestResponses.length - 1)];
 
-      const measure = getMeasureForRequest(route, response);
+      const measure = getMeasureForRequest({ route: route, measures: response });
       await route.fulfill({
         body: JSON.stringify([measure]),
         contentType: 'application/json',
@@ -574,7 +524,7 @@ test.describe('Weather station', () => {
     await expect(page.getByLabel('Current readings')).toContainText(
       `${secondaryInitialMeasure.signal_power_dbm} dBm`,
     );
-    await expectDesktopChartReadout({
+    await assertDesktopChartReadout({
       chart: getChart({ page, deviceName: primaryDeviceName }),
       expectedValues: [
         '01 Sept · 17:00:00',
@@ -582,7 +532,10 @@ test.describe('Weather station', () => {
         `${primaryChangedMeasure.heat_index.toFixed(1)}°C`,
       ],
       page,
-      tooltipTestId: getChartTestId(primaryDeviceName, 'temperature'),
+      tooltipTestId: getChartTestId({
+        deviceName: primaryDeviceName,
+        metric: WEATHER_METRICS.TEMPERATURE,
+      }),
     });
 
     const refreshReadings = page.getByRole('button', {
@@ -623,7 +576,9 @@ test.describe('Weather station', () => {
               status: 500,
             }
           : {
-              body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+              body: JSON.stringify([
+                getMeasureForRequest({ route: route, measures: initialMeasures }),
+              ]),
               contentType: 'application/json',
             },
       );
@@ -689,7 +644,7 @@ test.describe('Weather station', () => {
     await page.route('**/rest/v1/measures**', async (route) => {
       const response = latestResponses[Math.min(latestResponseIndex, latestResponses.length - 1)];
 
-      const measure = getMeasureForRequest(route, response);
+      const measure = getMeasureForRequest({ route: route, measures: response });
       await route.fulfill({
         body: JSON.stringify([measure]),
         contentType: 'application/json',
@@ -737,7 +692,7 @@ test.describe('Weather station', () => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.route('**/rest/v1/measures**', async (route) => {
         await route.fulfill({
-          body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+          body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
           contentType: 'application/json',
         });
       });
@@ -762,9 +717,7 @@ test.describe('Weather station', () => {
       await expect(plot).toBeVisible({ timeout: 5_000 });
       const plotBox = await plot.boundingBox();
 
-      if (plotBox === null) {
-        throw new Error('The configured temperature chart plot is not rendered.');
-      }
+      assertTouchPlotBox(plotBox);
 
       const touchPosition = {
         x: plotBox.x + plotBox.width - 1,
@@ -805,7 +758,7 @@ test.describe('Weather station', () => {
     const requestedRanges: Array<{ end: string; start: string }> = [];
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest(route, initialMeasures)]),
+        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
         contentType: 'application/json',
       });
     });
@@ -838,7 +791,7 @@ test.describe('Weather station', () => {
       deviceName: primaryDeviceName,
     }).first();
 
-    await expectDesktopChartReadout({
+    await assertDesktopChartReadout({
       chart: primaryTemperatureChart,
       expectedValues: [
         '01 Sept · 17:00:00',
@@ -846,7 +799,10 @@ test.describe('Weather station', () => {
         `${primaryChangedMeasure.heat_index.toFixed(1)}°C`,
       ],
       page,
-      tooltipTestId: getChartTestId(primaryDeviceName, 'temperature'),
+      tooltipTestId: getChartTestId({
+        deviceName: primaryDeviceName,
+        metric: WEATHER_METRICS.TEMPERATURE,
+      }),
     });
 
     const deviceAccordion = page.getByRole('button', {
@@ -856,7 +812,7 @@ test.describe('Weather station', () => {
     await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'false');
     await deviceAccordion.click();
     await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'true');
-    await expectDesktopChartReadout({
+    await assertDesktopChartReadout({
       chart: getChart({
         page,
         deviceName: secondaryDeviceName,
@@ -867,27 +823,36 @@ test.describe('Weather station', () => {
         `${secondaryChangedMeasure.heat_index.toFixed(1)}°C`,
       ],
       page,
-      tooltipTestId: getChartTestId(secondaryDeviceName, 'temperature'),
+      tooltipTestId: getChartTestId({
+        deviceName: secondaryDeviceName,
+        metric: WEATHER_METRICS.TEMPERATURE,
+      }),
     });
-    await expectDesktopChartReadout({
+    await assertDesktopChartReadout({
       chart: getChart({
         page,
         deviceName: primaryDeviceName,
-        metric: 'humidity',
+        metric: WEATHER_METRICS.HUMIDITY,
       }).first(),
       expectedValues: ['01 Sept · 17:00:00', `${primaryInitialMeasure.humidity}%`],
       page,
-      tooltipTestId: getChartTestId(primaryDeviceName, 'humidity'),
+      tooltipTestId: getChartTestId({
+        deviceName: primaryDeviceName,
+        metric: WEATHER_METRICS.HUMIDITY,
+      }),
     });
-    await expectDesktopChartReadout({
+    await assertDesktopChartReadout({
       chart: getChart({
         page,
         deviceName: primaryDeviceName,
-        metric: 'dewPoint',
+        metric: WEATHER_METRICS.DEW_POINT,
       }).first(),
       expectedValues: ['01 Sept · 17:00:00', `${primaryInitialMeasure.dew_point.toFixed(1)}°C`],
       page,
-      tooltipTestId: getChartTestId(primaryDeviceName, 'dewPoint'),
+      tooltipTestId: getChartTestId({
+        deviceName: primaryDeviceName,
+        metric: WEATHER_METRICS.DEW_POINT,
+      }),
     });
     await deviceAccordion.click();
     await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'false');
@@ -899,7 +864,7 @@ test.describe('Weather station', () => {
     for (const label of ['Last 3 days', 'Last week', 'Last 2 weeks', 'Last month']) {
       await zoomOut.click();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
-      await expectDesktopChartReadout({
+      await assertDesktopChartReadout({
         chart: primaryTemperatureChart,
         expectedValues: [
           '01 Sept · 17:00:00',
@@ -907,7 +872,10 @@ test.describe('Weather station', () => {
           `${primaryChangedMeasure.heat_index.toFixed(1)}°C`,
         ],
         page,
-        tooltipTestId: getChartTestId(primaryDeviceName, 'temperature'),
+        tooltipTestId: getChartTestId({
+          deviceName: primaryDeviceName,
+          metric: WEATHER_METRICS.TEMPERATURE,
+        }),
       });
     }
 
@@ -923,7 +891,7 @@ test.describe('Weather station', () => {
     ]) {
       await zoomIn.click();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
-      await expectDesktopChartReadout({
+      await assertDesktopChartReadout({
         chart: primaryTemperatureChart,
         expectedValues: [
           '01 Sept · 17:00:00',
@@ -931,7 +899,10 @@ test.describe('Weather station', () => {
           `${primaryChangedMeasure.heat_index.toFixed(1)}°C`,
         ],
         page,
-        tooltipTestId: getChartTestId(primaryDeviceName, 'temperature'),
+        tooltipTestId: getChartTestId({
+          deviceName: primaryDeviceName,
+          metric: WEATHER_METRICS.TEMPERATURE,
+        }),
       });
     }
 
@@ -940,7 +911,8 @@ test.describe('Weather station', () => {
     const lastRange = requestedRanges.at(-1);
     expect(lastRange).toBeDefined();
     expect(
-      new Date(lastRange?.end ?? '').getTime() - new Date(lastRange?.start ?? '').getTime(),
+      Temporal.Instant.from(lastRange?.end ?? '').epochMilliseconds -
+        Temporal.Instant.from(lastRange?.start ?? '').epochMilliseconds,
     ).toBe(6 * 60 * 60 * 1_000);
 
     await saveCoverage({

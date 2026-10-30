@@ -1,6 +1,12 @@
 // Verify weather station state and API calls with controlled React hook mocks.
+
+import { readFileSync } from 'node:fs';
+
 import type { Measure } from '@wx/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import type { SupabaseApi } from '#supabase.api.ts';
+import { CHART_RANGES } from '#utils/chart-ranges.ts';
 
 const state = vi.hoisted<{ values: unknown[] }>(() => ({ values: [] }));
 
@@ -12,15 +18,15 @@ const configuredDevices = vi.hoisted(() => [
 ]);
 
 const weatherApi = vi.hoisted(() => ({
-  getLatestMeasure: vi.fn<typeof import('#supabase.api.ts').getLatestMeasure>(),
-  getChartHistory: vi.fn<typeof import('#supabase.api.ts').getChartHistory>(),
+  getLatestMeasure: vi.fn<SupabaseApi['getLatestMeasure']>(),
+  getChartHistory: vi.fn<SupabaseApi['getChartHistory']>(),
 }));
 
 vi.mock('#environment.ts', () => ({
   environment: { DEVICES: configuredDevices },
 }));
 
-vi.mock('#supabase.api.ts', () => weatherApi);
+vi.mock('#supabase.api.ts', () => ({ default: weatherApi }));
 
 vi.mock('react', async (importOriginal) => {
   const React = await importOriginal<typeof import('react')>();
@@ -41,41 +47,11 @@ import { useWeatherStation } from '#hooks/useWeatherStation.ts';
 
 const deviceNames = configuredDevices.map(({ deviceName }) => deviceName);
 
-const createMeasure = ({
-  deviceName,
-  id,
-  deviceType = 'indoor',
-  temperature = 20,
-}: {
-  deviceName: string;
-  id: string;
-  deviceType?: Measure['deviceType'];
-  temperature?: number;
-}): Measure => ({
-  id,
-  deviceId: 'device',
-  deviceName,
-  address: 'address',
-  deviceType,
-  measuredAt: '2026-01-01T00:00:00Z',
-  temperature,
-  dewPoint: 10,
-  heatIndex: temperature + 1,
-  humidity: 50,
-  battery: 80,
-  signalPowerDBM: -50,
-});
-
-const measuresByDeviceName: Record<string, Measure> = Object.fromEntries(
-  configuredDevices.map(({ deviceName }, index) => [
-    deviceName,
-    createMeasure({
-      deviceName,
-      id: `123e4567-e89b-12d3-a456-426614174${String(index + 1).padStart(3, '0')}`,
-      deviceType: index === 0 ? 'outdoor' : 'indoor',
-      temperature: 20 + index,
-    }),
-  ]),
+const measuresByDeviceName: Record<string, Measure> = JSON.parse(
+  readFileSync(
+    new URL('../tests/fixtures/hooks/complete-current-readings.json', import.meta.url),
+    'utf8',
+  ),
 );
 
 const historyByDeviceName: Record<string, Measure[]> = Object.fromEntries(
@@ -95,7 +71,7 @@ afterEach(() => {
 describe('useWeatherStation', () => {
   it('given empty initial state when loading the station then requests current measures for every configured device', async () => {
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
-    state.values = [null, null, 'LAST_DAY', false];
+    state.values = [null, null, CHART_RANGES.LAST_DAY, false];
 
     const result = useWeatherStation();
     await Promise.resolve();
@@ -109,7 +85,12 @@ describe('useWeatherStation', () => {
 
   it('given current measures without readings when loading the station then does not request chart history', async () => {
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
-    state.values = [{ byDeviceName: emptyCurrentMeasures, error: null }, null, 'LAST_DAY', false];
+    state.values = [
+      { byDeviceName: emptyCurrentMeasures, error: null },
+      null,
+      CHART_RANGES.LAST_DAY,
+      false,
+    ];
 
     const result = useWeatherStation();
     await Promise.resolve();
@@ -120,12 +101,10 @@ describe('useWeatherStation', () => {
 
   it('given a complete current state when loading and refreshing then preserves name-keyed readings and fetches history once', async () => {
     vi.useFakeTimers();
-    weatherApi.getLatestMeasure.mockImplementation(
-      async ({ deviceName }: { deviceName: string }) => ({
-        rows: [measuresByDeviceName[deviceName]],
-        error: null,
-      }),
-    );
+    weatherApi.getLatestMeasure.mockImplementation(async ({ deviceName }) => ({
+      rows: [measuresByDeviceName[deviceName]],
+      error: null,
+    }));
     weatherApi.getChartHistory.mockResolvedValue({
       history: historyByDeviceName,
       error: null,
@@ -133,7 +112,7 @@ describe('useWeatherStation', () => {
     state.values = [
       { byDeviceName: measuresByDeviceName, error: null },
       { history: historyByDeviceName, error: null },
-      'LAST_DAY',
+      CHART_RANGES.LAST_DAY,
       false,
     ];
 
@@ -155,7 +134,5 @@ describe('useWeatherStation', () => {
     });
     expect(weatherApi.getChartHistory).toHaveBeenCalledOnce();
     expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length * 2);
-    result.changeRange(1);
-    result.changeRange(99);
   });
 });

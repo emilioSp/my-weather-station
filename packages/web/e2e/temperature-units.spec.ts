@@ -1,8 +1,13 @@
 // Verify temperature unit selection and persistence in browser tests.
-import { expect, type Page, test } from '@playwright/test';
+
+import { readFileSync } from 'node:fs';
+
+import { expect, type Page, type Route, test } from '@playwright/test';
+import { METER_TYPES } from '@wx/shared';
 import { loadEnv } from 'vite';
 
-import { saveCoverage } from './utils/save-coverage';
+import { saveCoverage } from '#e2e/utils/save-coverage.ts';
+import { TEMPERATURE_UNITS } from '#utils/temperature-unit.util.ts';
 
 type ConfiguredDevice = {
   deviceName: string;
@@ -11,7 +16,7 @@ type ConfiguredDevice = {
 type MeasureRow = {
   id: string;
   device_name: string;
-  device_type: 'outdoor' | 'indoor';
+  device_type: typeof METER_TYPES.OUTDOOR | typeof METER_TYPES.INDOOR;
   measured_at: string;
   temperature: number;
   humidity: number;
@@ -21,138 +26,74 @@ type MeasureRow = {
   signal_power_dbm: number;
 };
 
-type ReadingValues = Omit<MeasureRow, 'id' | 'device_name' | 'device_type' | 'measured_at'>;
-
 // JUSTIFICATION: The repository's development configuration lists devices with string deviceName fields.
 const configuredDevices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
 ) as ConfiguredDevice[];
 
-const deviceNameAt = (index: number): string => {
-  const device = configuredDevices[index];
+const deviceNameAt = (index: number): string => configuredDevices[index].deviceName;
 
-  if (device === undefined) {
-    throw new Error(`No configured device exists at index ${index}.`);
-  }
+type TemperatureFixture = { latest: MeasureRow[]; history: MeasureRow[][] };
 
-  return device.deviceName;
-};
+const fixture: TemperatureFixture = JSON.parse(
+  readFileSync(
+    new URL(
+      '../tests/fixtures/temperature-units/celsius-readings-with-history.json',
+      import.meta.url,
+    ),
+    'utf8',
+  ),
+);
 
-const latestReadings: ReadingValues[] = [
-  {
-    temperature: 20,
-    humidity: 67,
-    dew_point: 12,
-    heat_index: 19.5,
-    battery: 80,
-    signal_power_dbm: -55,
-  },
-  {
-    temperature: 21,
-    humidity: 49,
-    dew_point: 10,
-    heat_index: 21.2,
-    battery: 80,
-    signal_power_dbm: -55,
-  },
-  {
-    temperature: 22,
-    humidity: 46,
-    dew_point: 10,
-    heat_index: 22.1,
-    battery: 80,
-    signal_power_dbm: -55,
-  },
-  {
-    temperature: 19,
-    humidity: 51,
-    dew_point: 9,
-    heat_index: 19.2,
-    battery: 80,
-    signal_power_dbm: -55,
-  },
-];
-
-const historyTemperatures = [18, 19, 20, 17];
-
-const historyHeatIndices = [17.7, 18.7, 19.8, 16.8];
-
-const getLatestReadings = (index: number): ReadingValues =>
-  latestReadings[index] ?? {
-    temperature: 20 + index,
-    humidity: 50,
-    dew_point: 10,
-    heat_index: 20 + index,
-    battery: 80,
-    signal_power_dbm: -55,
-  };
-
-const createMeasure = ({
-  deviceIndex,
-  id,
-  readings = getLatestReadings(deviceIndex),
-}: {
-  deviceIndex: number;
-  id: number;
-  readings?: ReadingValues;
-}): MeasureRow => ({
-  id: `00000000-0000-0000-0000-${String(id).padStart(12, '0')}`,
-  device_name: deviceNameAt(deviceIndex),
-  device_type: deviceIndex === 0 ? 'outdoor' : 'indoor',
-  measured_at: '2026-09-01T14:00:00.000Z',
-  ...readings,
-});
-
+// This scenario has four fixture meters; it does not generate data for additional devices.
 const latestMeasures: Record<string, MeasureRow> = Object.fromEntries(
-  configuredDevices.map((_, deviceIndex) => {
-    const measure = createMeasure({ deviceIndex, id: deviceIndex + 1 });
-
-    return [measure.device_name, measure];
-  }),
+  configuredDevices.map(({ deviceName }, index) => [
+    deviceName,
+    { ...fixture.latest[index], device_name: deviceName },
+  ]),
 );
 
 const history: Record<string, MeasureRow[]> = Object.fromEntries(
-  configuredDevices.map((_, deviceIndex) => {
-    const deviceName = deviceNameAt(deviceIndex);
-    const latestMeasure = latestMeasures[deviceName];
-
-    return [
-      deviceName,
-      [
-        {
-          ...latestMeasure,
-          id: `00000000-0000-0000-0000-${String(deviceIndex + 5).padStart(12, '0')}`,
-          temperature: historyTemperatures[deviceIndex] ?? latestMeasure.temperature - 2,
-          heat_index: historyHeatIndices[deviceIndex] ?? latestMeasure.heat_index - 2,
-        },
-        latestMeasure,
-      ],
-    ];
-  }),
+  configuredDevices.map(({ deviceName }, index) => [
+    deviceName,
+    fixture.history[index].map((row) => ({ ...row, device_name: deviceName })),
+  ]),
 );
 
-const getRequestedDeviceName = (route: {
-  request: () => { url: () => string };
-}): string | undefined =>
+const getRequestedDeviceName = (route: Route): string | undefined =>
   new URL(route.request().url()).searchParams.get('device_name')?.replace(/^eq\./, '');
 
-const getLatestMeasureForRequest = (route: {
-  request: () => { url: () => string };
-}): MeasureRow => {
-  const deviceName = getRequestedDeviceName(route);
+type MeasureFixtureRequest = {
+  deviceName: string | undefined;
+  measure: MeasureRow | undefined;
+};
 
-  if (deviceName === undefined || latestMeasures[deviceName] === undefined) {
-    throw new Error(`No fixture exists for requested device ${deviceName}.`);
+function assertMeasureFixture(
+  request: MeasureFixtureRequest,
+): asserts request is MeasureFixtureRequest & { measure: MeasureRow } {
+  if (request.deviceName === undefined || request.measure === undefined) {
+    throw new Error(`No fixture exists for requested device ${request.deviceName}.`);
   }
+}
 
-  return latestMeasures[deviceName];
+const getLatestMeasureForRequest = (route: Route): MeasureRow => {
+  const deviceName = getRequestedDeviceName(route);
+  const request = { deviceName, measure: latestMeasures[deviceName ?? ''] };
+  assertMeasureFixture(request);
+
+  return request.measure;
 };
 
 const toFahrenheit = (celsius: number): string => `${((celsius * 9) / 5 + 32).toFixed(1)}°F`;
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const getTemperatureChart = (page: Page, deviceName: string) =>
+type GetTemperatureChartInput = {
+  page: Page;
+  deviceName: string;
+};
+
+const getTemperatureChart = ({ page, deviceName }: GetTemperatureChartInput) =>
   page.getByLabel(
     new RegExp(`Interactive temperature chart for ${escapeRegExp(deviceName)} measurements`),
   );
@@ -195,7 +136,7 @@ test.describe('Temperature units', () => {
 
     const primaryDeviceName = deviceNameAt(0);
     const primaryHistory = history[primaryDeviceName];
-    const temperatureChart = getTemperatureChart(page, primaryDeviceName);
+    const temperatureChart = getTemperatureChart({ page: page, deviceName: primaryDeviceName });
     await temperatureChart.hover({ position: { x: 200, y: 200 } });
     await expect(page.getByTestId(`${primaryDeviceName}-temperature-chart-tooltip`)).toContainText(
       toFahrenheit(primaryHistory[0].heat_index),
@@ -240,7 +181,7 @@ test.describe('Temperature units', () => {
     );
     await expect(
       page.evaluate(() => window.localStorage.getItem('temperature-unit')),
-    ).resolves.toBe('fahrenheit');
+    ).resolves.toBe(TEMPERATURE_UNITS.FAHRENHEIT);
 
     const jsCoverage = await page.coverage.stopJSCoverage();
     await saveCoverage({
@@ -277,11 +218,7 @@ test.describe('Temperature units', () => {
     await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
 
     await page.addInitScript(() => {
-      Object.defineProperty(window, 'localStorage', {
-        get: () => {
-          throw new Error('Storage unavailable');
-        },
-      });
+      Object.defineProperty(window, 'localStorage', { value: undefined });
     });
     await page.reload();
     await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
