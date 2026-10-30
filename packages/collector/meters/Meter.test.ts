@@ -19,7 +19,9 @@ import { createMeter } from '#meters/meter.factory.ts';
 import { OutdoorMeter } from '#meters/OutdoorMeter.ts';
 import type { Advertisement } from '#types.ts';
 
-const sensor = vi.hoisted(() => ({ getAdvertisement: vi.fn() }));
+const sensor = vi.hoisted(() => ({
+  getAdvertisement: vi.fn<typeof import('#api/sensor.api.ts').getAdvertisement>(),
+}));
 
 vi.mock('#api/sensor.api.ts', () => sensor);
 
@@ -54,7 +56,7 @@ afterEach(async () => {
 afterAll(closeDatabaseConnection);
 
 describe('meters', () => {
-  it('reads a complete indoor advertisement and stores it', async () => {
+  it('given a complete indoor advertisement when reading the meter then returns decoded values and persists the device name', async () => {
     sensor.getAdvertisement.mockResolvedValue(
       advertisement({
         serviceData: [{ uuid: 'FD3D', data: Buffer.from([0x54, 0, 80, 5, 0x94, 60]) }],
@@ -76,7 +78,7 @@ describe('meters', () => {
     });
   });
 
-  it('combines outdoor advertisements before storing a complete reading', async () => {
+  it('given separate outdoor advertisements when reading the meter then combines temperature humidity and battery values', async () => {
     sensor.getAdvertisement
       .mockResolvedValueOnce(
         advertisement({
@@ -103,7 +105,7 @@ describe('meters', () => {
     });
   });
 
-  it('rejects incomplete and invalid advertisements after all scan attempts', async () => {
+  it('given incomplete indoor advertisements when reading the meter then throws NoCompleteReadingError after eight attempts', async () => {
     sensor.getAdvertisement.mockResolvedValue(
       advertisement({
         serviceData: [{ uuid: 'fd3d', data: Buffer.from([0x54]) }],
@@ -113,7 +115,7 @@ describe('meters', () => {
     expect(sensor.getAdvertisement).toHaveBeenCalledTimes(8);
   });
 
-  it('creates configured meter strategies and rejects an unknown type', () => {
+  it('given indoor outdoor and unknown meter types when creating strategies then returns matching instances and rejects the unknown type', () => {
     expect(createMeter(indoor)).toBeInstanceOf(IndoorMeter);
     expect(createMeter(outdoor)).toBeInstanceOf(OutdoorMeter);
     expect(() =>

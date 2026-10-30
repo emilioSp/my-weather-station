@@ -228,7 +228,9 @@ const expectDesktopChartReadout = async ({
 };
 
 test.describe('Weather station', () => {
-  test('shows all configured names, icons, and history accordions', async ({ page }) => {
+  test('given configured devices with readings when opening the dashboard then shows device icons and history controls without overflow', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.route('**/rest/v1/measures**', async (route) => {
@@ -272,7 +274,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('uses distinct meter themes at every target viewport', async ({ page }) => {
+  test('given configured meters when resizing the dashboard then preserves distinct themes and responsive columns without overflow', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
@@ -377,7 +381,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('shows chart placeholders while named history is loading', async ({ page }) => {
+  test('given a delayed history response when opening the dashboard then shows placeholders followed by the loaded chart', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     let releaseHistory!: () => void;
 
@@ -410,7 +416,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('shows empty charts for configured history keys without measures', async ({ page }) => {
+  test('given configured history keys without measures when opening the dashboard then shows empty charts for every device', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
@@ -436,7 +444,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('shows the current-reading error returned by the API', async ({ page }) => {
+  test('given a current-reading API error when opening the dashboard then shows the returned error', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
@@ -459,7 +469,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('shows the chart-history error returned by the API', async ({ page }) => {
+  test('given a chart-history API error when opening the dashboard then shows the returned history error', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
@@ -488,7 +500,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('shows empty current-reading and chart states when no readings exist', async ({ page }) => {
+  test('given no stored readings when opening the dashboard then shows empty readings and no history accordions', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
@@ -512,7 +526,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('refreshes changed readings but retains unchanged readings', async ({ page }) => {
+  test('given updated readings when refreshing twice then shows changed values and retains them on the unchanged response', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     const latestResponses = [initialMeasures, changedMeasures, changedMeasures];
     let latestResponseIndex = 0;
@@ -593,7 +609,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('shows an error when a refresh cannot load current readings', async ({ page }) => {
+  test('given loaded readings when refreshing fails then shows the refresh error', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     let failRefresh = false;
     await page.route('**/rest/v1/measures**', async (route) => {
@@ -634,7 +652,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('shows weak, medium, and strong signal readings', async ({ page }) => {
+  test('given weak and medium signals when refreshing with a strong signal then updates the displayed signal values', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     const firstDeviceName = deviceNameAt(0);
     const secondDeviceName = deviceNameAt(1);
@@ -710,7 +730,9 @@ test.describe('Weather station', () => {
   test.describe('at the smartphone viewport', () => {
     test.use({ hasTouch: true, isMobile: true });
 
-    test('shows the smartphone touch chart readout', async ({ page }) => {
+    test('given a smartphone chart when touching and dragging then replaces the prompt with the reading time and temperatures', async ({
+      page,
+    }) => {
       await page.coverage.startJSCoverage();
       await page.setViewportSize({ width: 390, height: 844 });
       await page.route('**/rest/v1/measures**', async (route) => {
@@ -776,7 +798,9 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('changes chart ranges at both limits and toggles a device accordion', async ({ page }) => {
+  test('given loaded history when toggling a device and zooming to both limits then updates charts and disables the limit controls', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     const requestedRanges: Array<{ end: string; start: string }> = [];
     await page.route('**/rest/v1/measures**', async (route) => {

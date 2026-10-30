@@ -1,9 +1,10 @@
-import { describe, it } from 'vitest';
+// Verify primitive values remain unchanged when mapping database keys.
 
-import { toCamelCaseKeys } from './caseMapper.util.ts';
+import { toCamelCaseKeys } from '@wx/shared';
+import { describe, expect, it } from 'vitest';
 
 describe('caseMapper', () => {
-  it('returns a string converted to camel case', () => {
-    toCamelCaseKeys('ciao');
+  it('given a string value when mapping keys to camel case then preserves the string', () => {
+    expect(toCamelCaseKeys('ciao')).toBe('ciao');
   });
 });

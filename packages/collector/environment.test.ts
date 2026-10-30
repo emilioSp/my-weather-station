@@ -1,3 +1,5 @@
+// Verify device name validation and trimming during collector configuration checks.
+
 import { describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
@@ -23,25 +25,18 @@ const environmentInput = (devices: unknown[]) => ({
 });
 
 describe('environment', () => {
-  it('accepts named devices and trims their names', () => {
-    const result = environmentSchema.safeParse(
+  it('given named devices with surrounding spaces when parsing configuration then trims device names', () => {
+    const result = environmentSchema.parse(
       environmentInput([
         { type: 'indoor', deviceId: 'indoor-device', deviceName: ' Kitchen ' },
         { type: 'outdoor', deviceId: 'outdoor-device', deviceName: 'Garden' },
       ]),
     );
 
-    expect(result.success).toBe(true);
-
-    if (result.success) {
-      expect(result.data.DEVICES.map(({ deviceName }) => deviceName)).toEqual([
-        'Kitchen',
-        'Garden',
-      ]);
-    }
+    expect(result.DEVICES.map(({ deviceName }) => deviceName)).toEqual(['Kitchen', 'Garden']);
   });
 
-  it('rejects blank device names', () => {
+  it('given a blank device name when parsing configuration then rejects it', () => {
     expect(
       environmentSchema.safeParse(
         environmentInput([{ type: 'indoor', deviceId: 'indoor-device', deviceName: ' ' }]),
@@ -49,7 +44,7 @@ describe('environment', () => {
     ).toBe(false);
   });
 
-  it('rejects duplicate device names', () => {
+  it('given duplicate device names when parsing configuration then rejects them', () => {
     expect(
       environmentSchema.safeParse(
         environmentInput([

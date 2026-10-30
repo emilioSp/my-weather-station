@@ -1,3 +1,5 @@
+// Verify temperature conversion, unit validation, and display formatting during web checks.
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -8,12 +10,12 @@ import {
 } from '#utils/temperature-unit.util.ts';
 
 describe('Temperature unit.util', () => {
-  it('converts temperatures for the selected unit', () => {
+  it('given 20 degrees Celsius when converting temperatures then returns 68 Fahrenheit or 20 Celsius', () => {
     expect(convertTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.FAHRENHEIT })).toEqual(68);
     expect(convertTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.CELSIUS })).toEqual(20);
   });
 
-  it('recognizes and formats supported temperature units', () => {
+  it('given Celsius Fahrenheit and Kelvin when validating and formatting units then rejects Kelvin and formats supported units', () => {
     expect(isTemperatureUnit('celsius')).toBe(true);
     expect(isTemperatureUnit('kelvin')).toBe(false);
     expect(

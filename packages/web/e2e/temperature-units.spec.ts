@@ -158,7 +158,7 @@ const getTemperatureChart = (page: Page, deviceName: string) =>
   );
 
 test.describe('Temperature units', () => {
-  test('switches current readings and chart temperature displays to Fahrenheit', async ({
+  test('given Celsius readings when selecting Fahrenheit then converts current readings chart values and tooltips', async ({
     page,
   }) => {
     await page.coverage.startJSCoverage();
@@ -209,7 +209,9 @@ test.describe('Temperature units', () => {
     });
   });
 
-  test('persists Fahrenheit after reload', async ({ page }) => {
+  test('given Fahrenheit is selected when reloading then preserves the selection readings and stored preference', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
@@ -247,7 +249,9 @@ test.describe('Temperature units', () => {
     });
   });
 
-  test('defaults safely to Celsius without valid browser storage', async ({ page }) => {
+  test('given missing invalid or unavailable browser storage when loading then selects Celsius and displays Celsius readings', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({

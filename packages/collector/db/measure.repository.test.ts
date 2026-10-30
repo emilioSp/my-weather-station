@@ -1,3 +1,5 @@
+// Verify stored measure mapping against PostgreSQL during collector integration checks.
+
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
@@ -21,7 +23,7 @@ afterEach(async () => {
 });
 
 describe('storeMeasure', () => {
-  it('stores a complete measure and returns its camel-case row', async () => {
+  it('given a complete measure when storing it then persists snake-case columns and returns a camel-case row', async () => {
     const measure = await storeMeasure({
       type: 'indoor',
       deviceName: 'repository meter',

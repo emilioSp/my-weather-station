@@ -67,7 +67,9 @@ const getLinkHref = async (page: Page, selector: string): Promise<string> => {
 };
 
 test.describe('Site icons', () => {
-  test('serves the declared thermometer SVG favicon', async ({ page }) => {
+  test('given the site icon declaration when fetching the favicon then serves the thermometer SVG', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
 
     await page.goto('/');
@@ -91,7 +93,9 @@ test.describe('Site icons', () => {
     });
   });
 
-  test('serves the declared 180 by 180 Apple touch icon', async ({ page }) => {
+  test('given the Apple touch icon declaration when fetching the image then serves a 180 by 180 PNG', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
 
     await page.goto('/');
@@ -121,7 +125,9 @@ test.describe('Site icons', () => {
     });
   });
 
-  test('serves the declared Android Home Screen icons from the manifest', async ({ page }) => {
+  test('given the web manifest when fetching its icons then serves matching Android Home Screen PNGs', async ({
+    page,
+  }) => {
     await page.coverage.startJSCoverage();
 
     await page.goto('/');

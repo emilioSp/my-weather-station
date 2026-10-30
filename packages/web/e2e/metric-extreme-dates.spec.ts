@@ -101,7 +101,7 @@ for (const viewport of [
   { width: 768, height: 1024 },
   { width: 390, height: 844 },
 ]) {
-  test(`AC1 AC9: dates are visible, unclipped, and 13px at ${viewport.width} × ${viewport.height}`, async ({
+  test(`given dated extrema at ${viewport.width} × ${viewport.height} when viewing history then shows unclipped 13px dates`, async ({
     page,
   }, testInfo) => {
     await page.coverage.startJSCoverage();
@@ -190,7 +190,9 @@ for (const scenario of [
   { fixture: 'winter-midnight', date: '07 Jan · 00:35' },
   { fixture: 'summer-midnight', date: '07 Jul · 01:35' },
 ]) {
-  test(`AC2: ${scenario.fixture} uses Rome time without seconds or year`, async ({ page }) => {
+  test(`given ${scenario.fixture} readings when viewing extreme dates then shows Rome time without seconds or year`, async ({
+    page,
+  }) => {
     await mockDashboard({ page, fixture: readFixture(scenario.fixture) });
     await page.goto('/');
 
@@ -202,7 +204,7 @@ for (const scenario of [
   });
 }
 
-test('AC3: each sensor and metric uses its own extreme row, including a single measurement', async ({
+test('given two sensors including a single reading when viewing extrema then shows dates for each sensor and metric', async ({
   page,
 }) => {
   await mockDashboard({
@@ -226,7 +228,7 @@ test('AC3: each sensor and metric uses its own extreme row, including a single m
   }
 });
 
-test('AC4: unordered repeated extremes use the earliest available row for every metric', async ({
+test('given unordered tied extrema when viewing history then shows the earliest dates for every metric', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('unordered-ties') });
@@ -239,7 +241,7 @@ test('AC4: unordered repeated extremes use the earliest available row for every 
   }
 });
 
-test('AC5: changing from Last day to Last 6 hours replaces the older minimum date', async ({
+test('given an older daily minimum when zooming to six hours then replaces its date and value', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('range-change') });
@@ -261,7 +263,7 @@ test('AC5: changing from Last day to Last 6 hours replaces the older minimum dat
   await expect(summary.getByTestId('low-value')).toHaveText('18.0°C');
 });
 
-test('AC6: refreshing changed latest readings and history replaces the high date', async ({
+test('given newer readings and history when refreshing then updates the maximum date and value', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('before-refresh') });
@@ -282,7 +284,7 @@ test('AC6: refreshing changed latest readings and history replaces the high date
   await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
 });
 
-test('AC7: switching to Fahrenheit changes values but preserves all six dates', async ({
+test('given Celsius extrema when selecting Fahrenheit then converts temperatures and preserves all six dates', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('unit-change') });
@@ -319,7 +321,7 @@ test('AC7: switching to Fahrenheit changes values but preserves all six dates', 
   }
 });
 
-test('AC8: empty history keeps all three empty charts and placeholders without dates', async ({
+test('given empty history when zooming in then shows three empty charts and placeholders without dates', async ({
   page,
 }) => {
   await mockDashboard({ page, fixture: readFixture('empty-history') });

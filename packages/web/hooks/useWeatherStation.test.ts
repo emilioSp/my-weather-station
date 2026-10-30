@@ -12,8 +12,8 @@ const configuredDevices = vi.hoisted(() => [
 ]);
 
 const weatherApi = vi.hoisted(() => ({
-  getLatestMeasure: vi.fn(),
-  getChartHistory: vi.fn(),
+  getLatestMeasure: vi.fn<typeof import('#supabase.api.ts').getLatestMeasure>(),
+  getChartHistory: vi.fn<typeof import('#supabase.api.ts').getChartHistory>(),
 }));
 
 vi.mock('#environment.ts', () => ({
@@ -30,7 +30,10 @@ vi.mock('react', async (importOriginal) => {
     useEffect: (effect: () => unknown) => effect(),
     useMemo: <T>(factory: () => T) => factory(),
     useState: <T>(value: T) =>
-      [state.values.length > 0 ? state.values.shift() : value, vi.fn()] as const,
+      [
+        state.values.length > 0 ? state.values.shift() : value,
+        vi.fn<React.Dispatch<React.SetStateAction<T>>>(),
+      ] as const,
   };
 });
 
@@ -90,7 +93,7 @@ afterEach(() => {
 });
 
 describe('useWeatherStation', () => {
-  it('loads current measures when initial state is empty', async () => {
+  it('given empty initial state when loading the station then requests current measures for every configured device', async () => {
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
     state.values = [null, null, 'LAST_DAY', false];
 
@@ -104,7 +107,7 @@ describe('useWeatherStation', () => {
     );
   });
 
-  it('sets empty history when current measures have no readings', async () => {
+  it('given current measures without readings when loading the station then does not request chart history', async () => {
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
     state.values = [{ byDeviceName: emptyCurrentMeasures, error: null }, null, 'LAST_DAY', false];
 
@@ -115,7 +118,7 @@ describe('useWeatherStation', () => {
     expect(weatherApi.getChartHistory).not.toHaveBeenCalled();
   });
 
-  it('loads name-keyed history and refreshes a complete current state', async () => {
+  it('given a complete current state when loading and refreshing then preserves name-keyed readings and fetches history once', async () => {
     vi.useFakeTimers();
     weatherApi.getLatestMeasure.mockImplementation(
       async ({ deviceName }: { deviceName: string }) => ({
