@@ -1,6 +1,8 @@
+// Apply and reverse init during database migrations.
+
 import type { Knex } from 'knex';
 
-export async function up(knex: Knex): Promise<void> {
+export const up = async (knex: Knex): Promise<void> => {
   await knex.raw(`
     CREATE TABLE measures (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -15,8 +17,8 @@ export async function up(knex: Knex): Promise<void> {
       measured_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
-}
+};
 
-export async function down(knex: Knex): Promise<void> {
+export const down = async (knex: Knex): Promise<void> => {
   await knex.raw('DROP TABLE IF EXISTS measures;');
-}
+};

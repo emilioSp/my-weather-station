@@ -1,3 +1,5 @@
+// Apply and reverse get chart history by device name during database migrations.
+
 import type { Knex } from 'knex';
 
 const chartHistoryFunction = `
@@ -202,10 +204,10 @@ const chartHistoryFunctionByDeviceType = `
     $$;
 `;
 
-export async function up(knex: Knex): Promise<void> {
+export const up = async (knex: Knex): Promise<void> => {
   await knex.raw(chartHistoryFunction);
-}
+};
 
-export async function down(knex: Knex): Promise<void> {
+export const down = async (knex: Knex): Promise<void> => {
   await knex.raw(chartHistoryFunctionByDeviceType);
-}
+};

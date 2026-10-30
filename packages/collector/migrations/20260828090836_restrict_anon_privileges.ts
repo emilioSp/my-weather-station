@@ -1,3 +1,5 @@
+// Apply and reverse restrict anon privileges during database migrations.
+
 import type { Knex } from 'knex';
 
 // Supabase grants the browser roles full privileges on every new object in the
@@ -7,7 +9,7 @@ import type { Knex } from 'knex';
 //
 // The `anon` and `authenticated` roles exist only on Supabase, not in the local
 // docker PostgreSQL, so the whole block is guarded.
-export async function up(knex: Knex): Promise<void> {
+export const up = async (knex: Knex): Promise<void> => {
   await knex.raw(`
     DO $$
     BEGIN
@@ -36,12 +38,12 @@ export async function up(knex: Knex): Promise<void> {
     END
     $$;
   `);
-}
+};
 
 // Only the default privileges go back to the Supabase defaults. The grants on
 // the existing tables stay as they are: a blanket re-grant would hand `anon`
 // more than it held before this migration ran, which no rollback should do.
-export async function down(knex: Knex): Promise<void> {
+export const down = async (knex: Knex): Promise<void> => {
   await knex.raw(`
     DO $$
     BEGIN
@@ -58,4 +60,4 @@ export async function down(knex: Knex): Promise<void> {
     END
     $$;
   `);
-}
+};
