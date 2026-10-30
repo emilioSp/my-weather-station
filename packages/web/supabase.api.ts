@@ -11,8 +11,8 @@ type GetLatestMeasureInput = {
 };
 
 type GetChartHistoryInput = {
-  measuredAfter: Temporal.Instant;
-  measuredBefore: Temporal.Instant;
+  measuredAfter: Date;
+  measuredBefore: Date;
 };
 
 export class SupabaseApi {
@@ -50,8 +50,8 @@ export class SupabaseApi {
     measuredBefore,
   }: GetChartHistoryInput): Promise<MeasureHistoryQueryResult> {
     const { data, error } = await this.client.rpc('get_chart_history', {
-      p_start: measuredAfter.toString({ smallestUnit: 'millisecond' }),
-      p_end: measuredBefore.toString({ smallestUnit: 'millisecond' }),
+      p_start: measuredAfter.toISOString(),
+      p_end: measuredBefore.toISOString(),
     });
 
     return { history: toMeasureHistory(data), error };

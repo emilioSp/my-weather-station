@@ -28,7 +28,8 @@ The [collector](packages/collector/package.json) owns BLE and database writes. T
 
 ## Web interface
 
-Browser date handling uses native Temporal. The target browser must support it; no polyfill dependency is included.
+Browser date handling uses native `Date` and `Intl` for Safari compatibility, with explicit `Europe/Rome` formatting. Native Temporal is only used in the Node.js
+collector; the web app does not need it or a polyfill. See [ADR-004](ADR.md#adr-004-use-date-and-intl-in-the-web-app-for-safari-compatibility).
 
 | Technology          | Role                                                      |
 | ------------------- | --------------------------------------------------------- |
@@ -40,15 +41,15 @@ Browser date handling uses native Temporal. The target browser must support it; 
 
 ## Development and verification
 
-| Technology                    | Role                                                                                  |
-| ----------------------------- | ------------------------------------------------------------------------------------- |
-| TypeScript compiler           | Checks types across all three workspaces without emitting application JavaScript.     |
-| Vitest and V8 coverage        | Run unit and integration tests and collect coverage.                                  |
-| Playwright                    | Runs browser tests and collects browser coverage, which is merged with unit coverage. |
-| Oxlint and `oxlint-anti-slop` | Enforce lint rules and project conventions.                                           |
-| Local Oxlint plugin           | Validates static and interpolated Playwright test titles.                             |
-| Oxfmt                         | Formats source, configuration, and documentation.                                     |
-| GitHub Actions                | Runs pull request checks and deploys the web build.                                   |
+| Technology                    | Role                                                                              |
+| ----------------------------- | --------------------------------------------------------------------------------- |
+| TypeScript compiler           | Checks types across all three workspaces without emitting application JavaScript. |
+| Vitest and V8 coverage        | Run unit and integration tests and collect coverage.                              |
+| Playwright                    | Tests Chromium and WebKit; Chromium coverage is merged with unit coverage.        |
+| Oxlint and `oxlint-anti-slop` | Enforce lint rules and project conventions.                                       |
+| Local Oxlint plugin           | Validates static and interpolated Playwright test titles.                         |
+| Oxfmt                         | Formats source, configuration, and documentation.                                 |
+| GitHub Actions                | Runs pull request checks and deploys the web build.                               |
 
 `npm run check` applies formatting and lint fixes, then checks types, tests, and coverage. See the [root scripts](package.json) and
 [local lint rule](.oxlint/test-titles.js).

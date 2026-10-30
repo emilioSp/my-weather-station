@@ -30,10 +30,10 @@ type TemperaturePair = {
 
 describe('weather dashboard utilities', () => {
   it('given a UTC timestamp humidity and temperature when formatting dashboard values then returns local times percent and Fahrenheit', () => {
-    const measuredAt = Temporal.Instant.from('2026-01-01T12:34:56Z');
+    const measuredAt = new Date('2026-01-01T12:34:56Z');
 
-    expect(formatMeasuredAt(measuredAt.toString())).toBe('01 Jan · 13:34:56');
-    expect(formatChartTime(measuredAt.epochMilliseconds)).toEqual(['01 Jan', '13:34']);
+    expect(formatMeasuredAt(measuredAt.toISOString())).toBe('01 Jan · 13:34:56');
+    expect(formatChartTime(measuredAt.getTime())).toEqual(['01 Jan', '13:34']);
     expect(formatMeasureValue({ value: 50.4, metric: WEATHER_METRICS.HUMIDITY })).toBe('50%');
     expect(
       formatMeasureValue({
@@ -44,8 +44,41 @@ describe('weather dashboard utilities', () => {
     ).toBe('68.0°F');
   });
 
+  it.each([
+    {
+      label: 'winter midnight',
+      measuredAt: '2026-01-06T23:35:59Z',
+      date: '07 Jan',
+      time: '00:35',
+    },
+    {
+      label: 'summer midnight',
+      measuredAt: '2026-07-06T23:35:59Z',
+      date: '07 Jul',
+      time: '01:35',
+    },
+    {
+      label: 'spring daylight saving jump',
+      measuredAt: '2026-03-29T01:35:59Z',
+      date: '29 Mar',
+      time: '03:35',
+    },
+    {
+      label: 'autumn daylight saving rollback',
+      measuredAt: '2026-10-25T01:35:59Z',
+      date: '25 Oct',
+      time: '02:35',
+    },
+  ])(
+    'given $label when formatting a measurement then shows the Rome date and time',
+    ({ measuredAt, date, time }) => {
+      expect(formatMeasuredAt(measuredAt)).toBe(`${date} · ${time}:59`);
+      expect(formatChartTime(Date.parse(measuredAt))).toEqual([date, time]);
+    },
+  );
+
   it('given readings before at and within the last day when filtering then includes only boundary and later readings', () => {
-    const end = Temporal.Instant.from('2026-01-02T00:00:00Z');
+    const end = new Date('2026-01-02T00:00:00Z');
 
     const measures: Measure[] = JSON.parse(
       readFileSync(
@@ -58,7 +91,7 @@ describe('weather dashboard utilities', () => {
       filterMeasuresForRange({
         measures,
         range: chartRanges[CHART_RANGES.LAST_DAY],
-        end: end.epochMilliseconds,
+        end: end.getTime(),
       }).map(({ id }) => id),
     ).toEqual(['edge', 'inside']);
   });
@@ -71,9 +104,7 @@ describe('weather dashboard utilities', () => {
       ),
     );
 
-    expect(getLatestTimestamp([oldest, older, newer, newest])).toBe(
-      Temporal.Instant.from(newest.measuredAt).epochMilliseconds,
-    );
+    expect(getLatestTimestamp([oldest, older, newer, newest])).toBe(Date.parse(newest.measuredAt));
     expect(getLatestTimestamp([])).toBeNull();
     expect(
       getRangeExtrema({
@@ -107,23 +138,28 @@ describe('weather dashboard utilities', () => {
     });
   });
 
-  it('given tied temperatures in reverse time order when finding extrema then selects the earliest dates', () => {
-    const { earlier, later }: TemperaturePair = JSON.parse(
-      readFileSync(
-        new URL('../tests/fixtures/dashboard/tied-temperatures.json', import.meta.url),
-        'utf8',
-      ),
-    );
+  it.each([
+    { label: 'temperature', metric: WEATHER_METRICS.TEMPERATURE, low: 18, high: 25 },
+    { label: 'humidity', metric: WEATHER_METRICS.HUMIDITY, low: 40, high: 70 },
+    { label: 'dew point', metric: WEATHER_METRICS.DEW_POINT, low: 8, high: 12 },
+  ])(
+    'given unordered tied $label readings when finding extrema then selects the earliest low and high dates',
+    ({ metric, low, high }) => {
+      const measures: Measure[] = JSON.parse(
+        readFileSync(
+          new URL('../tests/fixtures/dashboard/unordered-metric-ties.json', import.meta.url),
+          'utf8',
+        ),
+      );
 
-    expect(
-      getRangeExtrema({ measures: [later, earlier], metric: WEATHER_METRICS.TEMPERATURE }),
-    ).toEqual({
-      low: 18.01,
-      high: 18.01,
-      lowMeasuredAt: earlier.measuredAt,
-      highMeasuredAt: earlier.measuredAt,
-    });
-  });
+      expect(getRangeExtrema({ measures, metric })).toEqual({
+        low,
+        high,
+        lowMeasuredAt: '2026-10-06T06:00:00Z',
+        highMeasuredAt: '2026-10-06T09:00:00Z',
+      });
+    },
+  );
 
   it('given weak medium and strong signals when calculating percentages then returns zero fifty and one hundred', () => {
     expect(getSignalPercentage(-125)).toBe(0);

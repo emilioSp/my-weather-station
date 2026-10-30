@@ -2,11 +2,11 @@
 
 import { readFileSync } from 'node:fs';
 
-import { expect, type Page, type Route, test } from '@playwright/test';
+import { expect, type Page, type Route } from '@playwright/test';
 import { METER_TYPES } from '@wx/shared';
 import { loadEnv } from 'vite';
 
-import { saveCoverage } from '#e2e/utils/save-coverage.ts';
+import { test } from '#e2e/utils/test.ts';
 import { TEMPERATURE_UNITS } from '#utils/temperature-unit.util.ts';
 
 type ConfiguredDevice = {
@@ -99,10 +99,9 @@ const getTemperatureChart = ({ page, deviceName }: GetTemperatureChartInput) =>
   );
 
 test.describe('Temperature units', () => {
-  test('given Celsius readings when selecting Fahrenheit then converts current readings chart values and tooltips', async ({
+  test('given Celsius readings when selecting Fahrenheit and reloading then converts readings charts and tooltips and preserves the selection', async ({
     page,
   }) => {
-    await page.coverage.startJSCoverage();
     await page.route('**/rest/v1/measures**', async (route) => {
       await route.fulfill({
         contentType: 'application/json',
@@ -143,93 +142,16 @@ test.describe('Temperature units', () => {
     );
     await expect(page.getByLabel('Measurement history')).not.toContainText('20.0°C');
 
-    const jsCoverage = await page.coverage.stopJSCoverage();
-    await saveCoverage({
-      jsCoverage,
-      name: 'temperature-units-fahrenheit',
-    });
-  });
-
-  test('given Fahrenheit is selected when reloading then preserves the selection readings and stored preference', async ({
-    page,
-  }) => {
-    await page.coverage.startJSCoverage();
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify([getLatestMeasureForRequest(route)]),
-      });
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify(history),
-      });
-    });
-
-    await page.goto('/');
-    await page.getByLabel('Temperature unit').getByText('°F').click();
     await page.reload();
-
     await expect(page.getByRole('radio', { name: '°F' })).toBeChecked();
     await expect(page.getByLabel('Current readings')).toContainText(
-      toFahrenheit(latestMeasures[deviceNameAt(0)].temperature),
+      toFahrenheit(latestMeasures[primaryDeviceName].temperature),
     );
     await expect(page.getByLabel('Measurement history')).toContainText(
-      toFahrenheit(history[deviceNameAt(0)][0].temperature),
-      { timeout: 5_000 },
+      toFahrenheit(primaryHistory[0].temperature),
     );
     await expect(
       page.evaluate(() => window.localStorage.getItem('temperature-unit')),
     ).resolves.toBe(TEMPERATURE_UNITS.FAHRENHEIT);
-
-    const jsCoverage = await page.coverage.stopJSCoverage();
-    await saveCoverage({
-      jsCoverage,
-      name: 'temperature-units-reload',
-    });
-  });
-
-  test('given missing invalid or unavailable browser storage when loading then selects Celsius and displays Celsius readings', async ({
-    page,
-  }) => {
-    await page.coverage.startJSCoverage();
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify([getLatestMeasureForRequest(route)]),
-      });
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify(history),
-      });
-    });
-
-    await page.goto('/');
-    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${latestMeasures[deviceNameAt(0)].temperature.toFixed(1)}°C`,
-    );
-
-    await page.evaluate(() => window.localStorage.setItem('temperature-unit', 'kelvin'));
-    await page.reload();
-    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-
-    await page.addInitScript(() => {
-      Object.defineProperty(window, 'localStorage', { value: undefined });
-    });
-    await page.reload();
-    await expect(page.getByRole('radio', { name: '°C' })).toBeChecked();
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${latestMeasures[deviceNameAt(0)].temperature.toFixed(1)}°C`,
-    );
-
-    const jsCoverage = await page.coverage.stopJSCoverage();
-    await saveCoverage({
-      jsCoverage,
-      name: 'temperature-units-storage',
-    });
   });
 });

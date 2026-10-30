@@ -19,6 +19,7 @@
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "test:visual": "npm run test:visual --workspaces --if-present --",
     "supabase:start": "supabase start",
     "supabase:reset": "supabase db reset",
     "supabase:stop": "supabase stop",

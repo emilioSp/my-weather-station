@@ -99,7 +99,7 @@ describe('useWeatherStation', () => {
     expect(weatherApi.getChartHistory).not.toHaveBeenCalled();
   });
 
-  it('given a complete current state when loading and refreshing then preserves name-keyed readings and fetches history once', async () => {
+  it('given a complete current state when loading and refreshing then preserves name-keyed readings and requests one day of history once', async () => {
     vi.useFakeTimers();
     weatherApi.getLatestMeasure.mockImplementation(async ({ deviceName }) => ({
       rows: [measuresByDeviceName[deviceName]],
@@ -133,6 +133,10 @@ describe('useWeatherStation', () => {
       error: null,
     });
     expect(weatherApi.getChartHistory).toHaveBeenCalledOnce();
+    expect(weatherApi.getChartHistory).toHaveBeenCalledWith({
+      measuredAfter: new Date('2025-12-31T00:00:00Z'),
+      measuredBefore: new Date('2026-01-01T00:00:00Z'),
+    });
     expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length * 2);
   });
 });

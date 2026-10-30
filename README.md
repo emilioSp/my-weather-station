@@ -39,7 +39,7 @@ import { createMeter } from '#meters/meter.factory.ts';
 ## Prerequisites
 
 - Node.js 26 or newer, for native TypeScript support
-- A browser with native Temporal support for the web app
+- A modern browser for the web app
 - A Bluetooth adapter, and Bluetooth permission for the terminal or Node.js
 - Docker or another Docker-compatible container runtime
 
@@ -143,6 +143,48 @@ npm run test:e2e         # run Playwright end-to-end tests
 npm run test:coverage    # run tests and coverage in every workspace
 npm run dev              # every workspace that defines dev
 ```
+
+Browser tests run in Chromium and WebKit, Safari's browser engine. Coverage is collected from Chromium only. Install the browser binaries before running the tests:
+
+```sh
+npx playwright install chromium webkit
+```
+
+To run only the Safari engine tests:
+
+```sh
+npm run test:e2e -w @wx/web -- --project=webkit
+```
+
+### Visual snapshots
+
+Full-page dashboard screenshots cover desktop (1280 × 700), tablet (768 × 1024), and smartphone (390 × 844) in Chromium and WebKit. The reference PNGs live in
+`packages/web/e2e/dashboard.visual.spec.ts-snapshots/`.
+
+Run comparisons in the same Linux container used by CI. The root `npm run test:visual` shortcut forwards to this command:
+
+```sh
+npm run test:visual -w @wx/web
+```
+
+After an intentional UI change, regenerate the references and review the PNG diffs before committing them:
+
+```sh
+npm run test:visual -w @wx/web -- --update-snapshots
+```
+
+The wrapper selects the official Playwright image matching the version in the root `package.json` and pins `linux/amd64`, including on Apple Silicon. This avoids OS and
+browser architecture differences, but emulation makes local visual tests slower on Apple Silicon. Docker must be running; the first run downloads the image.
+
+Linux dependencies are installed in disposable Docker volumes with lifecycle scripts disabled because visual tests do not need the collector's native BLE bindings. Host
+`node_modules` directories are not changed. The image supplies its own Node runtime for visual tests only; the other checks still use Node.js 26. The container install
+can report an engine warning for the Node.js 26 lint tool, which is not run there.
+
+The tests use fixed readings, disable motion, and block remote Google Fonts requests so screenshots use the app's fallback fonts without depending on network
+availability. CI uses the same wrapper and uploads failure images as `visual-test-results`. It never updates reference images automatically.
+
+Regular browser tests explicitly exclude the `@visual` tag. `npm run check` validates those tests and coverage; run the Docker command above separately for visual
+comparisons. The wrapper invokes Playwright directly inside the container.
 
 ## Deployment
 

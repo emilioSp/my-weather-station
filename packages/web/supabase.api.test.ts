@@ -55,8 +55,8 @@ describe('Supabase API', () => {
     const latest = await supabaseApi.getLatestMeasure({ deviceName: 'kitchen' });
 
     const history = await supabaseApi.getChartHistory({
-      measuredAfter: Temporal.Instant.from('2020-01-01T00:00:00Z'),
-      measuredBefore: Temporal.Instant.from('2020-01-02T00:00:00Z'),
+      measuredAfter: new Date('2020-01-01T00:00:00Z'),
+      measuredBefore: new Date('2020-01-02T00:00:00Z'),
     });
 
     expect(latest.error).toBeNull();
@@ -109,8 +109,8 @@ describe('Supabase API', () => {
     const latest = await supabaseApi.getLatestMeasure({ deviceName: 'kitchen' });
 
     const history = await supabaseApi.getChartHistory({
-      measuredAfter: Temporal.Instant.from('2020-01-01T00:00:00Z'),
-      measuredBefore: Temporal.Instant.from('2020-01-02T00:00:00Z'),
+      measuredAfter: new Date('2020-01-01T00:00:00Z'),
+      measuredBefore: new Date('2020-01-02T00:00:00Z'),
     });
 
     expect(latest.error).toBeNull();
