@@ -1,7 +1,9 @@
 // Scan Noble peripherals and return validated advertisements during meter reads.
 import { on } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
+
 import noble, { type Peripheral } from '@stoprocent/noble';
+
 import { environment } from '#environment.ts';
 import { type Advertisement, advertisementSchema, type Meter } from '#types.ts';
 
@@ -70,9 +72,7 @@ const findPeripheral = async (meter: Meter): Promise<Peripheral | null> => {
   return null;
 };
 
-export const getAdvertisement = async (
-  meter: Meter,
-): Promise<Advertisement | null> => {
+export const getAdvertisement = async (meter: Meter): Promise<Advertisement | null> => {
   const peripheral = await findPeripheral(meter);
 
   if (!peripheral) return null;

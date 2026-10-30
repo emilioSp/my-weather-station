@@ -13,10 +13,7 @@ export const deviceIconMap = {
 export type DeviceIconName = keyof typeof deviceIconMap;
 
 // JUSTIFICATION: This non-empty local object has only DeviceIconName keys; Object.keys loses their literal types.
-const deviceIconNames = Object.keys(deviceIconMap) as [
-  DeviceIconName,
-  ...DeviceIconName[],
-];
+const deviceIconNames = Object.keys(deviceIconMap) as [DeviceIconName, ...DeviceIconName[]];
 
 const deviceSchema = z.object({
   deviceName: z.string().trim().min(1),
@@ -42,9 +39,7 @@ const devicesSchema = z
       .array(deviceSchema)
       .min(1)
       .refine(
-        (devices) =>
-          new Set(devices.map(({ deviceName }) => deviceName)).size ===
-          devices.length,
+        (devices) => new Set(devices.map(({ deviceName }) => deviceName)).size === devices.length,
         { message: 'VITE_DEVICES must contain unique device names' },
       ),
   );

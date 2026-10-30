@@ -1,4 +1,5 @@
 import type { Measure } from '@wx/shared';
+
 import { WeatherCard } from '#components/weather-station/WeatherCard.tsx';
 import { deviceIconMap, environment } from '#environment.ts';
 import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
@@ -12,10 +13,7 @@ export const CurrentReadings = ({
   measuresByDeviceName,
   temperatureUnit,
 }: CurrentReadingsProps) => (
-  <section
-    className="grid gap-3.5 md:grid-cols-2"
-    aria-label="Current readings"
-  >
+  <section className="grid gap-3.5 md:grid-cols-2" aria-label="Current readings">
     {environment.DEVICES.map((device, index) => (
       <WeatherCard
         key={device.deviceName}

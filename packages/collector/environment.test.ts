@@ -44,9 +44,7 @@ describe('environment', () => {
   it('rejects blank device names', () => {
     expect(
       environmentSchema.safeParse(
-        environmentInput([
-          { type: 'indoor', deviceId: 'indoor-device', deviceName: ' ' },
-        ]),
+        environmentInput([{ type: 'indoor', deviceId: 'indoor-device', deviceName: ' ' }]),
       ).success,
     ).toBe(false);
   });

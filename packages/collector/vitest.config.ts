@@ -8,12 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['json', 'html', 'text-summary'],
-      include: [
-        'meters/**/*.ts',
-        'api/**/*.ts',
-        'db/**/*.ts',
-        'errors/**/*.ts',
-      ],
+      include: ['meters/**/*.ts', 'api/**/*.ts', 'db/**/*.ts', 'errors/**/*.ts'],
       thresholds: coverageThresholds,
     },
   },

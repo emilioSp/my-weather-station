@@ -30,10 +30,7 @@ vi.mock('react', async (importOriginal) => {
     useEffect: (effect: () => unknown) => effect(),
     useMemo: <T>(factory: () => T) => factory(),
     useState: <T>(value: T) =>
-      [
-        state.values.length > 0 ? state.values.shift() : value,
-        vi.fn(),
-      ] as const,
+      [state.values.length > 0 ? state.values.shift() : value, vi.fn()] as const,
   };
 });
 
@@ -79,10 +76,7 @@ const measuresByDeviceName: Record<string, Measure> = Object.fromEntries(
 );
 
 const historyByDeviceName: Record<string, Measure[]> = Object.fromEntries(
-  configuredDevices.map(({ deviceName }) => [
-    deviceName,
-    [measuresByDeviceName[deviceName]],
-  ]),
+  configuredDevices.map(({ deviceName }) => [deviceName, [measuresByDeviceName[deviceName]]]),
 );
 
 const emptyCurrentMeasures = Object.fromEntries(
@@ -104,22 +98,15 @@ describe('useWeatherStation', () => {
     await Promise.resolve();
 
     expect(result.currentMeasures).toBeNull();
-    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(
-      configuredDevices.length,
+    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length);
+    expect(weatherApi.getLatestMeasure.mock.calls.map(([input]) => input.deviceName)).toEqual(
+      deviceNames,
     );
-    expect(
-      weatherApi.getLatestMeasure.mock.calls.map(([input]) => input.deviceName),
-    ).toEqual(deviceNames);
   });
 
   it('sets empty history when current measures have no readings', async () => {
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
-    state.values = [
-      { byDeviceName: emptyCurrentMeasures, error: null },
-      null,
-      'LAST_DAY',
-      false,
-    ];
+    state.values = [{ byDeviceName: emptyCurrentMeasures, error: null }, null, 'LAST_DAY', false];
 
     const result = useWeatherStation();
     await Promise.resolve();
@@ -164,9 +151,7 @@ describe('useWeatherStation', () => {
       error: null,
     });
     expect(weatherApi.getChartHistory).toHaveBeenCalledOnce();
-    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(
-      configuredDevices.length * 2,
-    );
+    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length * 2);
     result.changeRange(1);
     result.changeRange(99);
   });

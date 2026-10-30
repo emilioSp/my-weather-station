@@ -1,8 +1,5 @@
-import {
-  FaArrowsRotate,
-  FaMagnifyingGlassMinus,
-  FaMagnifyingGlassPlus,
-} from 'react-icons/fa6';
+import { FaArrowsRotate, FaMagnifyingGlassMinus, FaMagnifyingGlassPlus } from 'react-icons/fa6';
+
 import { IconButton } from '#components/primitives/IconButton.tsx';
 import { type ChartRange, chartRangeKeys } from '#weather-dashboard.util.ts';
 
@@ -22,10 +19,7 @@ export const RangeControls = ({
   <div className="flex min-h-10 items-center justify-end gap-3">
     {isLoading && (
       <span className="grid size-4 place-items-center" role="status">
-        <FaArrowsRotate
-          aria-hidden="true"
-          className="size-3.5 animate-spin text-[#83d2e5]"
-        />
+        <FaArrowsRotate aria-hidden="true" className="size-3.5 animate-spin text-[#83d2e5]" />
         <span className="sr-only">Updating charts</span>
       </span>
     )}

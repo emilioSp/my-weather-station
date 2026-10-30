@@ -49,9 +49,7 @@ describe('storeMeasure', () => {
     });
     expect(measure.measuredAt).toEqual(expect.any(String));
 
-    expect(
-      await db('measures').where({ id: measure.id }).first(),
-    ).toMatchObject({
+    expect(await db('measures').where({ id: measure.id }).first()).toMatchObject({
       id: measure.id,
       device_id: 'repository-device',
       address: 'aa:bb:cc',

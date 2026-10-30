@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+
 import { coverageThresholds } from './index.ts';
 
 export default defineConfig({

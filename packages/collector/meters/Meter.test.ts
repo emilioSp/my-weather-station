@@ -37,9 +37,7 @@ const outdoor = {
   address: 'cc:dd',
 };
 
-const advertisement = (
-  overrides: Partial<Advertisement> = {},
-): Advertisement => ({
+const advertisement = (overrides: Partial<Advertisement> = {}): Advertisement => ({
   deviceId: 'indoor-device',
   address: 'aa:bb',
   manufacturerData: undefined,
@@ -59,9 +57,7 @@ describe('meters', () => {
   it('reads a complete indoor advertisement and stores it', async () => {
     sensor.getAdvertisement.mockResolvedValue(
       advertisement({
-        serviceData: [
-          { uuid: 'FD3D', data: Buffer.from([0x54, 0, 80, 5, 0x94, 60]) },
-        ],
+        serviceData: [{ uuid: 'FD3D', data: Buffer.from([0x54, 0, 80, 5, 0x94, 60]) }],
       }),
     );
     const measure = await new IndoorMeter(indoor).read();
@@ -75,9 +71,9 @@ describe('meters', () => {
       battery: 80,
       signalPowerDBM: -50,
     });
-    expect(
-      await db('measures').where({ id: measure.id }).first(),
-    ).toMatchObject({ device_name: 'indoor meter' });
+    expect(await db('measures').where({ id: measure.id }).first()).toMatchObject({
+      device_name: 'indoor meter',
+    });
   });
 
   it('combines outdoor advertisements before storing a complete reading', async () => {
@@ -86,9 +82,7 @@ describe('meters', () => {
         advertisement({
           deviceId: 'outdoor-device',
           address: 'cc:dd',
-          manufacturerData: Buffer.from([
-            0x69, 0x09, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0x99, 70,
-          ]),
+          manufacturerData: Buffer.from([0x69, 0x09, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0x99, 70]),
         }),
       )
       .mockResolvedValueOnce(
@@ -115,9 +109,7 @@ describe('meters', () => {
         serviceData: [{ uuid: 'fd3d', data: Buffer.from([0x54]) }],
       }),
     );
-    await expect(new IndoorMeter(indoor).read()).rejects.toBeInstanceOf(
-      NoCompleteReadingError,
-    );
+    await expect(new IndoorMeter(indoor).read()).rejects.toBeInstanceOf(NoCompleteReadingError);
     expect(sensor.getAdvertisement).toHaveBeenCalledTimes(8);
   });
 

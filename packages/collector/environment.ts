@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { meterSchema } from './types.ts';
 
 const devicesSchema = z
@@ -20,9 +21,7 @@ const devicesSchema = z
       .array(meterSchema)
       .min(1)
       .refine(
-        (devices) =>
-          new Set(devices.map(({ deviceName }) => deviceName)).size ===
-          devices.length,
+        (devices) => new Set(devices.map(({ deviceName }) => deviceName)).size === devices.length,
         { message: 'DEVICES must contain unique device names' },
       ),
   );

@@ -1,5 +1,6 @@
 import { Client } from 'pg';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
+
 import {
   getChartHistory,
   getLatestMeasure,
@@ -102,10 +103,7 @@ describe('Supabase API', () => {
     const latest = await getLatestMeasures();
 
     expect(latest.error).toBeNull();
-    expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual([
-      'garden',
-      'living room',
-    ]);
+    expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual(['garden', 'living room']);
   });
 
   it('queries an empty local database through the real Supabase client', async () => {

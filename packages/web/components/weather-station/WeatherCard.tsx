@@ -1,5 +1,6 @@
 import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
+
 import { ProgressBar } from '#components/primitives/ProgressBar.tsx';
 import {
   convertTemperature,
@@ -125,11 +126,7 @@ export const WeatherCard = ({
         <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
           Sensor health
         </div>
-        <HealthRow
-          label="Battery"
-          value={`${measure.battery}%`}
-          barValue={measure.battery}
-        />
+        <HealthRow label="Battery" value={`${measure.battery}%`} barValue={measure.battery} />
         <HealthRow
           label="Signal"
           value={`${measure.signalPowerDBM} dBm`}
@@ -147,9 +144,7 @@ type WeatherCardMetricProps = {
 
 const WeatherCardMetric = ({ label, value }: WeatherCardMetricProps) => (
   <div className="border-t border-[#2b3a38] pt-[10px]">
-    <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
-      {label}
-    </div>
+    <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">{label}</div>
     <b className="mt-[5px] block text-[20px] tracking-[-0.05em]">{value}</b>
   </div>
 );

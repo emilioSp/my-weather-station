@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   convertTemperature,
   formatTemperature,
@@ -8,12 +9,8 @@ import {
 
 describe('Temperature unit.util', () => {
   it('converts temperatures for the selected unit', () => {
-    expect(
-      convertTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.FAHRENHEIT }),
-    ).toEqual(68);
-    expect(
-      convertTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.CELSIUS }),
-    ).toEqual(20);
+    expect(convertTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.FAHRENHEIT })).toEqual(68);
+    expect(convertTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.CELSIUS })).toEqual(20);
   });
 
   it('recognizes and formats supported temperature units', () => {
@@ -26,8 +23,6 @@ describe('Temperature unit.util', () => {
         decimalPlaces: 0,
       }),
     ).toBe('68°F');
-    expect(
-      formatTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.CELSIUS }),
-    ).toBe('20.0°C');
+    expect(formatTemperature({ celsius: 20, unit: TEMPERATURE_UNITS.CELSIUS })).toBe('20.0°C');
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { environmentSchema } from '#environment.ts';
 
 const environmentInput = (devices: unknown[]) => ({
@@ -40,10 +41,7 @@ describe('web environment', () => {
         { deviceName: 'same', icon: 'FaBed' },
       ]),
     ],
-    [
-      'unsupported icon',
-      JSON.stringify([{ deviceName: 'kitchen', icon: 'FaCloud' }]),
-    ],
+    ['unsupported icon', JSON.stringify([{ deviceName: 'kitchen', icon: 'FaCloud' }])],
   ])('rejects %s', (_caseName, devices) => {
     expect(
       environmentSchema.safeParse({

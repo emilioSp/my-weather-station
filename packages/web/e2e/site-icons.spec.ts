@@ -1,5 +1,6 @@
 // Verify the declared site icons and their rendered assets in browser tests.
 import { expect, type Page, test } from '@playwright/test';
+
 import { saveCoverage } from './utils/save-coverage';
 
 type PngHeader = {
@@ -28,10 +29,7 @@ const getPngHeader = async (page: Page, href: string): Promise<PngHeader> =>
     };
   }, href);
 
-const getPngColorCounts = async (
-  page: Page,
-  href: string,
-): Promise<PngColorCounts> =>
+const getPngColorCounts = async (page: Page, href: string): Promise<PngColorCounts> =>
   page.evaluate(async (url) => {
     const response = await fetch(url);
     const image = await createImageBitmap(await response.blob());
@@ -48,19 +46,11 @@ const getPngColorCounts = async (
     let lime = 0;
 
     for (let index = 0; index < pixels.length; index += 4) {
-      if (
-        pixels[index] === 16 &&
-        pixels[index + 1] === 25 &&
-        pixels[index + 2] === 27
-      ) {
+      if (pixels[index] === 16 && pixels[index + 1] === 25 && pixels[index + 2] === 27) {
         dark += 1;
       }
 
-      if (
-        pixels[index] === 185 &&
-        pixels[index + 1] === 229 &&
-        pixels[index + 2] === 59
-      ) {
+      if (pixels[index] === 185 && pixels[index + 1] === 229 && pixels[index + 2] === 59) {
         lime += 1;
       }
     }
@@ -86,15 +76,11 @@ test.describe('Site icons', () => {
     await expect(favicon).toHaveCount(1);
     await expect(favicon).toHaveAttribute('type', 'image/svg+xml');
 
-    const response = await page.request.get(
-      await getLinkHref(page, 'head link[rel="icon"]'),
-    );
+    const response = await page.request.get(await getLinkHref(page, 'head link[rel="icon"]'));
 
     expect(response.ok()).toBe(true);
     expect(response.headers()['content-type']).toContain('image/svg+xml');
-    await expect(response.text()).resolves.toContain(
-      'M160 64c-26.5 0-48 21.5-48 48',
-    );
+    await expect(response.text()).resolves.toContain('M160 64c-26.5 0-48 21.5-48 48');
     await expect(response.text()).resolves.toContain('fill="#b9e53b"');
     await expect(response.text()).resolves.toContain('fill="#10191b"');
 
@@ -114,10 +100,7 @@ test.describe('Site icons', () => {
     await expect(appleTouchIcon).toHaveCount(1);
     await expect(appleTouchIcon).toHaveAttribute('sizes', '180x180');
 
-    const appleTouchIconHref = await getLinkHref(
-      page,
-      'head link[rel="apple-touch-icon"]',
-    );
+    const appleTouchIconHref = await getLinkHref(page, 'head link[rel="apple-touch-icon"]');
 
     await expect(getPngHeader(page, appleTouchIconHref)).resolves.toEqual({
       contentType: 'image/png',
@@ -126,10 +109,7 @@ test.describe('Site icons', () => {
       width: 180,
     });
 
-    const appleTouchIconColors = await getPngColorCounts(
-      page,
-      appleTouchIconHref,
-    );
+    const appleTouchIconColors = await getPngColorCounts(page, appleTouchIconHref);
 
     expect(appleTouchIconColors.dark).toBeGreaterThan(0);
     expect(appleTouchIconColors.lime).toBeGreaterThan(0);
@@ -141,9 +121,7 @@ test.describe('Site icons', () => {
     });
   });
 
-  test('serves the declared Android Home Screen icons from the manifest', async ({
-    page,
-  }) => {
+  test('serves the declared Android Home Screen icons from the manifest', async ({ page }) => {
     await page.coverage.startJSCoverage();
 
     await page.goto('/');

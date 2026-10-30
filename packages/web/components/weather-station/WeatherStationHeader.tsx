@@ -1,4 +1,5 @@
 import { FaArrowsRotate, FaTemperatureHalf } from 'react-icons/fa6';
+
 import { IconButton } from '#components/primitives/IconButton.tsx';
 import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
 import { formatMeasuredAt } from '#weather-dashboard.util.ts';
@@ -20,13 +21,8 @@ export const WeatherStationHeader = ({
 }: WeatherStationHeaderProps) => (
   <header className="grid gap-5 border-b border-[#2b3a38] pb-[18px] sm:grid-cols-[1fr_auto] sm:items-center">
     <div className="flex items-center gap-[13px]">
-      <FaTemperatureHalf
-        aria-hidden="true"
-        className="h-8 w-7 text-[#b9e53b]"
-      />
-      <h1 className="text-[17px] font-bold tracking-[-0.035em]">
-        Weather station
-      </h1>
+      <FaTemperatureHalf aria-hidden="true" className="h-8 w-7 text-[#b9e53b]" />
+      <h1 className="text-[17px] font-bold tracking-[-0.035em]">Weather station</h1>
     </div>
     <div className="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
       <div className="text-left sm:text-right">

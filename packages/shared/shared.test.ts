@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   deviceIdentifiersSchema,
   measureSchema,
@@ -69,9 +70,7 @@ describe('shared schemas', () => {
 
   it('validates complete weather readings', () => {
     expect(weatherReadingSchema.safeParse(reading).success).toBe(true);
-    expect(
-      weatherReadingSchema.safeParse({ ...reading, battery: '80' }).success,
-    ).toBe(false);
+    expect(weatherReadingSchema.safeParse({ ...reading, battery: '80' }).success).toBe(false);
   });
 
   it('validates complete measures', () => {
@@ -87,8 +86,6 @@ describe('shared schemas', () => {
     expect(result.success).toBe(true);
 
     if (result.success) expect(result.data.deviceName).toBe('garden');
-    expect(
-      measureSchema.safeParse({ ...reading, id: 'not-a-uuid' }).success,
-    ).toBe(false);
+    expect(measureSchema.safeParse({ ...reading, id: 'not-a-uuid' }).success).toBe(false);
   });
 });

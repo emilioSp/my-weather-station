@@ -1,13 +1,12 @@
 import { setTimeout as delay } from 'node:timers/promises';
+
 import noble, { type AdapterState, type Peripheral } from '@stoprocent/noble';
 
 const devices = new Set<string>();
 
 const packets = new Set<string>();
 
-function formatServiceData(
-  serviceData: Peripheral['advertisement']['serviceData'] = [],
-) {
+function formatServiceData(serviceData: Peripheral['advertisement']['serviceData'] = []) {
   return serviceData.map((item) => ({
     uuid: item.uuid,
     data: item.data?.toString('hex'),
@@ -21,8 +20,7 @@ noble.on('stateChange', (state) => {
 noble.on('discover', (peripheral) => {
   const { id, address, rssi, connectable, advertisement } = peripheral;
 
-  const manufacturerData =
-    advertisement.manufacturerData?.toString('hex') ?? null;
+  const manufacturerData = advertisement.manufacturerData?.toString('hex') ?? null;
 
   const serviceData = formatServiceData(advertisement.serviceData);
 

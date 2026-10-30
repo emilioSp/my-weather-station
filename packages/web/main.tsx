@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { WeatherStation } from '#views/WeatherStation.tsx';
+
 import '#styles.css';
 
 const rootElement = document.getElementById('root');

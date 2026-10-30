@@ -1,20 +1,19 @@
 {
   "name": "my-weather-station",
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "license": "ISC",
   "author": "",
-  "private": true,
-  "type": "module",
   "workspaces": [
     "packages/*"
   ],
+  "type": "module",
   "scripts": {
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "lint:anti-slop": "oxlint --fix",
+    "lint": "oxlint --fix",
+    "fmt": "oxfmt",
     "typecheck": "tsc --project packages/collector/tsconfig.json && tsc --project packages/web/tsconfig.json && tsc --project packages/shared/tsconfig.json",
-    "check": "npm run lint:anti-slop && npm run lint && npm run typecheck && npm run test:coverage",
+    "check": "npm run fmt && npm run lint && npm run typecheck && npm run test:coverage",
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
@@ -25,8 +24,10 @@
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status -o env"
   },
+  "dependencies": {
+    "oxfmt": "0.75.0"
+  },
   "devDependencies": {
-    "@biomejs/biome": "2.4.10",
     "@playwright/test": "1.62.1",
     "@types/istanbul-lib-coverage": "2.0.6",
     "@types/istanbul-lib-report": "3.0.3",

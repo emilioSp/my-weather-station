@@ -79,7 +79,6 @@ Use a hook when it makes a view or component easier to read.
 
 Folder used to store utility modules.
 
-
 ```text
 main.tsx
 index.html

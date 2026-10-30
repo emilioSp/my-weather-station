@@ -8,12 +8,7 @@ export default defineConfig({
       reporter: ['json'],
       reportsDirectory: 'coverage/vitest',
       include: ['**/*.{ts,tsx}'],
-      exclude: [
-        '**/*.spec.ts',
-        'environment.ts',
-        'playwright.config.ts',
-        'e2e/utils/*.ts',
-      ],
+      exclude: ['**/*.spec.ts', 'environment.ts', 'playwright.config.ts', 'e2e/utils/*.ts'],
     },
   },
 });

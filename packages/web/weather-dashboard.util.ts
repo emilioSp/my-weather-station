@@ -1,9 +1,7 @@
 // Prepare measurement values and chart ranges for the weather dashboard.
 import type { Measure } from '@wx/shared';
-import {
-  formatTemperature,
-  type TemperatureUnit,
-} from '#utils/temperature-unit.util.ts';
+
+import { formatTemperature, type TemperatureUnit } from '#utils/temperature-unit.util.ts';
 
 export const CHART_RANGES = {
   LAST_MONTH: 'LAST_MONTH',
@@ -68,10 +66,7 @@ export const formatChartTime = (measuredAt: number): [string, string] => {
   const getPart = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((part) => part.type === type)?.value ?? '';
 
-  return [
-    `${getPart('day')} ${getPart('month')}`,
-    `${getPart('hour')}:${getPart('minute')}`,
-  ];
+  return [`${getPart('day')} ${getPart('month')}`, `${getPart('hour')}:${getPart('minute')}`];
 };
 
 export const formatMeasureValue = ({
@@ -105,15 +100,11 @@ export const filterMeasuresForRange = ({
 }): Measure[] => {
   const start = end - range.hours * 60 * 60 * 1_000;
 
-  return measures.filter(
-    (measure) => new Date(measure.measuredAt).getTime() >= start,
-  );
+  return measures.filter((measure) => new Date(measure.measuredAt).getTime() >= start);
 };
 
 export const getLatestTimestamp = (measures: Measure[]): number | null => {
-  const timestamps = measures.map((measure) =>
-    new Date(measure.measuredAt).getTime(),
-  );
+  const timestamps = measures.map((measure) => new Date(measure.measuredAt).getTime());
 
   return timestamps.length === 0 ? null : Math.max(...timestamps);
 };
@@ -139,12 +130,10 @@ export const getRangeExtrema = ({
   const { low, high } = measures.reduce(
     (result, measure) => {
       const isEarlierThanLow =
-        new Date(measure.measuredAt).getTime() <
-        new Date(result.low.measuredAt).getTime();
+        new Date(measure.measuredAt).getTime() < new Date(result.low.measuredAt).getTime();
 
       const isEarlierThanHigh =
-        new Date(measure.measuredAt).getTime() <
-        new Date(result.high.measuredAt).getTime();
+        new Date(measure.measuredAt).getTime() < new Date(result.high.measuredAt).getTime();
 
       return {
         low:

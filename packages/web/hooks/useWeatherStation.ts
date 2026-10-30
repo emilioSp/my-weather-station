@@ -1,5 +1,6 @@
 import type { Measure } from '@wx/shared';
 import * as React from 'react';
+
 import { environment } from '#environment.ts';
 import {
   getChartHistory,
@@ -33,11 +34,7 @@ const waitUntil = (deadline: number): Promise<void> =>
     setTimeout(resolve, Math.max(0, deadline - Date.now()));
   });
 
-const getLatestRows = ({
-  results,
-}: {
-  results: MeasureQueryResult[];
-}): CurrentMeasures => ({
+const getLatestRows = ({ results }: { results: MeasureQueryResult[] }): CurrentMeasures => ({
   byDeviceName: Object.fromEntries(
     environment.DEVICES.map(({ deviceName }, index) => [
       deviceName,
@@ -49,18 +46,13 @@ const getLatestRows = ({
 
 const loadLatestMeasures = async (): Promise<CurrentMeasures> => {
   const results = await Promise.all(
-    environment.DEVICES.map(({ deviceName }) =>
-      getLatestMeasure({ deviceName }),
-    ),
+    environment.DEVICES.map(({ deviceName }) => getLatestMeasure({ deviceName })),
   );
 
   return getLatestRows({ results });
 };
 
-const getHistoryRows = ({
-  history,
-  error,
-}: MeasureHistoryQueryResult): ChartHistory => ({
+const getHistoryRows = ({ history, error }: MeasureHistoryQueryResult): ChartHistory => ({
   history: Object.fromEntries(
     Object.entries(history).filter(([deviceName]) =>
       environment.DEVICES.some((device) => device.deviceName === deviceName),
@@ -77,15 +69,11 @@ const getMeasures = (currentMeasures: CurrentMeasures | null): Measure[] =>
       );
 
 export const useWeatherStation = () => {
-  const [currentMeasures, setCurrentMeasures] =
-    React.useState<CurrentMeasures | null>(null);
+  const [currentMeasures, setCurrentMeasures] = React.useState<CurrentMeasures | null>(null);
 
-  const [measureHistory, setMeasureHistory] =
-    React.useState<ChartHistory | null>(null);
+  const [measureHistory, setMeasureHistory] = React.useState<ChartHistory | null>(null);
 
-  const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(
-    CHART_RANGES.LAST_DAY,
-  );
+  const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(CHART_RANGES.LAST_DAY);
 
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const currentRange: ChartRange = chartRanges[rangeKey];
@@ -127,9 +115,7 @@ export const useWeatherStation = () => {
     const loadHistory = async () => {
       const placeholderDeadline = Date.now() + 100;
 
-      const measuredAfter = new Date(
-        latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000,
-      );
+      const measuredAfter = new Date(latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000);
 
       const history = await getChartHistory({
         measuredAfter,
@@ -159,8 +145,7 @@ export const useWeatherStation = () => {
       latestRows.error === null &&
       environment.DEVICES.every(
         ({ deviceName }) =>
-          latestRows.byDeviceName[deviceName]?.id ===
-          currentMeasures?.byDeviceName[deviceName]?.id,
+          latestRows.byDeviceName[deviceName]?.id === currentMeasures?.byDeviceName[deviceName]?.id,
       );
 
     if (!isUnchanged) {
@@ -192,16 +177,14 @@ export const useWeatherStation = () => {
       measureHistory === null
         ? {}
         : Object.fromEntries(
-            Object.entries(measureHistory.history).map(
-              ([deviceName, measures]) => [
-                deviceName,
-                filterMeasuresForRange({
-                  measures,
-                  range: currentRange,
-                  end: chartEnd ?? Number.POSITIVE_INFINITY,
-                }),
-              ],
-            ),
+            Object.entries(measureHistory.history).map(([deviceName, measures]) => [
+              deviceName,
+              filterMeasuresForRange({
+                measures,
+                range: currentRange,
+                end: chartEnd ?? Number.POSITIVE_INFINITY,
+              }),
+            ]),
           ),
     [measureHistory, currentRange, chartEnd],
   );

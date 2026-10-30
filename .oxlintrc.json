@@ -1,22 +1,38 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "categories": {
-    "correctness": "off",
-    "nursery": "off",
-    "pedantic": "off",
-    "perf": "off",
-    "restriction": "off",
-    "style": "off",
-    "suspicious": "off"
+    "correctness": "error"
   },
-  "plugins": [],
+  "plugins": ["typescript", "import", "vitest"],
   "jsPlugins": [
     {
       "name": "anti-slop",
       "specifier": "oxlint-anti-slop"
     }
   ],
+  "ignorePatterns": [".agents/**", ".pi/**", "coverage/**"],
   "rules": {
+    "vitest/valid-title": [
+      "error",
+      {
+        "ignoreTypeOfDescribeName": true,
+        "mustMatch": {
+          "it": "^given .+ when .+ then .+$",
+          "test": "^given .+ when .+ then .+$"
+        }
+      }
+    ],
+    "prefer-const": "error",
+    "no-else-return": ["error", { "allowElseIf": false }],
+    "typescript/consistent-type-definitions": ["error", "type"],
+    "import/no-commonjs": [
+      "error",
+      {
+        "allowConditionalRequire": false,
+        "allowPrimitiveModules": false,
+        "allowRequire": false
+      }
+    ],
     "anti-slop/no-reduce-accumulator-copy": "error",
     "anti-slop/no-chained-type-assertions": "error",
     "anti-slop/no-unnecessary-type-widening": "error",
