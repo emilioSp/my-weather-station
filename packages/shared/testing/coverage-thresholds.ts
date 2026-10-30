@@ -1,3 +1,5 @@
+// Define coverage requirements used by workspace test runners.
+
 export const coverageThresholds = {
   statements: 80,
   lines: 80,

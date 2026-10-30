@@ -26,7 +26,7 @@ with its own `package.json` and run `npm install`. The root file does not change
 step:
 
 ```ts
-import { normalizeUuid } from '@wx/shared';
+import { normalizeUuid } from '@wx/shared/utils/normalizeUuid.util.ts';
 ```
 
 Inside a workspace, never climb directories with `../`. Use the `imports` field of that workspace's own `package.json`. These are Node subpath imports, not TypeScript
@@ -39,6 +39,7 @@ import { createMeter } from '#meters/meter.factory.ts';
 ## Prerequisites
 
 - Node.js 26 or newer, for native TypeScript support
+- A browser with native Temporal support for the web app
 - A Bluetooth adapter, and Bluetooth permission for the terminal or Node.js
 - Docker or another Docker-compatible container runtime
 

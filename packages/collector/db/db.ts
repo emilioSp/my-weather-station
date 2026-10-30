@@ -1,36 +1,40 @@
-import knex from 'knex';
+// Own the PostgreSQL client and its lifetime during collector database operations.
+import knex, { type Knex } from 'knex';
 import pg from 'pg';
 
 import { environment } from '#environment.ts';
 
-// 1114 = timestamp, 1184 = timestamptz — return raw string instead of Date
-pg.types.setTypeParser(1114, (v) => v);
+// Keep PostgreSQL timestamp (1114) and timestamptz (1184) values as strings at the database boundary.
+pg.types.setTypeParser(1114, (value) => value);
 
-pg.types.setTypeParser(1184, (v) => v);
+pg.types.setTypeParser(1184, (value) => value);
 
-// 1700 = numeric type as a number, not a string. e.g 30.5 instead of '30.5'
+// PostgreSQL numeric (1700) readings must be numbers rather than driver-returned strings.
 pg.types.setTypeParser(1700, Number);
 
-const db = knex({
-  client: 'postgresql',
-  connection: {
-    host: environment.POSTGRES_HOST,
-    port: environment.POSTGRES_PORT,
-    database: environment.POSTGRES_DB,
-    user: environment.POSTGRES_USER,
-    password: environment.POSTGRES_PASSWORD,
-    connectionTimeoutMillis: environment.POSTGRES_TIMEOUT_MS,
-    query_timeout: environment.POSTGRES_TIMEOUT_MS,
-  },
-  acquireConnectionTimeout: environment.POSTGRES_TIMEOUT_MS,
-  pool: {
-    min: 2,
-    max: 15,
-  },
-});
+export class Database {
+  private readonly client = knex({
+    client: 'postgresql',
+    connection: {
+      host: environment.POSTGRES_HOST,
+      port: environment.POSTGRES_PORT,
+      database: environment.POSTGRES_DB,
+      user: environment.POSTGRES_USER,
+      password: environment.POSTGRES_PASSWORD,
+      connectionTimeoutMillis: environment.POSTGRES_TIMEOUT_MS,
+      query_timeout: environment.POSTGRES_TIMEOUT_MS,
+    },
+    acquireConnectionTimeout: environment.POSTGRES_TIMEOUT_MS,
+    pool: { min: 2, max: 15 },
+  });
 
-export const closeDatabaseConnection = async (): Promise<void> => {
-  await db.destroy();
-};
+  public getClient(): Knex {
+    return this.client;
+  }
 
-export default db;
+  public async close(): Promise<void> {
+    await this.client.destroy();
+  }
+}
+
+export default new Database();

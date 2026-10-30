@@ -1,7 +1,10 @@
-import type { Measure, WeatherReading } from '@wx/shared';
-import { toCamelCaseKeys, toSnakeCaseKeys } from '@wx/shared';
+// Persist complete measurements and map stored rows at the collector database boundary.
 
-import db from '#db/db.ts';
+import type { Measure, WeatherReading } from '@wx/shared';
+import { toCamelCaseKeys } from '@wx/shared/utils/toCamelCaseKeys.util.ts';
+import { toSnakeCaseKeys } from '@wx/shared/utils/toSnakeCaseKeys.util.ts';
+
+import database from '#db/db.ts';
 import type { Advertisement, Meter } from '#types.ts';
 
 type StoreMeasureInput = Pick<Meter, 'type' | 'deviceName'> &
@@ -20,7 +23,8 @@ export const storeMeasure = async ({
   battery,
   signalPowerDBM,
 }: StoreMeasureInput): Promise<Measure> => {
-  const [storedMeasure] = await db('measures')
+  const [storedMeasure] = await database
+    .getClient()('measures')
     .insert(
       toSnakeCaseKeys({
         deviceId,

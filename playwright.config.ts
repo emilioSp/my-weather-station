@@ -1,3 +1,5 @@
+// Configure playwright when running builds or automated checks.
+
 import { defineConfig, devices } from '@playwright/test';
 
 /**

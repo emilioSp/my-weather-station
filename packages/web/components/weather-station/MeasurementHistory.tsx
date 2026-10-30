@@ -1,11 +1,13 @@
+// Render MeasurementHistory when displaying the weather dashboard.
+
 import type { Measure } from '@wx/shared';
 
 import { MeterAccordion } from '#components/weather-station/MeterAccordion.tsx';
 import { RangeControls } from '#components/weather-station/RangeControls.tsx';
-import { getMeterTheme } from '#components/weather-station/WeatherCard.tsx';
 import { deviceIconMap, environment } from '#environment.ts';
+import type { ChartRange } from '#utils/chart-ranges.ts';
+import { getMeterTheme } from '#utils/getMeterTheme.util.ts';
 import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
-import type { ChartRange } from '#weather-dashboard.util.ts';
 
 type MeasurementHistoryProps = {
   error: string | null;

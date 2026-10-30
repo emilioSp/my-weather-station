@@ -1,8 +1,10 @@
+// Render WeatherStationHeader when displaying the weather dashboard.
+
 import { FaArrowsRotate, FaTemperatureHalf } from 'react-icons/fa6';
 
 import { IconButton } from '#components/primitives/IconButton.tsx';
-import type { TemperatureUnit } from '#utils/temperature-unit.util.ts';
-import { formatMeasuredAt } from '#weather-dashboard.util.ts';
+import { formatMeasuredAt } from '#utils/formatMeasuredAt.util.ts';
+import { TEMPERATURE_UNITS, type TemperatureUnit } from '#utils/temperature-unit.util.ts';
 
 type WeatherStationHeaderProps = {
   isRefreshing: boolean;
@@ -32,7 +34,7 @@ export const WeatherStationHeader = ({
         <strong className="mt-1 block text-[13px]">
           {latestMeasuredAt === null
             ? 'No readings yet'
-            : formatMeasuredAt(new Date(latestMeasuredAt).toISOString())}
+            : formatMeasuredAt(Temporal.Instant.fromEpochMilliseconds(latestMeasuredAt).toString())}
         </strong>
       </div>
       <div
@@ -40,7 +42,7 @@ export const WeatherStationHeader = ({
         className="flex gap-0.5 rounded-lg border border-[#2b3a38] bg-[#15201f] p-0.5"
         role="radiogroup"
       >
-        {(['celsius', 'fahrenheit'] as const).map((unit) => (
+        {([TEMPERATURE_UNITS.CELSIUS, TEMPERATURE_UNITS.FAHRENHEIT] as const).map((unit) => (
           <label key={unit} className="cursor-pointer">
             <input
               checked={temperatureUnit === unit}
@@ -51,7 +53,7 @@ export const WeatherStationHeader = ({
               value={unit}
             />
             <span className="block rounded-[5px] px-[11px] py-2 font-mono text-[13px] font-medium text-[#9bad9e] peer-checked:bg-[#b9e53b] peer-checked:text-[#10191b] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#eaf0e9]">
-              {unit === 'celsius' ? '°C' : '°F'}
+              {unit === TEMPERATURE_UNITS.CELSIUS ? '°C' : '°F'}
             </span>
           </label>
         ))}

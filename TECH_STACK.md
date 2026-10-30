@@ -28,6 +28,8 @@ The [collector](packages/collector/package.json) owns BLE and database writes. T
 
 ## Web interface
 
+Browser date handling uses native Temporal. The target browser must support it; no polyfill dependency is included.
+
 | Technology          | Role                                                      |
 | ------------------- | --------------------------------------------------------- |
 | React and React DOM | Render the dashboard and manage browser UI state.         |

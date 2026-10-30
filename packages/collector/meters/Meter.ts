@@ -1,19 +1,20 @@
+// Share retries, derived values, and storage across meter reading strategies.
+
 import { type Measure, type WeatherReading, weatherReadingSchema } from '@wx/shared';
 
 import { getAdvertisement } from '#api/sensor.api.ts';
 import { storeMeasure } from '#db/measure.repository.ts';
 import { environment } from '#environment.ts';
-import NoCompleteReadingError from '#errors/NoCompleteReadingError.ts';
+import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
+import { calculateDewPoint } from '#meters/utils/calculateDewPoint.util.ts';
+import { calculateHeatIndex } from '#meters/utils/calculateHeatIndex.util.ts';
+import { formatMeasure } from '#meters/utils/formatMeasure.util.ts';
 import {
   type Advertisement,
   type Meter as MeterConfiguration,
   type MeterInterface,
   meterSchema,
 } from '#types.ts';
-
-import { calculateDewPoint } from './utils/calculateDewPoint.util.ts';
-import { calculateHeatIndex } from './utils/calculateHeatIndex.util.ts';
-import { formatMeasure } from './utils/formatMeasure.util.ts';
 
 export type DecodedAdvertisement = Partial<
   Pick<WeatherReading, 'temperature' | 'humidity' | 'battery'>

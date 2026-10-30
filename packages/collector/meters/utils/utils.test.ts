@@ -1,5 +1,6 @@
 // Verify derived weather values and timestamp formatting during collector utility checks.
 
+import { METER_TYPES } from '@wx/shared';
 import { describe, expect, it } from 'vitest';
 
 import { calculateDewPoint } from '#meters/utils/calculateDewPoint.util.ts';
@@ -24,7 +25,7 @@ describe('meter calculations', () => {
         deviceId: 'device',
         deviceName: 'test meter',
         address: 'address',
-        deviceType: 'indoor',
+        deviceType: METER_TYPES.INDOOR,
         temperature: 20,
         dewPoint: 10,
         heatIndex: 21,

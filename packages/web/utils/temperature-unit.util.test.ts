@@ -2,12 +2,9 @@
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  convertTemperature,
-  formatTemperature,
-  isTemperatureUnit,
-  TEMPERATURE_UNITS,
-} from '#utils/temperature-unit.util.ts';
+import { convertTemperature } from '#utils/convertTemperature.util.ts';
+import { formatTemperature } from '#utils/formatTemperature.util.ts';
+import { isTemperatureUnit, TEMPERATURE_UNITS } from '#utils/temperature-unit.util.ts';
 
 describe('Temperature unit.util', () => {
   it('given 20 degrees Celsius when converting temperatures then returns 68 Fahrenheit or 20 Celsius', () => {
@@ -16,7 +13,7 @@ describe('Temperature unit.util', () => {
   });
 
   it('given Celsius Fahrenheit and Kelvin when validating and formatting units then rejects Kelvin and formats supported units', () => {
-    expect(isTemperatureUnit('celsius')).toBe(true);
+    expect(isTemperatureUnit(TEMPERATURE_UNITS.CELSIUS)).toBe(true);
     expect(isTemperatureUnit('kelvin')).toBe(false);
     expect(
       formatTemperature({

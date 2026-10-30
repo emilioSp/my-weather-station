@@ -45,7 +45,7 @@ The web app supports Celsius and Fahrenheit and saves the selected unit in brows
 #### Evidence
 
 The owner confirmed acceptance during the constitution initialization interview. See the
-[implementation commit](https://github.com/emilioSp/my-weather-station/commit/c41a6f4), [conversion utility](packages/web/utils/temperature-unit.util.ts), and
+[implementation commit](https://github.com/emilioSp/my-weather-station/commit/c41a6f4), [conversion utility](packages/web/utils/convertTemperature.util.ts), and
 [browser tests](packages/web/e2e/temperature-units.spec.ts).
 
 ### R-04: Date chart lows and highs

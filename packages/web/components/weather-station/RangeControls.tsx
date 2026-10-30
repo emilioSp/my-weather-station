@@ -1,7 +1,9 @@
+// Render RangeControls when displaying the weather dashboard.
+
 import { FaArrowsRotate, FaMagnifyingGlassMinus, FaMagnifyingGlassPlus } from 'react-icons/fa6';
 
 import { IconButton } from '#components/primitives/IconButton.tsx';
-import { type ChartRange, chartRangeKeys } from '#weather-dashboard.util.ts';
+import { type ChartRange, chartRangeKeys } from '#utils/chart-ranges.ts';
 
 type RangeControlsProps = {
   isLoading: boolean;

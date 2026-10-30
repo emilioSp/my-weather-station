@@ -1,12 +1,19 @@
+// Select the configured meter strategy when initializing collector reads.
+
+import { METER_TYPES, type MeterType } from '@wx/shared';
+
+import { IndoorMeter } from '#meters/IndoorMeter.ts';
+import { OutdoorMeter } from '#meters/OutdoorMeter.ts';
 import type { Meter, MeterInterface } from '#types.ts';
 
-import { IndoorMeter } from './IndoorMeter.ts';
-import { OutdoorMeter } from './OutdoorMeter.ts';
+function assertMeterType(type: unknown): asserts type is MeterType {
+  if (type !== METER_TYPES.OUTDOOR && type !== METER_TYPES.INDOOR) {
+    throw new Error(`Unknown meter type ${type}`);
+  }
+}
 
 export const createMeter = (meter: Meter): MeterInterface => {
-  if (meter.type === 'outdoor') return new OutdoorMeter(meter);
+  assertMeterType(meter.type);
 
-  if (meter.type === 'indoor') return new IndoorMeter(meter);
-
-  throw new Error(`Unknown meter type ${meter.type}`);
+  return meter.type === METER_TYPES.OUTDOOR ? new OutdoorMeter(meter) : new IndoorMeter(meter);
 };

@@ -1,4 +1,5 @@
 // Verify meter decoding and factory rejection with controlled sensor advertisements.
+import { METER_TYPES } from '@wx/shared';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
@@ -12,12 +13,14 @@ vi.hoisted(() => {
   });
 });
 
-import db, { closeDatabaseConnection } from '#db/db.ts';
-import NoCompleteReadingError from '#errors/NoCompleteReadingError.ts';
+import database from '#db/db.ts';
+import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
 import { IndoorMeter } from '#meters/IndoorMeter.ts';
 import { createMeter } from '#meters/meter.factory.ts';
 import { OutdoorMeter } from '#meters/OutdoorMeter.ts';
-import type { Advertisement } from '#types.ts';
+import { incompleteIndoorReading } from '#tests/fixtures/meters/incomplete-indoor-reading.ts';
+import { indoorReading } from '#tests/fixtures/meters/indoor-reading.ts';
+import { outdoorReading } from '#tests/fixtures/meters/outdoor-split-reading.ts';
 
 const sensor = vi.hoisted(() => ({
   getAdvertisement: vi.fn<typeof import('#api/sensor.api.ts').getAdvertisement>(),
@@ -25,80 +28,43 @@ const sensor = vi.hoisted(() => ({
 
 vi.mock('#api/sensor.api.ts', () => sensor);
 
-const indoor = {
-  type: 'indoor' as const,
-  deviceName: 'indoor meter',
-  deviceId: 'indoor-device',
-  address: 'aa:bb',
-};
-
-const outdoor = {
-  type: 'outdoor' as const,
-  deviceName: 'outdoor meter',
-  deviceId: 'outdoor-device',
-  address: 'cc:dd',
-};
-
-const advertisement = (overrides: Partial<Advertisement> = {}): Advertisement => ({
-  deviceId: 'indoor-device',
-  address: 'aa:bb',
-  manufacturerData: undefined,
-  serviceData: [],
-  signalPowerDBM: -50,
-  ...overrides,
-});
-
 afterEach(async () => {
-  await db.raw('TRUNCATE TABLE measures');
+  await database.getClient().raw('TRUNCATE TABLE measures');
   sensor.getAdvertisement.mockReset();
 });
 
-afterAll(closeDatabaseConnection);
+afterAll(async () => {
+  await database.close();
+});
 
 describe('meters', () => {
   it('given a complete indoor advertisement when reading the meter then returns decoded values and persists the device name', async () => {
-    sensor.getAdvertisement.mockResolvedValue(
-      advertisement({
-        serviceData: [{ uuid: 'FD3D', data: Buffer.from([0x54, 0, 80, 5, 0x94, 60]) }],
-      }),
-    );
-    const measure = await new IndoorMeter(indoor).read();
+    sensor.getAdvertisement.mockResolvedValue(indoorReading.advertisement);
+    const measure = await new IndoorMeter(indoorReading.meter).read();
 
     expect(measure).toMatchObject({
       deviceId: 'indoor-device',
       deviceName: 'indoor meter',
-      deviceType: 'indoor',
+      deviceType: METER_TYPES.INDOOR,
       temperature: 20.5,
       humidity: 60,
       battery: 80,
       signalPowerDBM: -50,
     });
-    expect(await db('measures').where({ id: measure.id }).first()).toMatchObject({
+    expect(await database.getClient()('measures').where({ id: measure.id }).first()).toMatchObject({
       device_name: 'indoor meter',
     });
   });
 
   it('given separate outdoor advertisements when reading the meter then combines temperature humidity and battery values', async () => {
     sensor.getAdvertisement
-      .mockResolvedValueOnce(
-        advertisement({
-          deviceId: 'outdoor-device',
-          address: 'cc:dd',
-          manufacturerData: Buffer.from([0x69, 0x09, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0x99, 70]),
-        }),
-      )
-      .mockResolvedValueOnce(
-        advertisement({
-          deviceId: 'outdoor-device',
-          address: 'cc:dd',
-          serviceData: [{ uuid: 'fd3d', data: Buffer.from([0x77, 0, 90]) }],
-        }),
-      );
-    const measure = await new OutdoorMeter(outdoor).read();
+      .mockResolvedValueOnce(outdoorReading.advertisements[0])
+      .mockResolvedValueOnce(outdoorReading.advertisements[1]);
+    const measure = await new OutdoorMeter(outdoorReading.meter).read();
 
     expect(measure).toMatchObject({
       deviceName: 'outdoor meter',
-      deviceType: 'outdoor',
+      deviceType: METER_TYPES.OUTDOOR,
       temperature: 25.3,
       humidity: 70,
       battery: 90,
@@ -106,22 +72,20 @@ describe('meters', () => {
   });
 
   it('given incomplete indoor advertisements when reading the meter then throws NoCompleteReadingError after eight attempts', async () => {
-    sensor.getAdvertisement.mockResolvedValue(
-      advertisement({
-        serviceData: [{ uuid: 'fd3d', data: Buffer.from([0x54]) }],
-      }),
+    sensor.getAdvertisement.mockResolvedValue(incompleteIndoorReading.advertisement);
+    await expect(new IndoorMeter(indoorReading.meter).read()).rejects.toBeInstanceOf(
+      NoCompleteReadingError,
     );
-    await expect(new IndoorMeter(indoor).read()).rejects.toBeInstanceOf(NoCompleteReadingError);
     expect(sensor.getAdvertisement).toHaveBeenCalledTimes(8);
   });
 
   it('given indoor outdoor and unknown meter types when creating strategies then returns matching instances and rejects the unknown type', () => {
-    expect(createMeter(indoor)).toBeInstanceOf(IndoorMeter);
-    expect(createMeter(outdoor)).toBeInstanceOf(OutdoorMeter);
+    expect(createMeter(indoorReading.meter)).toBeInstanceOf(IndoorMeter);
+    expect(createMeter(outdoorReading.meter)).toBeInstanceOf(OutdoorMeter);
     expect(() =>
       // JUSTIFICATION: This test deliberately passes an invalid runtime type to exercise the factory's rejection branch.
-      createMeter({ ...indoor, type: 'unknown' as 'indoor' }),
+      createMeter({ ...indoorReading.meter, type: 'unknown' as typeof METER_TYPES.INDOOR }),
     ).toThrow('Unknown meter type unknown');
-    expect(new IndoorMeter(indoor).getMeter()).toEqual(indoor);
+    expect(new IndoorMeter(indoorReading.meter).getMeter()).toEqual(indoorReading.meter);
   });
 });

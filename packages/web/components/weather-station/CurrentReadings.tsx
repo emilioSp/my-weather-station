@@ -1,3 +1,5 @@
+// Render CurrentReadings when displaying the weather dashboard.
+
 import type { Measure } from '@wx/shared';
 
 import { WeatherCard } from '#components/weather-station/WeatherCard.tsx';

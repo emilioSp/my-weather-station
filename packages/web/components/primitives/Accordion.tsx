@@ -1,3 +1,5 @@
+// Render Accordion when displaying the weather dashboard.
+
 import * as React from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 

@@ -1,14 +1,15 @@
 // Verify shared data transformations and schema validation during workspace checks.
 
 import {
+  METER_TYPES,
   deviceIdentifiersSchema,
   measureSchema,
   meterTypeSchema,
-  normalizeUuid,
-  toCamelCaseKeys,
-  toSnakeCaseKeys,
   weatherReadingSchema,
 } from '@wx/shared';
+import { normalizeUuid } from '@wx/shared/utils/normalizeUuid.util.ts';
+import { toCamelCaseKeys } from '@wx/shared/utils/toCamelCaseKeys.util.ts';
+import { toSnakeCaseKeys } from '@wx/shared/utils/toSnakeCaseKeys.util.ts';
 import { describe, expect, it } from 'vitest';
 
 const reading = {
@@ -44,6 +45,7 @@ describe('case mapping', () => {
 
   it('given primitive and null values when mapping keys then preserves them', () => {
     expect(toCamelCaseKeys(null)).toBeNull();
+    expect(toCamelCaseKeys('value')).toBe('value');
     expect(toSnakeCaseKeys('value')).toBe('value');
   });
 });
@@ -57,7 +59,7 @@ describe('normalizeUuid', () => {
 
 describe('shared schemas', () => {
   it('given indoor and unknown meter types when validating them then accepts indoor and rejects unknown', () => {
-    expect(meterTypeSchema.safeParse('indoor').success).toBe(true);
+    expect(meterTypeSchema.safeParse(METER_TYPES.INDOOR).success).toBe(true);
     expect(meterTypeSchema.safeParse('other').success).toBe(false);
   });
 
@@ -79,7 +81,7 @@ describe('shared schemas', () => {
       ...reading,
       id: '123e4567-e89b-12d3-a456-426614174000',
       deviceName: 'garden',
-      deviceType: 'outdoor',
+      deviceType: METER_TYPES.OUTDOOR,
       measuredAt: '2026-01-01T00:00:00Z',
       address: 'AA:BB',
     });

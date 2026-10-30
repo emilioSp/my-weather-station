@@ -1,8 +1,9 @@
-import { normalizeUuid } from '@wx/shared';
+// Decode SwitchBot outdoor meter advertisements during collector reads.
 
-import type { Advertisement } from '#types.ts';
+import { normalizeUuid } from '@wx/shared/utils/normalizeUuid.util.ts';
 
-import { type DecodedAdvertisement, Meter } from './Meter.ts';
+import { type DecodedAdvertisement, Meter } from '#meters/Meter.ts';
+import { SWITCHBOT_UUIDS, type Advertisement } from '#types.ts';
 
 export class OutdoorMeter extends Meter {
   protected decodeAdvertisement({
@@ -28,7 +29,10 @@ export class OutdoorMeter extends Meter {
     }
 
     const batteryData = serviceData.find(
-      ({ uuid, data }) => normalizeUuid(uuid) === 'fd3d' && data.length >= 3 && data[0] === 0x77,
+      ({ uuid, data }) =>
+        normalizeUuid(uuid) === SWITCHBOT_UUIDS.METER_SERVICE &&
+        data.length >= 3 &&
+        data[0] === 0x77,
     )?.data;
 
     if (batteryData) decodedAdvertisement.battery = batteryData[2] & 0x7f;

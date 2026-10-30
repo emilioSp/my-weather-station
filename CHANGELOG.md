@@ -8,6 +8,13 @@ omitted.
 
 ## Unreleased
 
+Aligned source with the coding conventions: explicit shared utility subpaths, one primary operation per module, class-based database and Supabase singletons, named input
+shapes, assertion helpers, and scenario fixtures. Removed redundant tests and branch-built heat-index state. Database schemas and stored measurement shapes are unchanged.
+
+TypeScript API compatibility: import shared functions from `@wx/shared/utils/<module>.ts`; the package root exposes schemas, types, and domain constants. Use the database
+singleton's `getClient()` and `close()` methods and the default Supabase singleton's query methods. History query inputs are now `Temporal.Instant` values. The web app
+requires a browser with native Temporal support.
+
 Initialized the mission, tech stack, roadmap, changelog, and architecture decision records through an owner interview.
 
 ## 2026-10-30

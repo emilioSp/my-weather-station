@@ -1,3 +1,5 @@
+// Calculate dew point from temperature and humidity during meter decoding.
+
 type CalculateDewPointInput = {
   temperature: number;
   humidity: number;

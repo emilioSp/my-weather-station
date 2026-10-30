@@ -1,93 +1,80 @@
+// Inspect raw BLE advertisements when diagnosing meter discovery and signal data.
+
+import { on } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import noble, { type AdapterState, type Peripheral } from '@stoprocent/noble';
 
-const devices = new Set<string>();
+const formatServiceData = (serviceData: Peripheral['advertisement']['serviceData'] = []) =>
+  serviceData.map((item) => ({ uuid: item.uuid, data: item.data?.toString('hex') }));
 
-const packets = new Set<string>();
+class BleDiscoveryLog {
+  private readonly devices = new Set<string>();
+  private readonly packets = new Set<string>();
 
-function formatServiceData(serviceData: Peripheral['advertisement']['serviceData'] = []) {
-  return serviceData.map((item) => ({
-    uuid: item.uuid,
-    data: item.data?.toString('hex'),
-  }));
+  public record(peripheral: Peripheral): void {
+    const { id, address, rssi, connectable, advertisement } = peripheral;
+    const manufacturerData = advertisement.manufacturerData?.toString('hex') ?? null;
+    const serviceData = formatServiceData(advertisement.serviceData);
+    const signature = JSON.stringify({ id, manufacturerData, serviceData });
+
+    if (this.packets.has(signature)) return;
+
+    this.packets.add(signature);
+    this.devices.add(id);
+
+    console.dir(
+      {
+        id,
+        address,
+        rssi,
+        connectable,
+        name: advertisement.localName,
+        manufacturerData,
+        serviceData,
+      },
+      { depth: null, colors: true },
+    );
+  }
+
+  public getDeviceCount(): number {
+    return this.devices.size;
+  }
 }
+
+const discoveryLog = new BleDiscoveryLog();
 
 noble.on('stateChange', (state) => {
   console.log('Stato Bluetooth:', state);
 });
 
-noble.on('discover', (peripheral) => {
-  const { id, address, rssi, connectable, advertisement } = peripheral;
+noble.on('discover', (peripheral) => discoveryLog.record(peripheral));
 
-  const manufacturerData = advertisement.manufacturerData?.toString('hex') ?? null;
-
-  const serviceData = formatServiceData(advertisement.serviceData);
-
-  const signature = JSON.stringify({
-    id,
-    manufacturerData,
-    serviceData,
-  });
-
-  if (packets.has(signature)) {
-    return;
+function assertBluetoothAvailable(state: AdapterState): void {
+  if (state === 'unauthorized' || state === 'unsupported') {
+    throw new Error(`Bluetooth non disponibile: ${state}`);
   }
-
-  packets.add(signature);
-  devices.add(id);
-
-  console.dir(
-    {
-      id,
-      address,
-      rssi,
-      connectable,
-      name: advertisement.localName,
-      manufacturerData,
-      serviceData,
-    },
-    {
-      depth: null,
-      colors: true,
-    },
-  );
-});
-
-async function waitForBluetooth() {
-  if (noble.state === 'poweredOn') {
-    return;
-  }
-
-  await new Promise<void>((resolve, reject) => {
-    const handler = (state: AdapterState) => {
-      if (state === 'poweredOn') {
-        noble.off('stateChange', handler);
-        resolve();
-      }
-
-      if (state === 'unauthorized' || state === 'unsupported') {
-        noble.off('stateChange', handler);
-        reject(new Error(`Bluetooth non disponibile: ${state}`));
-      }
-    };
-
-    noble.on('stateChange', handler);
-  });
 }
+
+const waitForBluetooth = async (): Promise<void> => {
+  if (noble.state === 'poweredOn') return;
+
+  // JUSTIFICATION: Noble emits one AdapterState per stateChange event; node:events.on loses that type.
+  const states = on(noble, 'stateChange') as AsyncIterable<[AdapterState]>;
+
+  for await (const [state] of states) {
+    if (state === 'poweredOn') return;
+    assertBluetoothAvailable(state);
+  }
+};
 
 try {
   await waitForBluetooth();
-
   console.log('Scansione BLE grezza per 30 secondi...');
-
-  noble.startScanning([], true);
-
+  await noble.startScanningAsync([], true);
   await delay(30_000);
-
-  noble.stopScanning();
-
-  console.log(`Dispositivi BLE rilevati: ${devices.size}`);
+  await noble.stopScanningAsync();
+  console.log(`Dispositivi BLE rilevati: ${discoveryLog.getDeviceCount()}`);
 } catch (error) {
   console.error(error);
   process.exitCode = 1;

@@ -1,4 +1,6 @@
-import { coverageThresholds } from '@wx/shared';
+// Configure vitest when running builds or automated checks.
+
+import { coverageThresholds } from '@wx/shared/testing/coverage-thresholds.ts';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({

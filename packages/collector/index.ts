@@ -1,18 +1,13 @@
+// Read configured meters and store measurements during the collector daemon loop.
+
 import { setTimeout } from 'node:timers/promises';
 
 import type { Measure } from '@wx/shared';
 
-import { closeDatabaseConnection } from './db/db.ts';
-import { environment } from './environment.ts';
-import NoCompleteReadingError from './errors/NoCompleteReadingError.ts';
-import { createMeter } from './meters/meter.factory.ts';
-import type { Meter } from './types.ts';
-
-const readMeter = async (meterConfig: Meter): Promise<Measure> => {
-  const meter = createMeter(meterConfig);
-
-  return meter.read();
-};
+import database from '#db/db.ts';
+import { environment } from '#environment.ts';
+import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
+import { createMeter } from '#meters/meter.factory.ts';
 
 const run = async (): Promise<void> => {
   const measures: Measure[] = [];
@@ -23,7 +18,7 @@ const run = async (): Promise<void> => {
 
   for (const meter of environment.DEVICES) {
     try {
-      measures.push(await readMeter(meter));
+      measures.push(await createMeter(meter).read());
     } catch (error) {
       if (error instanceof NoCompleteReadingError) {
         console.error(error);
@@ -52,6 +47,6 @@ try {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 } finally {
-  await closeDatabaseConnection();
+  await database.close();
   process.exit(0);
 }

@@ -1,0 +1,58 @@
+{
+  "oldest": {
+    "id": "oldest",
+    "measuredAt": "2026-01-01T00:00:00Z",
+    "deviceId": "device",
+    "deviceName": "test meter",
+    "address": "address",
+    "deviceType": "indoor",
+    "temperature": 10,
+    "dewPoint": 5,
+    "heatIndex": 11,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -60
+  },
+  "older": {
+    "id": "older",
+    "measuredAt": "2026-01-01T06:00:00Z",
+    "deviceId": "device",
+    "deviceName": "test meter",
+    "address": "address",
+    "deviceType": "indoor",
+    "temperature": 25,
+    "dewPoint": 20,
+    "heatIndex": 26,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -60
+  },
+  "newer": {
+    "id": "newer",
+    "measuredAt": "2026-01-02T00:00:00Z",
+    "deviceId": "device",
+    "deviceName": "test meter",
+    "address": "address",
+    "deviceType": "indoor",
+    "temperature": 30,
+    "dewPoint": 25,
+    "heatIndex": 31,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -60
+  },
+  "newest": {
+    "id": "newest",
+    "measuredAt": "2026-01-02T06:00:00Z",
+    "deviceId": "device",
+    "deviceName": "test meter",
+    "address": "address",
+    "deviceType": "indoor",
+    "temperature": 15,
+    "dewPoint": 10,
+    "heatIndex": 16,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -60
+  }
+}

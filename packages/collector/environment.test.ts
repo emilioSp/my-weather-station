@@ -1,5 +1,6 @@
 // Verify device name validation and trimming during collector configuration checks.
 
+import { METER_TYPES } from '@wx/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
@@ -28,8 +29,8 @@ describe('environment', () => {
   it('given named devices with surrounding spaces when parsing configuration then trims device names', () => {
     const result = environmentSchema.parse(
       environmentInput([
-        { type: 'indoor', deviceId: 'indoor-device', deviceName: ' Kitchen ' },
-        { type: 'outdoor', deviceId: 'outdoor-device', deviceName: 'Garden' },
+        { type: METER_TYPES.INDOOR, deviceId: 'indoor-device', deviceName: ' Kitchen ' },
+        { type: METER_TYPES.OUTDOOR, deviceId: 'outdoor-device', deviceName: 'Garden' },
       ]),
     );
 
@@ -39,7 +40,9 @@ describe('environment', () => {
   it('given a blank device name when parsing configuration then rejects it', () => {
     expect(
       environmentSchema.safeParse(
-        environmentInput([{ type: 'indoor', deviceId: 'indoor-device', deviceName: ' ' }]),
+        environmentInput([
+          { type: METER_TYPES.INDOOR, deviceId: 'indoor-device', deviceName: ' ' },
+        ]),
       ).success,
     ).toBe(false);
   });
@@ -48,8 +51,8 @@ describe('environment', () => {
     expect(
       environmentSchema.safeParse(
         environmentInput([
-          { type: 'indoor', deviceId: 'indoor-device', deviceName: 'same' },
-          { type: 'outdoor', deviceId: 'outdoor-device', deviceName: 'same' },
+          { type: METER_TYPES.INDOOR, deviceId: 'indoor-device', deviceName: 'same' },
+          { type: METER_TYPES.OUTDOOR, deviceId: 'outdoor-device', deviceName: 'same' },
         ]),
       ).success,
     ).toBe(false);

@@ -1,6 +1,7 @@
 // Verify advertisement matching, scan timeouts, and startup failures during collector checks.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { METER_TYPES } from '@wx/shared';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const noble = await vi.hoisted(async () => {
   const { EventEmitter } = await import('node:events');
@@ -23,7 +24,7 @@ vi.mock('#environment.ts', () => ({
 import { getAdvertisement } from '#api/sensor.api.ts';
 
 const meter = {
-  type: 'indoor' as const,
+  type: METER_TYPES.INDOOR,
   deviceId: 'device-id',
   address: 'aa:bb',
 };
@@ -41,15 +42,16 @@ const nonMatchingPeripheral = {
   address: '00:00',
 };
 
-beforeEach(() => {
+afterEach(() => {
   noble.removeAllListeners();
-  noble.waitForPoweredOnAsync.mockReset().mockResolvedValue(undefined);
-  noble.startScanningAsync.mockReset().mockResolvedValue(undefined);
-  noble.stopScanningAsync.mockReset().mockResolvedValue(undefined);
+  vi.resetAllMocks();
 });
 
 describe('getAdvertisement', () => {
   it('given matching and unrelated peripherals when scanning then returns the matching advertisement and stops scanning', async () => {
+    noble.waitForPoweredOnAsync.mockResolvedValue(undefined);
+    noble.startScanningAsync.mockResolvedValue(undefined);
+    noble.stopScanningAsync.mockResolvedValue(undefined);
     noble.startScanningAsync.mockImplementation(async () => {
       queueMicrotask(() => {
         noble.emit('discover', nonMatchingPeripheral);
@@ -66,11 +68,17 @@ describe('getAdvertisement', () => {
   });
 
   it('given no matching peripheral when scanning times out then returns null and stops scanning', async () => {
+    noble.waitForPoweredOnAsync.mockResolvedValue(undefined);
+    noble.startScanningAsync.mockResolvedValue(undefined);
+    noble.stopScanningAsync.mockResolvedValue(undefined);
     await expect(getAdvertisement(meter)).resolves.toBeNull();
     expect(noble.stopScanningAsync).toHaveBeenCalledOnce();
   });
 
   it('given a scan startup failure when requesting an advertisement then rejects without stopping scanning', async () => {
+    noble.waitForPoweredOnAsync.mockResolvedValue(undefined);
+    noble.startScanningAsync.mockResolvedValue(undefined);
+    noble.stopScanningAsync.mockResolvedValue(undefined);
     noble.startScanningAsync.mockRejectedValue(new Error('scan failed'));
     await expect(getAdvertisement(meter)).rejects.toThrow('scan failed');
     expect(noble.stopScanningAsync).not.toHaveBeenCalled();

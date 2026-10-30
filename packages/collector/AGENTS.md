@@ -44,7 +44,7 @@ index.ts
 
 - `api/sensor.api.ts` is the BLE boundary. It manages Noble scanning, finds peripherals, and converts BLE data into `Advertisement` values. It does not decode meter data.
 - `db/db.ts` owns the Knex connection and PostgreSQL type parsers.
-- `db/measure.repository.ts` stores measures. Map database keys with `toSnakeCaseKeys` and `toCamelCaseKeys` from `@wx/shared` at this boundary.
+- `db/measure.repository.ts` stores measures. Map database keys with `toSnakeCaseKeys` and `toCamelCaseKeys` from the `@wx/shared/utils/` subpaths at this boundary.
 - `errors/` contains domain errors. `NoCompleteReadingError` represents an incomplete reading after all scan attempts.
 
 ## Types, configuration, and utilities

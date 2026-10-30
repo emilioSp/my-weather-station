@@ -2,7 +2,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { coverageThresholds } from '@wx/shared';
+import { coverageThresholds } from '@wx/shared/testing/coverage-thresholds.ts';
 import type { CoverageMap, CoverageMapData } from 'istanbul-lib-coverage';
 import coverageLib from 'istanbul-lib-coverage';
 import reportLib from 'istanbul-lib-report';
@@ -69,7 +69,7 @@ const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
   }
 };
 
-const checkCoverageThresholds = (coverageMap: CoverageMap): void => {
+function assertCoverageThresholds(coverageMap: CoverageMap): void {
   const summary = coverageMap.getCoverageSummary();
 
   // JUSTIFICATION: The shared thresholds object contains only the coverage metric keys used by Istanbul.
@@ -86,7 +86,7 @@ const checkCoverageThresholds = (coverageMap: CoverageMap): void => {
       .map((metric) => `${metric}: ${summary[metric].pct}% is below ${coverageThresholds[metric]}%`)
       .join('\n'),
   );
-};
+}
 
 export const mergeCoverage = async (): Promise<void> => {
   const coverageMap = coverageLib.createCoverageMap(await readCoverage(vitestCoveragePath));
@@ -105,7 +105,7 @@ export const mergeCoverage = async (): Promise<void> => {
   reports.create('json').execute(context);
   reports.create('html').execute(context);
   reports.create('text-summary').execute(context);
-  checkCoverageThresholds(coverageMap);
+  assertCoverageThresholds(coverageMap);
 };
 
 await mergeCoverage();

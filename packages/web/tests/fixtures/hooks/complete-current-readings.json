@@ -1,0 +1,58 @@
+{
+  "device-alpha": {
+    "id": "123e4567-e89b-12d3-a456-426614174001",
+    "deviceId": "device",
+    "deviceName": "device-alpha",
+    "address": "address",
+    "deviceType": "outdoor",
+    "measuredAt": "2026-01-01T00:00:00Z",
+    "temperature": 20,
+    "dewPoint": 10,
+    "heatIndex": 21,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -50
+  },
+  "device-beta": {
+    "id": "123e4567-e89b-12d3-a456-426614174002",
+    "deviceId": "device",
+    "deviceName": "device-beta",
+    "address": "address",
+    "deviceType": "indoor",
+    "measuredAt": "2026-01-01T00:00:00Z",
+    "temperature": 21,
+    "dewPoint": 10,
+    "heatIndex": 22,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -50
+  },
+  "device-gamma": {
+    "id": "123e4567-e89b-12d3-a456-426614174003",
+    "deviceId": "device",
+    "deviceName": "device-gamma",
+    "address": "address",
+    "deviceType": "indoor",
+    "measuredAt": "2026-01-01T00:00:00Z",
+    "temperature": 22,
+    "dewPoint": 10,
+    "heatIndex": 23,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -50
+  },
+  "device-delta": {
+    "id": "123e4567-e89b-12d3-a456-426614174004",
+    "deviceId": "device",
+    "deviceName": "device-delta",
+    "address": "address",
+    "deviceType": "indoor",
+    "measuredAt": "2026-01-01T00:00:00Z",
+    "temperature": 23,
+    "dewPoint": 10,
+    "heatIndex": 24,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -50
+  }
+}

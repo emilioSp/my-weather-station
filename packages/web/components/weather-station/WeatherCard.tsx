@@ -1,37 +1,14 @@
+// Render WeatherCard when displaying the weather dashboard.
+
 import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
 
 import { ProgressBar } from '#components/primitives/ProgressBar.tsx';
-import {
-  convertTemperature,
-  formatTemperature,
-  type TemperatureUnit,
-} from '#utils/temperature-unit.util.ts';
-import { getSignalPercentage } from '#weather-dashboard.util.ts';
-
-export type MeterTheme = {
-  themeClassName: string;
-  chartColor: string;
-};
-
-const meterThemes: MeterTheme[] = [
-  { themeClassName: 'meter-theme-garden', chartColor: '#b9e53b' },
-  { themeClassName: 'meter-theme-kitchen', chartColor: '#83d2e5' },
-  { themeClassName: 'meter-theme-living-room', chartColor: '#f0a46a' },
-  { themeClassName: 'meter-theme-bedroom', chartColor: '#c9a7ef' },
-];
-
-export const getMeterTheme = (colorIndex: number): MeterTheme =>
-  meterThemes[colorIndex] ?? meterThemes[0];
-
-type WeatherCardProps = {
-  deviceName: string;
-  label: string;
-  icon: IconType;
-  colorIndex: number;
-  measure: Measure | null;
-  temperatureUnit: TemperatureUnit;
-};
+import { convertTemperature } from '#utils/convertTemperature.util.ts';
+import { formatTemperature } from '#utils/formatTemperature.util.ts';
+import { getMeterTheme, type MeterTheme } from '#utils/getMeterTheme.util.ts';
+import { getSignalPercentage } from '#utils/getSignalPercentage.util.ts';
+import { TEMPERATURE_UNITS, type TemperatureUnit } from '#utils/temperature-unit.util.ts';
 
 type WeatherCardHeadingProps = {
   deviceName: string;
@@ -61,6 +38,15 @@ const WeatherCardHeading = ({
   </div>
 );
 
+type WeatherCardProps = {
+  deviceName: string;
+  label: string;
+  icon: IconType;
+  colorIndex: number;
+  measure: Measure | null;
+  temperatureUnit: TemperatureUnit;
+};
+
 export const WeatherCard = ({
   deviceName,
   label,
@@ -86,8 +72,6 @@ export const WeatherCard = ({
     );
   }
 
-  const signalPercentage = getSignalPercentage(measure.signalPowerDBM);
-
   return (
     <article className={cardClassName}>
       <WeatherCardHeading
@@ -102,7 +86,7 @@ export const WeatherCard = ({
           unit: temperatureUnit,
         }).toFixed(1)}
         <small className="ml-2 text-[20px] tracking-[-0.04em]">
-          °{temperatureUnit === 'celsius' ? 'C' : 'F'}
+          °{temperatureUnit === TEMPERATURE_UNITS.CELSIUS ? 'C' : 'F'}
         </small>
       </div>
       <div className="mt-7 grid grid-cols-2 gap-x-3 gap-y-[18px]">
@@ -130,7 +114,7 @@ export const WeatherCard = ({
         <HealthRow
           label="Signal"
           value={`${measure.signalPowerDBM} dBm`}
-          barValue={signalPercentage}
+          barValue={getSignalPercentage(measure.signalPowerDBM)}
         />
       </div>
     </article>

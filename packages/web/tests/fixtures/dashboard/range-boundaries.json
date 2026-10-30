@@ -1,0 +1,44 @@
+[
+  {
+    "id": "outside",
+    "measuredAt": "2025-12-31T23:59:59Z",
+    "deviceId": "device",
+    "deviceName": "test meter",
+    "address": "address",
+    "deviceType": "indoor",
+    "temperature": 20,
+    "dewPoint": 15,
+    "heatIndex": 21,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -60
+  },
+  {
+    "id": "edge",
+    "measuredAt": "2026-01-01T00:00:00Z",
+    "deviceId": "device",
+    "deviceName": "test meter",
+    "address": "address",
+    "deviceType": "indoor",
+    "temperature": 20,
+    "dewPoint": 15,
+    "heatIndex": 21,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -60
+  },
+  {
+    "id": "inside",
+    "measuredAt": "2026-01-01T12:00:00Z",
+    "deviceId": "device",
+    "deviceName": "test meter",
+    "address": "address",
+    "deviceType": "indoor",
+    "temperature": 20,
+    "dewPoint": 15,
+    "heatIndex": 21,
+    "humidity": 50,
+    "battery": 80,
+    "signalPowerDBM": -60
+  }
+]
