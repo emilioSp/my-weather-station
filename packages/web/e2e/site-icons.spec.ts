@@ -1,7 +1,7 @@
 // Verify the declared site icons and their rendered assets in browser tests.
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { saveCoverage } from '#e2e/utils/save-coverage.ts';
+import { test } from '#e2e/utils/test.ts';
 
 type PngHeader = {
   contentType: string | null;
@@ -92,8 +92,6 @@ test.describe('Site icons', () => {
   test('given the site icon declaration when fetching the favicon then serves the thermometer SVG', async ({
     page,
   }) => {
-    await page.coverage.startJSCoverage();
-
     await page.goto('/');
 
     const favicon = page.locator('head link[rel="icon"]');
@@ -109,19 +107,11 @@ test.describe('Site icons', () => {
     await expect(response.text()).resolves.toContain('M160 64c-26.5 0-48 21.5-48 48');
     await expect(response.text()).resolves.toContain('fill="#b9e53b"');
     await expect(response.text()).resolves.toContain('fill="#10191b"');
-
-    const jsCoverage = await page.coverage.stopJSCoverage();
-    await saveCoverage({
-      jsCoverage,
-      name: 'site-icons-favicon',
-    });
   });
 
   test('given the Apple touch icon declaration when fetching the image then serves a 180 by 180 PNG', async ({
     page,
   }) => {
-    await page.coverage.startJSCoverage();
-
     await page.goto('/');
 
     const appleTouchIcon = page.locator('head link[rel="apple-touch-icon"]');
@@ -144,19 +134,11 @@ test.describe('Site icons', () => {
 
     expect(appleTouchIconColors.dark).toBeGreaterThan(0);
     expect(appleTouchIconColors.lime).toBeGreaterThan(0);
-
-    const jsCoverage = await page.coverage.stopJSCoverage();
-    await saveCoverage({
-      jsCoverage,
-      name: 'site-icons-apple-touch-icon',
-    });
   });
 
   test('given the web manifest when fetching its icons then serves matching Android Home Screen PNGs', async ({
     page,
   }) => {
-    await page.coverage.startJSCoverage();
-
     await page.goto('/');
 
     const manifest = page.locator('head link[rel="manifest"]');
@@ -194,11 +176,5 @@ test.describe('Site icons', () => {
       expect(iconColors.dark).toBeGreaterThan(0);
       expect(iconColors.lime).toBeGreaterThan(0);
     }
-
-    const jsCoverage = await page.coverage.stopJSCoverage();
-    await saveCoverage({
-      jsCoverage,
-      name: 'site-icons-manifest',
-    });
   });
 });

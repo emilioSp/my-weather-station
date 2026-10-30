@@ -33,7 +33,7 @@ type ChartHistory = {
 // Browser timers have no native promise API; keep the callback at this boundary.
 const waitUntil = (deadline: number): Promise<void> =>
   new Promise((resolve) => {
-    setTimeout(resolve, Math.max(0, deadline - Temporal.Now.instant().epochMilliseconds));
+    setTimeout(resolve, Math.max(0, deadline - Date.now()));
   });
 
 type GetLatestRowsInput = {
@@ -121,15 +121,13 @@ export const useWeatherStation = () => {
     setMeasureHistory(null);
 
     const loadHistory = async () => {
-      const placeholderDeadline = Temporal.Now.instant().epochMilliseconds + 100;
+      const placeholderDeadline = Date.now() + 100;
 
-      const measuredAfter = Temporal.Instant.fromEpochMilliseconds(latestMeasuredAt).subtract({
-        hours: currentRange.hours,
-      });
+      const measuredAfter = new Date(latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000);
 
       const history = await supabaseApi.getChartHistory({
         measuredAfter,
-        measuredBefore: Temporal.Instant.fromEpochMilliseconds(latestMeasuredAt),
+        measuredBefore: new Date(latestMeasuredAt),
       });
 
       await waitUntil(placeholderDeadline);
@@ -148,7 +146,7 @@ export const useWeatherStation = () => {
 
   const refreshMeasures = async () => {
     setIsRefreshing(true);
-    const spinnerDeadline = Temporal.Now.instant().epochMilliseconds + 1_000;
+    const spinnerDeadline = Date.now() + 1_000;
     const latestRows = await loadLatestMeasures();
 
     const isUnchanged =

@@ -34,7 +34,7 @@ export const WeatherStationHeader = ({
         <strong className="mt-1 block text-[13px]">
           {latestMeasuredAt === null
             ? 'No readings yet'
-            : formatMeasuredAt(Temporal.Instant.fromEpochMilliseconds(latestMeasuredAt).toString())}
+            : formatMeasuredAt(new Date(latestMeasuredAt).toISOString())}
         </strong>
       </div>
       <div
