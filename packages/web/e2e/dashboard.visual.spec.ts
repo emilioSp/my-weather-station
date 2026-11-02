@@ -95,6 +95,11 @@ for (const viewport of [
       });
 
       await page.goto('/');
+      // Pin the Linux fallback so browser font selection cannot change screenshot dimensions.
+      await page.addStyleTag({
+        content: '.meter-card .font-mono { font-family: "Liberation Mono", monospace; }',
+      });
+
       await expect(page.getByLabel('Current readings').locator('article')).toHaveCount(
         devices.length,
       );
