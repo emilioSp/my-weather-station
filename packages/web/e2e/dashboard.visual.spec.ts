@@ -62,7 +62,7 @@ test.use({
 
 for (const viewport of [
   { label: 'desktop', width: 1280, height: 700 },
-  { label: 'tablet', width: 768, height: 1024 },
+  { label: 'tablet', width: 1024, height: 714 },
   { label: 'smartphone', width: 390, height: 844 },
 ]) {
   test(

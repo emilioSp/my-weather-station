@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>R-07 visual prototype — 1024×714</title>
+<style>
+/* === prototype layout === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 1024px;
+  height: 714px;
+  overflow: hidden;
+  color: #eaf0e9;
+  background: #10191b;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+}
+
+.prototype-wrap {
+  width: 1024px;
+  height: 714px;
+  background: radial-gradient(circle at 86% 0%, #294033 0, transparent 26rem), #10191b;
+  padding: 22px 40px 48px;
+}
+
+/* === header === */
+header {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border-bottom: 1px solid #2b3a38;
+  padding-bottom: 18px;
+}
+header h1 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+/* === 3-column grid — PROPOSED === */
+[aria-label="Current readings"] {
+  margin-top: 16px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* === cards === */
+.meter-theme-garden  { --meter-accent: #b9e53b; }
+.meter-theme-kitchen { --meter-accent: #83d2e5; }
+.meter-theme-living-room { --meter-accent: #f0a46a; }
+.meter-theme-bedroom { --meter-accent: #c9a7ef; }
+
+.meter-card {
+  min-height: 340px;
+  line-height: normal;
+  border: 1px solid color-mix(in srgb, var(--meter-accent) 22%, #2b3a38);
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--meter-accent) 16%, #192524), #182321 70%);
+}
+.meter-card .font-mono { font-family: 'DM Mono', monospace; }
+
+.meter-indicator {
+  display: inline-block;
+  width: 10px; height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: var(--meter-accent);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--meter-accent) 55%, transparent);
+}
+
+.meter-temperature {
+  font-size: clamp(58px, 5.4vw, 78px);
+  margin-top: 28px;
+  line-height: 0.85;
+  font-weight: 600;
+  letter-spacing: -0.09em;
+}
+.meter-temperature small {
+  font-size: 20px;
+  letter-spacing: -0.04em;
+  margin-left: 8px;
+}
+
+.metrics-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 12px;
+}
+.metric {
+  border-top: 1px solid #2b3a38;
+  padding-top: 10px;
+}
+.metric .label {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9bad9e;
+}
+.metric .value {
+  display: block;
+  margin-top: 5px;
+  font-size: 20px;
+  letter-spacing: -0.05em;
+  font-weight: 700;
+}
+
+.health {
+  margin-top: 19px;
+  border-top: 1px solid #2b3a38;
+  padding-top: 13px;
+}
+.health .label {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9bad9e;
+}
+.health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid color-mix(in srgb, #2b3a38 65%, transparent);
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.health-row .value {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 400;
+  color: #9bad9e;
+}
+
+/* === annotation === */
+.annotation {
+  position: absolute;
+  bottom: 16px;
+  left: 0; right: 0;
+  text-align: center;
+  color: #9bad9e;
+  font-size: 13px;
+  padding: 8px;
+  background: #15201f;
+  border-top: 1px solid #2b3a38;
+  opacity: 0.9;
+}
+
+/* === mock === */
+.card-content {
+  display: flex;
+  flex-direction: column;
+}
+</style>
+</head>
+<body>
+<div class="prototype-wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div style="display:flex;align-items:center;gap:13px">
+      <svg width="28" height="32" viewBox="0 0 28 32" fill="#b9e53b"><circle cx="14" cy="16" r="10"/></svg>
+      <h1>Weather station</h1>
+    </div>
+    <div style="display:grid;grid-auto-flow:column;align-items:center;justify-content:end;gap:12px">
+      <div style="text-align:right">
+        <div class="font-mono" style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#9bad9e">Latest available measurement</div>
+        <strong style="display:block;margin-top:4px;font-size:13px">10 Oct — 17:00:00</strong>
+      </div>
+      <div style="border:1px solid #2b3a38;background:#15201f;border-radius:8px;width:32px;height:32px;display:grid;place-items:center">↻</div>
+    </div>
+  </header>
+
+  <!-- CURRENT READINGS — 3 COLUMNS -->
+  <section aria-label="Current readings">
+
+    <!-- Garden -->
+    <article class="meter-card meter-theme-garden">
+      <div class="card-content">
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;text-transform:capitalize">
+          <span class="meter-indicator meter-theme-garden"></span>
+          <span>garden</span>
+          <svg width="20" height="20" fill="#eaf0e9"><rect x="4" y="6" width="12" height="8" rx="2"/></svg>
+        </div>
+        <div class="meter-temperature">22.3<small>°C</small></div>
+        <div class="metrics-grid">
+          <div class="metric"><div class="label">Humidity</div><strong class="value">67%</strong></div>
+          <div class="metric"><div class="label">Dew point</div><strong class="value">12.0°C</strong></div>
+          <div class="metric"><div class="label">Heat index</div><strong class="value">22.3°C</strong></div>
+        </div>
+        <div class="health">
+          <div class="label">Sensor health</div>
+          <div class="health-row"><span>Battery</span><span class="value">85%</span></div>
+          <div class="health-row"><span>Signal</span><span class="value">-72 dBm</span></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Living room -->
+    <article class="meter-card meter-theme-living-room">
+      <div class="card-content">
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;text-transform:capitalize">
+          <span class="meter-indicator meter-theme-living-room"></span>
+          <span>living room</span>
+          <svg width="20" height="20" fill="#eaf0e9"><rect x="2" y="2" width="16" height="12" rx="1"/></svg>
+        </div>
+        <div class="meter-temperature">24.1<small>°C</small></div>
+        <div class="metrics-grid">
+          <div class="metric"><div class="label">Humidity</div><strong class="value">55%</strong></div>
+          <div class="metric"><div class="label">Dew point</div><strong class="value">14.5°C</strong></div>
+          <div class="metric"><div class="label">Heat index</div><strong class="value">24.1°C</strong></div>
+        </div>
+        <div class="health">
+          <div class="label">Sensor health</div>
+          <div class="health-row"><span>Battery</span><span class="value">72%</span></div>
+          <div class="health-row"><span>Signal</span><span class="value">-68 dBm</span></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Bedroom -->
+    <article class="meter-card meter-theme-bedroom">
+      <div class="card-content">
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;text-transform:capitalize">
+          <span class="meter-indicator meter-theme-bedroom"></span>
+          <span>bedroom</span>
+          <svg width="20" height="20" fill="#eaf0e9"><circle cx="10" cy="10" r="6"/></svg>
+        </div>
+        <div class="meter-temperature">24.3<small>°C</small></div>
+        <div class="metrics-grid">
+          <div class="metric"><div class="label">Humidity</div><strong class="value">58%</strong></div>
+          <div class="metric"><div class="label">Dew point</div><strong class="value">15.3°C</strong></div>
+          <div class="metric"><div class="label">Heat index</div><strong class="value">24.3°C</strong></div>
+        </div>
+        <div class="health">
+          <div class="label">Sensor health</div>
+          <div class="health-row"><span>Battery</span><span class="value">91%</span></div>
+          <div class="health-row"><span>Signal</span><span class="value">-65 dBm</span></div>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <div style="margin-top:16px;color:#9bad9e;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.1em;text-align:center;border-top:1px solid #2b3a38;padding-top:12px">
+    Prototype — 1024 × 714 — 3 columns, 1 row · no scroll for current readings
+  </div>
+</div>
+</body>
+</html>

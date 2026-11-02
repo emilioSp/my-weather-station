@@ -158,7 +158,7 @@ npm run test:e2e -w @wx/web -- --project=webkit
 
 ### Visual snapshots
 
-Full-page dashboard screenshots cover desktop (1280 × 700), tablet (768 × 1024), and smartphone (390 × 844) in Chromium and WebKit. The reference PNGs live in
+Full-page dashboard screenshots cover desktop (1280 × 700), tablet (1024 × 714), and smartphone (390 × 844) in Chromium and WebKit. The reference PNGs live in
 `packages/web/e2e/dashboard.visual.spec.ts-snapshots/`.
 
 Run comparisons in the same Linux container used by CI. The root `npm run test:visual` shortcut forwards to this command:
