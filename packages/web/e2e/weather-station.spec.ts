@@ -412,7 +412,7 @@ test.describe('Weather station', () => {
     });
   });
 
-  test('given loaded history when toggling a device and zooming to both limits then updates charts and disables the limit controls', async ({
+  test('given loaded history when zooming to both limits then updates charts and disables the limit controls', async ({
     page,
   }) => {
     const requestedRanges: Array<{ end: string; start: string }> = [];
@@ -465,13 +465,6 @@ test.describe('Weather station', () => {
       }),
     });
 
-    const deviceAccordion = page.getByRole('button', {
-      name: secondaryDeviceName,
-    });
-
-    await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'false');
-    await deviceAccordion.click();
-    await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'true');
     await assertDesktopChartReadout({
       chart: getChart({
         page,
@@ -514,14 +507,12 @@ test.describe('Weather station', () => {
         metric: WEATHER_METRICS.DEW_POINT,
       }),
     });
-    await deviceAccordion.click();
-    await expect(deviceAccordion).toHaveAttribute('aria-expanded', 'false');
 
     const zoomOut = page.getByRole('button', { name: 'Zoom out' });
     const zoomIn = page.getByRole('button', { name: 'Zoom in' });
-    await expect(page.getByText('Last day', { exact: true })).toBeVisible();
+    await expect(page.getByText('Last 3 days', { exact: true })).toBeVisible();
 
-    for (const label of ['Last 3 days', 'Last week', 'Last 2 weeks', 'Last month']) {
+    for (const label of ['Last week', 'Last 2 weeks', 'Last month']) {
       await zoomOut.click();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
       await expect(primaryTemperatureChart).toBeVisible();

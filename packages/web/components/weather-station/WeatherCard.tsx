@@ -5,6 +5,7 @@ import type { IconType } from 'react-icons';
 
 import { ProgressBar } from '#components/primitives/ProgressBar.tsx';
 import { formatTemperature } from '#utils/formatTemperature.util.ts';
+import { getHistorySectionId } from '#utils/getHistorySectionId.util.ts';
 import { getMeterTheme, type MeterTheme } from '#utils/getMeterTheme.util.ts';
 import { getSignalPercentage } from '#utils/getSignalPercentage.util.ts';
 
@@ -36,6 +37,9 @@ const WeatherCardHeading = ({
   </div>
 );
 
+// Leave some space above the targeted chart instead of pinning it to the viewport top.
+const HISTORY_SCROLL_OFFSET = 80;
+
 type WeatherCardProps = {
   deviceName: string;
   label: string;
@@ -54,6 +58,16 @@ export const WeatherCard = ({
   const meterTheme = getMeterTheme(colorIndex);
   const cardClassName = `meter-card ${meterTheme.themeClassName} rounded-2xl border p-5`;
 
+  const scrollToHistory = () => {
+    const historySection = document.getElementById(getHistorySectionId(deviceName));
+
+    if (historySection === null) return;
+
+    const top = historySection.getBoundingClientRect().top + window.scrollY - HISTORY_SCROLL_OFFSET;
+
+    window.scrollTo({ top, behavior: 'smooth' });
+  };
+
   if (measure === null) {
     return (
       <article className={cardClassName}>
@@ -69,7 +83,7 @@ export const WeatherCard = ({
   }
 
   return (
-    <article className={cardClassName}>
+    <article className={`${cardClassName} cursor-pointer`} onClick={scrollToHistory}>
       <WeatherCardHeading
         deviceName={deviceName}
         icon={Icon}

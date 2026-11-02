@@ -83,11 +83,7 @@ type GetSummaryInput = {
 
 const getSummary = ({ page, deviceName, metric }: GetSummaryInput) =>
   page
-    .getByLabel('Measurement history')
-    .locator('section')
-    .filter({
-      has: page.getByRole('button', { name: deviceName, exact: true }),
-    })
+    .locator(`[id="history-${deviceName}"]`)
     .locator('section')
     .filter({
       has: page.getByText(chartMetricDetails[metric].label, { exact: true }),
@@ -104,7 +100,6 @@ test('given two sensors including a single reading when viewing extrema then sho
     fixture: readFixture('two-sensors-and-single-measurement'),
   });
   await page.goto('/');
-  await page.getByRole('button', { name: secondaryDevice, exact: true }).click();
 
   for (const metric of metrics) {
     await expect(
@@ -133,6 +128,8 @@ test('given an older daily minimum when zooming to six hours then replaces its d
   });
 
   await expect(summary.locator('time').first()).toHaveText('05 Oct · 22:00');
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(page.getByText('Last day', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await expect(page.getByText('Last 12 hours', { exact: true })).toBeVisible();
   await expect(summary.locator('time').first()).toHaveText('06 Oct · 10:00');
@@ -168,6 +165,8 @@ test('given empty history when zooming in then shows three empty charts and plac
 }) => {
   await mockDashboard({ page, fixture: readFixture('empty-history') });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(page.getByText('Last day', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await expect(page.getByText('Last 12 hours', { exact: true })).toBeVisible();
   await expect(page.getByText('No measurements in this range.')).toHaveCount(3);

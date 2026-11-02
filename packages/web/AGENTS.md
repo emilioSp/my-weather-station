@@ -29,7 +29,9 @@ main.tsx
 - Do not use XPath locators. Use `data-testid` attributes instead.
 - Assert user-visible results, not loading indicators alone.
 - Do not use fixed waits. Wait for an expected UI value or state.
-- Do not add browser tests for layout scenarios (columns, rows, element positions, scroll) that are already covered by the existing visual snapshot tests. The snapshot tests compare full-page screenshots against baselines and catch layout regressions more reliably than asserting computed styles or bounding boxes. Reserve e2e tests for scenarios that snapshots cannot verify: dynamic states (loading, errors, toggles), interactions (touch, click), and text content that changes over time.
+- Do not add browser tests for layout scenarios (columns, rows, element positions, scroll) that are already covered by the existing visual snapshot tests. The snapshot
+  tests compare full-page screenshots against baselines and catch layout regressions more reliably than asserting computed styles or bounding boxes. Reserve e2e tests for
+  scenarios that snapshots cannot verify: dynamic states (loading, errors, toggles), interactions (touch, click), and text content that changes over time.
 
 ## Styling and responsive layout
 
