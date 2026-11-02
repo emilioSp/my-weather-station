@@ -29,6 +29,9 @@ main.tsx
 - Do not use XPath locators. Use `data-testid` attributes instead.
 - Assert user-visible results, not loading indicators alone.
 - Do not use fixed waits. Wait for an expected UI value or state.
+- Do not add browser tests for layout scenarios (columns, rows, element positions, scroll) that are already covered by the existing visual snapshot tests. The snapshot
+  tests compare full-page screenshots against baselines and catch layout regressions more reliably than asserting computed styles or bounding boxes. Reserve e2e tests for
+  scenarios that snapshots cannot verify: dynamic states (loading, errors, toggles), interactions (touch, click), and text content that changes over time.
 
 ## Styling and responsive layout
 
@@ -39,7 +42,7 @@ main.tsx
 - Prefer CSS Grid over CSS Flex.
 - Use these target resolutions:
   - Desktop: 1280 × 700
-  - Tablet: 768 × 1024
+  - Tablet: 1024 × 714
   - Smartphone: 390 × 844
 - As the viewport becomes smaller, elements may only stack or hide. Keep the same DOM structure for all resolutions and users.
 - Use `react-icons` for icons.

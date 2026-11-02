@@ -1,11 +1,12 @@
-// Render MeterAccordion when displaying the weather dashboard.
+// Render HistoryChart when displaying the weather dashboard.
 
 import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
+import { FaArrowUp } from 'react-icons/fa6';
 
-import { Accordion } from '#components/primitives/Accordion.tsx';
 import { LinearChart } from '#components/weather-station/LinearChart.tsx';
 import type { ChartRange } from '#utils/chart-ranges.ts';
+import { getHistorySectionId } from '#utils/getHistorySectionId.util.ts';
 import type { MeterTheme } from '#utils/getMeterTheme.util.ts';
 import { WEATHER_METRICS, type WeatherMetric } from '#utils/weather-metrics.ts';
 
@@ -15,8 +16,7 @@ const chartMetrics: WeatherMetric[] = [
   WEATHER_METRICS.DEW_POINT,
 ];
 
-type MeterAccordionProps = {
-  defaultOpen: boolean;
+type HistoryChartProps = {
   icon: IconType;
   isLoading: boolean;
   measures: Measure[];
@@ -25,18 +25,23 @@ type MeterAccordionProps = {
   sensor: string;
 };
 
-export const MeterAccordion = ({
-  defaultOpen,
+const scrollToTop = () => {
+  window.scrollTo({ behavior: 'smooth', top: 0 });
+};
+
+export const HistoryChart = ({
   icon: Icon,
   isLoading,
   measures,
   meterTheme,
   range,
   sensor,
-}: MeterAccordionProps) => (
-  <Accordion
-    defaultOpen={defaultOpen}
-    title={
+}: HistoryChartProps) => (
+  <section
+    className="rounded-2xl border border-[#2b3a38] bg-[#15201f]"
+    id={getHistorySectionId(sensor)}
+  >
+    <div className="grid grid-cols-[1fr_auto] items-center gap-4 p-5 sm:p-[23px]">
       <span className="meter-history-heading flex items-center gap-2 capitalize text-sm">
         <span
           aria-hidden="true"
@@ -50,8 +55,15 @@ export const MeterAccordion = ({
           data-testid={`${sensor}-history-icon`}
         />
       </span>
-    }
-  >
+      <button
+        aria-label={`Scroll back to top for ${sensor}`}
+        className="cursor-pointer text-[#9bad9e]"
+        onClick={scrollToTop}
+        type="button"
+      >
+        <FaArrowUp aria-hidden="true" className="size-4" />
+      </button>
+    </div>
     <div className="grid gap-4 px-3 pb-3 sm:px-[23px] sm:pb-[23px]">
       {isLoading
         ? chartMetrics.map((metric) => <ChartLoadingPlaceholder key={`${sensor}-${metric}`} />)
@@ -66,7 +78,7 @@ export const MeterAccordion = ({
             />
           ))}
     </div>
-  </Accordion>
+  </section>
 );
 
 const ChartLoadingPlaceholder = () => (

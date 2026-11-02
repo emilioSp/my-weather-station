@@ -2,7 +2,7 @@
 
 import type { Measure } from '@wx/shared';
 
-import { MeterAccordion } from '#components/weather-station/MeterAccordion.tsx';
+import { HistoryChart } from '#components/weather-station/HistoryChart.tsx';
 import { RangeControls } from '#components/weather-station/RangeControls.tsx';
 import { deviceIconMap, environment } from '#environment.ts';
 import type { ChartRange } from '#utils/chart-ranges.ts';
@@ -48,10 +48,9 @@ export const MeasurementHistory = ({
       {error !== null ? (
         <HistoryError message={error} />
       ) : (
-        historyDevices.map(({ device, icon, meterTheme, measures }, historyIndex) => (
-          <MeterAccordion
+        historyDevices.map(({ device, icon, meterTheme, measures }) => (
+          <HistoryChart
             key={device.deviceName}
-            defaultOpen={historyIndex === 0}
             icon={icon}
             isLoading={isLoading}
             measures={measures}

@@ -82,7 +82,7 @@ body {
   }
 }
 
-@media (min-width: 1101px) {
+@media (min-width: 1024px) {
   [aria-label='Current readings'] {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

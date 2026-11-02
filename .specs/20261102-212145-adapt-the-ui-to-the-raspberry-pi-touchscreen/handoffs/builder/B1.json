@@ -1,0 +1,35 @@
+{
+  "status": "done",
+  "summary": "Lowered the three-column breakpoint to 1024px, updated tablet targets and R-07 documentation, regenerated existing tablet snapshots, and added browser coverage for fully visible current readings.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "Ran npm run test:e2e -w @wx/web -- --grep 'three populated meters': Chromium and WebKit passed at 1024×714 with three populated articles, three equal fractional grid tracks (allowing subpixel rounding), matching top coordinates, separate horizontal positions, all card bounds inside the viewport, and scrollY=0. Rendered the approved HTML prototype at 1024×714 with Playwright and compared its single-row layout with both regenerated tablet PNGs. Ran npm run test:visual -w @wx/web -- --update-snapshots followed by npm run test:visual -w @wx/web: all six comparisons passed; only the existing tablet references changed.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "Read packages/web/AGENTS.md and README.md; executed a node --input-type=module heredoc with node:assert/strict assertions matching 'Tablet: 1024 × 714' and 'tablet (1024 × 714)' respectively. Both assertions passed.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "Read ROADMAP.md; executed a node --input-type=module heredoc asserting that the R-07 table row contains 1024×714, the detailed description contains '7-inch 1024×714 IPS LCD HDMI capacitive touchscreen', and no 1024×600 remains. All assertions passed.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "Read packages/web/e2e/dashboard.visual.spec.ts; executed a node --input-type=module heredoc asserting the exact viewport entry { label: 'tablet', width: 1024, height: 714 }. Assertion passed; both tablet visual tests also executed successfully.",
+      "probeStatus": "passed"
+    }
+  ],
+  "notes": [
+    "npm run check passed formatting, lint, TypeScript, coverage, 54 unit tests, and 24 browser tests across Chromium and WebKit. git diff --check passed.",
+    "No additional visual snapshot tests or reference files were added. Desktop and smartphone references remain unchanged; card content, charts, and history layout were preserved.",
+    "Visual wrapper reported its documented container Node engine warning and existing dependency audit warnings. Dependencies and lockfile were not changed; container installs used disposable volumes.",
+    "Temporary prototype screenshot was removed."
+  ],
+  "escalations": [],
+  "version": "1.0.0",
+  "specId": "20261102-212145-adapt-the-ui-to-the-raspberry-pi-touchscreen"
+}

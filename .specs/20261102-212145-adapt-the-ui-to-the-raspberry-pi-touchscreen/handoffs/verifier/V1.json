@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "specId": "20261102-212145-adapt-the-ui-to-the-raspberry-pi-touchscreen",
+  "summary": "Independently verified all four criteria, repository checks, and visual comparisons. No technical findings recorded.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "Ran npm run test:e2e -w @wx/web -- --grep 'three populated meters': 2 tests passed in Chromium and WebKit. Independently launched both engines against Vite with viewport 1024×714, blocked Google Fonts, and intercepted measures/history using the existing current-and-refreshed-readings.json fixture mapped to garden, living room, and bedroom. Asserted each card's name and populated temperature, three grid tracks, equal top coordinates, complete viewport containment, and scrollY=0. Both engines reported card tops at 100px, bottoms at 502.296875px, and approximately 304.7px-wide tracks. At 1023px the grid had two tracks. Rendered the approved HTML prototype at 1024×714 in both engines and compared screenshots: the intended three-column, single-row layout matches, with every meter fully visible. Inspected styles.css: min-width 1024px applies repeat(3, minmax(0, 1fr)). Ran npm run test:visual -w @wx/web, then npm run test:visual -w @wx/web -- --update-snapshots, then npm run test:visual -w @wx/web again: all six comparisons passed each time; regeneration left all six reference PNGs byte-identical.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "Read packages/web/AGENTS.md and README.md; ran node --input-type=module with node:assert/strict to match /Tablet: 1024 × 714/ in AGENTS.md and /tablet \\(1024 × 714\\)/ in README.md. Both assertions passed.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "Read ROADMAP.md; ran node --input-type=module with node:assert/strict to assert that the R-07 table row includes 1024×714, the detailed description includes '7-inch 1024×714 IPS LCD HDMI capacitive touchscreen', and no 1024×600 remains. All assertions passed.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "Read packages/web/e2e/dashboard.visual.spec.ts; ran node --input-type=module with node:assert/strict to assert the exact entry { label: 'tablet', width: 1024, height: 714 }. Assertion passed. Both tablet visual tests also executed successfully in the pinned Linux Docker wrapper.",
+      "probeStatus": "passed"
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Confirmed workflow specId and verifier-running phase, read the approved proposal, spec, prototype, applicable AGENTS.md files, and active B1 handoff. No design document, earlier handoffs, or finding decisions were present.",
+    "npm run check completed successfully: formatting, lint, TypeScript, 54 unit tests, 24 browser tests, and coverage thresholds. Formatting and lint did not change candidate source or documentation. git diff --check also succeeded.",
+    "Read executable checks before running them. Docker visual execution used the documented disposable dependency volumes; host dependencies and lockfile were not changed. The wrapper emitted its documented Node engine warning and existing dependency audit warnings.",
+    "Restored 76 pre-existing generated coverage files byte-for-byte and removed three newly generated browser coverage files. Removed temporary probe scripts, screenshots, logs, and backups. Every file present at verification start, including contract files and visual references, matched its original bytes before submission.",
+    "Four unrelated .obsidian JSON files appeared during verification. They were not created by this verifier and were preserved untouched. Maestro was notified through a progress update."
+  ]
+}

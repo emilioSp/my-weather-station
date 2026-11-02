@@ -81,7 +81,7 @@ export const useWeatherStation = () => {
 
   const [measureHistory, setMeasureHistory] = React.useState<ChartHistory | null>(null);
 
-  const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(CHART_RANGES.LAST_DAY);
+  const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(CHART_RANGES.LAST_THREE_DAYS);
 
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const currentRange: ChartRange = chartRanges[rangeKey];
