@@ -12,7 +12,7 @@ Roadmap items are planning context, not permission to implement. The owner selec
 | R-04 | [Date chart lows and highs](#r-04-date-chart-lows-and-highs)                                       | Completed | Show the measurement dates associated with chart lows and highs.                           |
 | R-05 | [Monitor Raspberry Pi CPU temperature](#r-05-monitor-raspberry-pi-cpu-temperature)                 | Later     | Display and monitor the Raspberry Pi's CPU temperature in the application.                 |
 | R-06 | [Show chart trends](#r-06-show-chart-trends)                                                       | Later     | Show tendencies on existing charts to make rising and falling measurements easier to spot. |
-| R-07 | [Adapt the UI to the Raspberry Pi touchscreen](#r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen) | Later     | Redesign the interface for the owner's 7-inch 1024×714 IPS HDMI capacitive touchscreen.    |
+| R-07 | [Adapt the UI to the Raspberry Pi touchscreen](#r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen) | Completed | Adapt the dashboard to the owner's 7-inch 1024×714 IPS HDMI capacitive touchscreen.        |
 | R-08 | [Add forecasts](#r-08-add-forecasts)                                                               | Later     | Add forecasting capabilities with scope still to be defined.                               |
 | R-09 | [Add alerts](#r-09-add-alerts)                                                                     | Later     | Notify the owner about conditions using rules and delivery methods still to be defined.    |
 
@@ -60,6 +60,16 @@ The owner confirmed acceptance during the constitution initialization interview.
 [specification](.specs/20261006-204022-show-measurement-dates-for-metric-lows-and-highs/spec.md), and [browser tests](packages/web/e2e/metric-extreme-dates.spec.ts). The
 specification workflow still says `candidate-ready`; acceptance here comes from the owner's explicit confirmation, not that workflow status.
 
+### R-07: Adapt the UI to the Raspberry Pi touchscreen
+
+The dashboard displays three meter cards in one row at 1024×714, with always-visible history charts, card navigation to each meter's history, and scroll-to-top buttons.
+The default history range is three days. Documentation and visual snapshots use the touchscreen's target resolution.
+
+#### Evidence
+
+The owner confirmed completion. See the [responsive styles](packages/web/styles.css), [history charts](packages/web/components/weather-station/HistoryChart.tsx),
+[reading cards](packages/web/components/weather-station/WeatherCard.tsx), and [visual tests](packages/web/e2e/dashboard.visual.spec.ts).
+
 ## Now
 
 No current priority selected.
@@ -91,17 +101,6 @@ calculation remain open.
 #### Completed when
 
 Not yet defined. The owner must choose the trend meaning, calculation window, and visual presentation.
-
-### R-07: Adapt the UI to the Raspberry Pi touchscreen
-
-#### Objective
-
-Redesign the UI to be pixel perfect on the owner's 7-inch 1024×714 IPS LCD HDMI capacitive touchscreen for Raspberry Pi. The target display is selected; the detailed
-layout and touch interactions are not yet specified. This is additional work beyond the current responsive layouts.
-
-#### Completed when
-
-Not yet defined. The owner must approve the target design and its layout and touch interaction requirements.
 
 ### R-08: Add forecasts
 

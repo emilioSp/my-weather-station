@@ -6,7 +6,14 @@ history is intentionally omitted.
 There are no release tags in the inspected history. Dated sections use commit dates, not release or publication dates. Routine maintenance and version-only changes are
 omitted.
 
-## Unreleased
+## 2026-11-02
+
+Completed [R-07](ROADMAP.md#r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen): adapted the dashboard to the owner's 1024×714 Raspberry Pi touchscreen. Three meter cards
+now fit in one row, history charts remain visible, cards navigate to their history sections, and each section has a scroll-to-top button. The default history range is
+three days. Updated the documented tablet resolution and regenerated visual snapshots.
+
+Pinned the card monospace fallback to Liberation Mono in Chromium and WebKit visual tests to prevent screenshot dimensions changing during font selection. Regenerated the
+WebKit references; production fonts are unchanged.
 
 Aligned source with the coding conventions: explicit shared utility subpaths, one primary operation per module, class-based database and Supabase singletons, named input
 shapes, assertion helpers, and scenario fixtures. Removed redundant tests and branch-built heat-index state. Database schemas and stored measurement shapes are unchanged.
