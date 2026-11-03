@@ -16,7 +16,7 @@ export const WeatherStationClock = () => {
   return (
     <p
       data-testid="current-time"
-      className="place-self-center text-[clamp(44px,7vw,76px)] leading-[0.85] font-semibold tracking-[-0.09em]"
+      className="hidden place-self-center text-[clamp(44px,7vw,76px)] leading-[0.85] font-semibold tracking-[-0.09em] sm:block"
     >
       {formatClockTime(now)}
     </p>

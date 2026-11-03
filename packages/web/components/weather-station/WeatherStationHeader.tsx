@@ -23,8 +23,8 @@ export const WeatherStationHeader = ({
       <h1 className="text-[17px] font-bold tracking-[-0.035em]">Weather station</h1>
     </div>
     <WeatherStationClock />
-    <div className="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
-      <div className="text-left sm:text-right">
+    <div className="grid grid-flow-col items-center justify-end gap-3">
+      <div className="text-right">
         <div className="text-[14px] font-semibold tracking-[-0.01em] text-[#9bad9e] capitalize">
           Latest available measurement
         </div>
