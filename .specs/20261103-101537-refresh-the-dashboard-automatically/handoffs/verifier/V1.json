@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "specId": "20261103-101537-refresh-the-dashboard-automatically",
+  "summary": "Independently exercised all 13 acceptance criteria in Chromium and WebKit, both cited manual-refresh regressions, repository validation, and six Docker visual comparisons. No technical findings recorded.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: original minute boundaries scenario passed in Chromium and WebKit. Observed no automatic request at 59, refreshes at 60 and 120 despite completed manual refresh at 80 and Last day selection at 90, and no main-frame navigation.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: hidden dashboard scenario passed in Chromium and WebKit using controlled browser time and simulated document visibility properties/events. Hidden at 20, scheduled refresh at 60, visible/focus at 70 without another refresh, next refresh at 120.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: changed readings in six-hour range scenario passed in Chromium and WebKit. Tick at 60 requested each configured meter and displayed its changed temperature; header displayed 06 Oct · 14:00:00 without a manual refresh.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: six-hour range scenario passed in Chromium and WebKit. Last 6 hours remained selected, query bounds were 06:00Z to 12:00Z, every meter retained three plotted metric curves, primary temperature plot included both points, and temperature/humidity/dew point extrema and Rome dates matched the approved example.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC5",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: unchanged latest IDs scenario passed in Chromium and WebKit. Scheduled refresh requested all meters while history-request count remained one and the successful chart extrema remained visible.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC6",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: pending initial readings followed by error, empty, populated, and later error responses scenario passed in Chromium and WebKit. Refresh readings remained visible in every state.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC7",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: manual and automatic readings-failure scenarios passed in Chromium and WebKit. Latest readings unavailable replaced the previously populated current-readings section and all rendered charts.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC8",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: manual and automatic history-failure scenarios passed in Chromium and WebKit. Chart history unavailable replaced all charts while current cards displayed the newer 26.0°C reading.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC9",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: initial readings-error automatic retry and later automatic readings-failure recovery scenarios passed in Chromium and WebKit. Scheduled ticks at 60 and 120 respectively removed the readings error and restored the changed readings and history.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC10",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: initial history-error automatic retry and later history-failure recovery scenarios passed in Chromium and WebKit. Unchanged latest IDs still triggered history recovery at the next tick; charts, 26.0°C high, and 06 Oct · 14:00 date returned and the history error disappeared.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC11",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: scheduled readings/history errors followed by manual retry at 75, plus initial-error manual retries, passed in Chromium and WebKit. Both failed sections recovered before the next tick, including history with unchanged latest IDs.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC12",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: pending initial/manual/automatic request matrix passed in Chromium and WebKit. Readings and dependent history were separately held across successive timer boundaries; no overlapping or queued request occurred, and refresh resumed at the next normal boundary.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC13",
+      "probe": "npm run test:e2e -w @wx/web -- automatic-refresh.spec.ts: pending initial/manual/automatic request matrix with successful and failed history completion passed in Chromium and WebKit. Refresh readings was visible and disabled during readings and dependent history, then enabled after completion.",
+      "probeStatus": "passed"
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Confirmed the exact project directory, .pi/maestro.json specDirectory, approved proposal/spec, empty prototypes directory, active B1 handoff, and verifier-running workflow. No design document or earlier numbered handoffs exist for this spec.",
+    "Inspected candidate test code and fixtures against the approved scenarios before execution. The targeted suite independently completed 42 browser tests.",
+    "npm run check completed successfully: formatting, lint, TypeScript, 54 unit/integration tests, 64 browser tests, and coverage thresholds. Both existing manual-refresh regression tests named in REQ2 ran successfully in Chromium and WebKit.",
+    "npm run test:visual -w @wx/web completed six existing Linux-container screenshot comparisons across both engines and all three target viewports. Baselines were unchanged. Docker dependencies were installed only in authorized disposable volumes; no host dependency installation occurred. The wrapper reported its documented Node engine warning and existing dependency audit warnings.",
+    "AC2 uses controlled visibility API simulation with running browser timers, not browser-native background throttling or device sleep. Native foreground/background diagnostic attempts left document.visibilityState visible in the automation environment.",
+    "Formatting and lint did not alter candidate source. Restored exact pre-existing generated coverage and cache contents, removed three newly generated coverage files, and removed temporary backups/logs. Approved documents, builder handoff, candidate source/tests, and visual baselines remained unchanged. Preserved an unrelated IDE work-duration counter update in ignored .idea/workspace.xml."
+  ]
+}

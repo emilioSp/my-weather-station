@@ -1,0 +1,79 @@
+{
+  "status": "done",
+  "summary": "Implemented fixed 60-second automatic dashboard refresh, visible refresh controls in every state, readings and history error recovery, and exclusion through dependent history requests. Added browser probes for all acceptance criteria.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "npm run check: automatic-refresh.spec.ts, original minute boundaries scenario in Chromium and WebKit. Verified no tick at 59, ticks at 60 and 120 despite manual refresh at 80 and range change at 90, and no page navigation.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "npm run check: automatic-refresh.spec.ts, hidden dashboard scenario in Chromium and WebKit. Simulated document visibility API and visibilitychange events at 20 and 70 with browser timers running; verified only scheduled refreshes at 60 and 120.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "npm run check: automatic-refresh.spec.ts, six-hour automatic refresh scenario in Chromium and WebKit. Verified changed temperature values for every configured meter and header time 06 Oct · 14:00:00 without clicking refresh.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "npm run check: automatic-refresh.spec.ts, six-hour scenario in Chromium and WebKit. Verified retained range, 06:00Z to 12:00Z query, plotted history, and temperature/humidity/dew point lows 25/70/12 and highs 26/71/13 with Rome dates.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC5",
+      "probe": "npm run check: automatic-refresh.spec.ts, successfully loaded history and unchanged latest IDs scenario in Chromium and WebKit. Verified another readings request for every meter at 60, history request count remains one, and chart extrema remain visible.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC6",
+      "probe": "npm run check: automatic-refresh.spec.ts, pending initial readings followed by error, empty, populated and later error scenario in Chromium and WebKit. Asserted refresh button visibility in each state.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC7",
+      "probe": "npm run check: automatic-refresh.spec.ts, manual and automatic readings failure scenarios in Chromium and WebKit. Verified returned error replaces previously successful cards and charts; refresh control stays available.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC8",
+      "probe": "npm run check: automatic-refresh.spec.ts, manual and automatic history failure scenarios in Chromium and WebKit. Verified history error replaces charts while current-reading cards display updated 26.0°C.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC9",
+      "probe": "npm run check: automatic-refresh.spec.ts, initial readings error with automatic recovery and later automatic readings failure scenarios in Chromium and WebKit. Verified recovery at 60 or 120 respectively, updated readings and removal of error.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC10",
+      "probe": "npm run check: automatic-refresh.spec.ts, initial history error with automatic recovery and later history failure scenarios in Chromium and WebKit. Latest IDs remain unchanged during recovery; verified another history request, restored extrema and cleared error.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC11",
+      "probe": "npm run check: automatic-refresh.spec.ts, scheduled readings/history error followed by manual retry at 75 scenarios and initial-error manual retries in Chromium and WebKit. Verified immediate recovery before 120, including unchanged-ID history recovery.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC12",
+      "probe": "npm run check: automatic-refresh.spec.ts, pending initial/manual/automatic request scenarios in Chromium and WebKit. Held both readings and dependent history across successive ticks, verified no additional or queued refresh after completion, then refresh at next normal boundary.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC13",
+      "probe": "npm run check: automatic-refresh.spec.ts, pending initial/manual/automatic request matrix with both successful and failed history completion in Chromium and WebKit. Verified visible button disabled during readings and dependent history, enabled after completion.",
+      "probeStatus": "passed"
+    }
+  ],
+  "notes": [
+    "npm run check passed: lint, formatting, TypeScript, 54 unit/integration tests and 64 browser tests, including both existing manual-refresh regression scenarios cited by the spec.",
+    "Regenerated visual snapshots with npm run test:visual -w @wx/web -- --update-snapshots, then ran npm run test:visual -w @wx/web. All six Chromium/WebKit desktop/tablet/smartphone comparisons passed; populated-dashboard PNGs were unchanged.",
+    "Visual verification used authorized disposable Docker dependency volumes. No host dependencies or dependency versions were changed. Docker npm ci reported the documented Node engine warning and six dependency audit vulnerabilities; dependency remediation was outside scope."
+  ],
+  "escalations": [],
+  "version": "1.0.0",
+  "specId": "20261103-101537-refresh-the-dashboard-automatically"
+}

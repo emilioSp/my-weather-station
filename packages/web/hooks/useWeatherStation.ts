@@ -83,96 +83,94 @@ export const useWeatherStation = () => {
 
   const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(CHART_RANGES.LAST_THREE_DAYS);
 
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(true);
+  const busy = React.useRef(false);
   const currentRange: ChartRange = chartRanges[rangeKey];
   const rangeIndex = chartRangeKeys.indexOf(rangeKey);
   const latestMeasuredAt = getLatestTimestamp(getMeasures(currentMeasures));
 
-  React.useEffect(() => {
-    let isMounted = true;
+  type LoadHistoryInput = {
+    measures: CurrentMeasures;
+    range: ChartRange;
+  };
 
-    const loadMeasures = async () => {
-      const latestRows = await loadLatestMeasures();
+  const loadHistory = async ({ measures, range }: LoadHistoryInput) => {
+    const latestTimestamp = getLatestTimestamp(getMeasures(measures));
 
-      if (isMounted) {
-        setCurrentMeasures(latestRows);
-      }
-    };
-
-    void loadMeasures();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  React.useEffect(() => {
-    if (currentMeasures === null || currentMeasures.error !== null) {
-      return;
-    }
-
-    if (latestMeasuredAt === null) {
+    if (latestTimestamp === null) {
       setMeasureHistory({ history: {}, error: null });
 
       return;
     }
 
-    let isMounted = true;
     setMeasureHistory(null);
+    const placeholderDeadline = Date.now() + 100;
 
-    const loadHistory = async () => {
-      const placeholderDeadline = Date.now() + 100;
+    const history = await supabaseApi.getChartHistory({
+      measuredAfter: new Date(latestTimestamp - range.hours * 60 * 60 * 1_000),
+      measuredBefore: new Date(latestTimestamp),
+    });
 
-      const measuredAfter = new Date(latestMeasuredAt - currentRange.hours * 60 * 60 * 1_000);
-
-      const history = await supabaseApi.getChartHistory({
-        measuredAfter,
-        measuredBefore: new Date(latestMeasuredAt),
-      });
-
-      await waitUntil(placeholderDeadline);
-
-      if (isMounted) {
-        setMeasureHistory(getHistoryRows({ ...history, devices: environment.DEVICES }));
-      }
-    };
-
-    void loadHistory();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentMeasures, currentRange, latestMeasuredAt]);
+    await waitUntil(placeholderDeadline);
+    setMeasureHistory(getHistoryRows({ ...history, devices: environment.DEVICES }));
+  };
 
   const refreshMeasures = async () => {
+    if (busy.current) {
+      return;
+    }
+
+    busy.current = true;
     setIsRefreshing(true);
-    const spinnerDeadline = Date.now() + 1_000;
+    const spinnerDeadline = Date.now() + (currentMeasures === null ? 0 : 1_000);
     const latestRows = await loadLatestMeasures();
 
     const isUnchanged =
       latestRows.error === null &&
+      currentMeasures?.error === null &&
       environment.DEVICES.every(
         ({ deviceName }) =>
-          latestRows.byDeviceName[deviceName]?.id === currentMeasures?.byDeviceName[deviceName]?.id,
+          latestRows.byDeviceName[deviceName]?.id === currentMeasures.byDeviceName[deviceName]?.id,
       );
 
     if (!isUnchanged) {
       setCurrentMeasures(latestRows);
     }
 
+    if (latestRows.error !== null) {
+      setMeasureHistory(null);
+    } else if (!isUnchanged || measureHistory === null || measureHistory.error !== null) {
+      await loadHistory({ measures: latestRows, range: currentRange });
+    }
+
     await waitUntil(spinnerDeadline);
+    busy.current = false;
     setIsRefreshing(false);
   };
 
-  const changeRange = (nextRangeIndex: number): void => {
+  // Read the current data and range without restarting the dashboard's fixed schedule.
+  const refreshOnSchedule = React.useEffectEvent(refreshMeasures);
+
+  React.useEffect(() => {
+    void refreshOnSchedule();
+    const interval = setInterval(() => void refreshOnSchedule(), 60_000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const changeRange = async (nextRangeIndex: number): Promise<void> => {
     const nextRangeKey = chartRangeKeys[nextRangeIndex];
 
-    if (measureHistory === null || nextRangeKey === undefined) {
+    if (busy.current || currentMeasures === null || nextRangeKey === undefined) {
       return;
     }
 
-    setMeasureHistory(null);
+    busy.current = true;
+    setIsRefreshing(true);
     setRangeKey(nextRangeKey);
+    await loadHistory({ measures: currentMeasures, range: chartRanges[nextRangeKey] });
+    busy.current = false;
+    setIsRefreshing(false);
   };
 
   const chartEnd =

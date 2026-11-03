@@ -4,10 +4,10 @@ type WeatherStationErrorProps = {
 };
 
 export const WeatherStationError = ({ message }: WeatherStationErrorProps) => (
-  <main className="grid min-h-screen place-items-center px-5 text-center">
+  <section className="grid min-h-[60vh] place-items-center px-5 text-center">
     <div>
       <h1 className="text-lg font-bold">Unable to load weather station</h1>
       <p className="mt-2 text-sm text-[#9bad9e]">{message}</p>
     </div>
-  </main>
+  </section>
 );
