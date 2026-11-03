@@ -15,6 +15,7 @@ Roadmap items are planning context, not permission to implement. The owner selec
 | R-07 | [Adapt the UI to the Raspberry Pi touchscreen](#r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen) | Completed | Adapt the dashboard to the owner's 7-inch 1024×714 IPS HDMI capacitive touchscreen.        |
 | R-08 | [Add forecasts](#r-08-add-forecasts)                                                               | Later     | Add forecasting capabilities with scope still to be defined.                               |
 | R-09 | [Add alerts](#r-09-add-alerts)                                                                     | Later     | Notify the owner about conditions using rules and delivery methods still to be defined.    |
+| R-10 | [Refresh the dashboard automatically](#r-10-refresh-the-dashboard-automatically)                   | Later     | Keep the page up to date without requiring a manual refresh.                               |
 
 ## Completed
 
@@ -122,3 +123,13 @@ Add alerts for the owner. Trigger conditions, delivery methods, and operating re
 #### Completed when
 
 Not yet defined. The owner must choose alert conditions, delivery methods, and the expected notification behavior.
+
+### R-10: Refresh the dashboard automatically
+
+#### Objective
+
+Automatically refresh the dashboard so the page stays up to date without a manual refresh. Refresh timing and behavior remain open.
+
+#### Completed when
+
+The page updates automatically without user action. Refresh timing and which displayed data should update must be defined before implementation.

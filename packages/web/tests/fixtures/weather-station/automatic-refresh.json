@@ -1,0 +1,102 @@
+{
+  "initial": [
+    {
+      "id": "00000000-0000-0000-0000-000000000016",
+      "device_name": "device-1",
+      "device_type": "outdoor",
+      "measured_at": "2026-10-06T10:00:00Z",
+      "temperature": 25,
+      "humidity": 70,
+      "dew_point": 12,
+      "heat_index": 25,
+      "battery": 80,
+      "signal_power_dbm": -55
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000026",
+      "device_name": "device-2",
+      "device_type": "indoor",
+      "measured_at": "2026-10-06T10:00:00Z",
+      "temperature": 20,
+      "humidity": 69,
+      "dew_point": 11,
+      "heat_index": 20,
+      "battery": 80,
+      "signal_power_dbm": -55
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000036",
+      "device_name": "device-3",
+      "device_type": "indoor",
+      "measured_at": "2026-10-06T10:00:00Z",
+      "temperature": 15,
+      "humidity": 68,
+      "dew_point": 10,
+      "heat_index": 15,
+      "battery": 80,
+      "signal_power_dbm": -55
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000046",
+      "device_name": "device-4",
+      "device_type": "indoor",
+      "measured_at": "2026-10-06T10:00:00Z",
+      "temperature": 10,
+      "humidity": 67,
+      "dew_point": 9,
+      "heat_index": 10,
+      "battery": 80,
+      "signal_power_dbm": -55
+    }
+  ],
+  "changed": [
+    {
+      "id": "00000000-0000-0000-0000-000000000017",
+      "device_name": "device-1",
+      "device_type": "outdoor",
+      "measured_at": "2026-10-06T12:00:00Z",
+      "temperature": 26,
+      "humidity": 71,
+      "dew_point": 13,
+      "heat_index": 26,
+      "battery": 80,
+      "signal_power_dbm": -55
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000027",
+      "device_name": "device-2",
+      "device_type": "indoor",
+      "measured_at": "2026-10-06T12:00:00Z",
+      "temperature": 21,
+      "humidity": 70,
+      "dew_point": 12,
+      "heat_index": 21,
+      "battery": 80,
+      "signal_power_dbm": -55
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000037",
+      "device_name": "device-3",
+      "device_type": "indoor",
+      "measured_at": "2026-10-06T12:00:00Z",
+      "temperature": 16,
+      "humidity": 69,
+      "dew_point": 11,
+      "heat_index": 16,
+      "battery": 80,
+      "signal_power_dbm": -55
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000047",
+      "device_name": "device-4",
+      "device_type": "indoor",
+      "measured_at": "2026-10-06T12:00:00Z",
+      "temperature": 11,
+      "humidity": 68,
+      "dew_point": 10,
+      "heat_index": 11,
+      "battery": 80,
+      "signal_power_dbm": -55
+    }
+  ]
+}

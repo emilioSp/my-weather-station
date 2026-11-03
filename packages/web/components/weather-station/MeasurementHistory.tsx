@@ -12,6 +12,7 @@ type MeasurementHistoryProps = {
   error: string | null;
   measuresByDeviceName: Record<string, Measure[]>;
   isLoading: boolean;
+  isRefreshing: boolean;
   range: ChartRange;
   rangeIndex: number;
   onRangeIndexChange: (rangeIndex: number) => void;
@@ -21,6 +22,7 @@ export const MeasurementHistory = ({
   error,
   measuresByDeviceName,
   isLoading,
+  isRefreshing,
   range,
   rangeIndex,
   onRangeIndexChange,
@@ -40,7 +42,7 @@ export const MeasurementHistory = ({
   return (
     <section className="mt-4 grid gap-4" aria-label="Measurement history">
       <RangeControls
-        isLoading={isLoading}
+        isLoading={isLoading || isRefreshing}
         rangeIndex={rangeIndex}
         range={range}
         onRangeIndexChange={onRangeIndexChange}

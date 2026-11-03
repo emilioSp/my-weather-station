@@ -35,6 +35,8 @@ vi.mock('react', async (importOriginal) => {
     ...React,
     useEffect: (effect: () => unknown) => effect(),
     useMemo: <T>(factory: () => T) => factory(),
+    useRef: <T>(value: T) => ({ current: value }),
+    useEffectEvent: <T>(callback: T) => callback,
     useState: <T>(value: T) =>
       [
         state.values.length > 0 ? state.values.shift() : value,
@@ -64,12 +66,14 @@ const emptyCurrentMeasures = Object.fromEntries(
 
 afterEach(() => {
   state.values = [];
+  vi.clearAllTimers();
   vi.useRealTimers();
   vi.clearAllMocks();
 });
 
 describe('useWeatherStation', () => {
   it('given empty initial state when loading the station then requests current measures for every configured device', async () => {
+    vi.useFakeTimers();
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
     state.values = [null, null, CHART_RANGES.LAST_DAY, false];
 
@@ -84,6 +88,7 @@ describe('useWeatherStation', () => {
   });
 
   it('given current measures without readings when loading the station then does not request chart history', async () => {
+    vi.useFakeTimers();
     weatherApi.getLatestMeasure.mockResolvedValue({ rows: [], error: null });
     state.values = [
       { byDeviceName: emptyCurrentMeasures, error: null },
@@ -99,7 +104,7 @@ describe('useWeatherStation', () => {
     expect(weatherApi.getChartHistory).not.toHaveBeenCalled();
   });
 
-  it('given a complete current state when loading and refreshing then preserves name-keyed readings and requests one day of history once', async () => {
+  it('given current readings without loaded history when opening the station then requests one day of history', async () => {
     vi.useFakeTimers();
     weatherApi.getLatestMeasure.mockImplementation(async ({ deviceName }) => ({
       rows: [measuresByDeviceName[deviceName]],
@@ -111,7 +116,7 @@ describe('useWeatherStation', () => {
     });
     state.values = [
       { byDeviceName: measuresByDeviceName, error: null },
-      { history: historyByDeviceName, error: null },
+      null,
       CHART_RANGES.LAST_DAY,
       false,
     ];
@@ -119,24 +124,16 @@ describe('useWeatherStation', () => {
     const result = useWeatherStation();
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(1_000);
-    const refresh = result.refreshMeasures();
-    await Promise.resolve();
-    await vi.advanceTimersByTimeAsync(1_000);
-    await refresh;
-
     expect(result.currentMeasures).toEqual({
       byDeviceName: measuresByDeviceName,
       error: null,
     });
-    expect(result.measureHistory).toEqual({
-      history: historyByDeviceName,
-      error: null,
-    });
+    expect(result.measureHistory).toBeNull();
     expect(weatherApi.getChartHistory).toHaveBeenCalledOnce();
     expect(weatherApi.getChartHistory).toHaveBeenCalledWith({
       measuredAfter: new Date('2025-12-31T00:00:00Z'),
       measuredBefore: new Date('2026-01-01T00:00:00Z'),
     });
-    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length * 2);
+    expect(weatherApi.getLatestMeasure).toHaveBeenCalledTimes(configuredDevices.length);
   });
 });
