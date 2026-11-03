@@ -33,8 +33,6 @@ const configuredDevices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
 ) as ConfiguredDevice[];
 
-const deviceNames = configuredDevices.map(({ deviceName }) => deviceName);
-
 const deviceNameAt = (index: number): string => configuredDevices[index].deviceName;
 
 // Intl abbreviates September as either Sep or Sept, depending on the browser.
@@ -204,66 +202,6 @@ test.describe('Weather station', () => {
     await expect(page.getByLabel('Loading chart')).toHaveCount(configuredDevices.length * 3);
     releaseHistory();
     await expect(getChart({ page, deviceName: deviceNameAt(0) })).toBeVisible();
-  });
-
-  test('given a current-reading API error when opening the dashboard then shows the returned error', async ({
-    page,
-  }) => {
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify({ message: 'Latest readings unavailable' }),
-        contentType: 'application/json',
-        status: 500,
-      });
-    });
-
-    await page.goto('/');
-
-    await expect(page.getByText('Latest readings unavailable')).toBeVisible();
-  });
-
-  test('given a chart-history API error when opening the dashboard then shows the returned history error', async ({
-    page,
-  }) => {
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
-        contentType: 'application/json',
-      });
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify({ message: 'Chart history unavailable' }),
-        contentType: 'application/json',
-        status: 500,
-      });
-    });
-
-    await page.goto('/');
-
-    await expect(
-      page.getByText('Unable to load chart history: Chart history unavailable', { exact: true }),
-    ).toBeVisible();
-  });
-
-  test('given no stored readings when opening the dashboard then shows empty readings and no history accordions', async ({
-    page,
-  }) => {
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify([]),
-        contentType: 'application/json',
-      });
-    });
-
-    await page.goto('/');
-
-    await expect(page.getByText('No readings yet')).toBeVisible();
-    await expect(page.getByText('No readings available.')).toHaveCount(configuredDevices.length);
-
-    for (const deviceName of deviceNames) {
-      await expect(page.getByRole('button', { name: deviceName })).toHaveCount(0);
-    }
   });
 
   test('given updated readings when refreshing twice then shows changed values and retains them on the unchanged response', async ({

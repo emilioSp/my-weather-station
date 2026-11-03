@@ -124,10 +124,11 @@ class DashboardScenario {
   }
 }
 
-test('given loaded readings when manual refresh and range changes occur between ticks then keeps the original minute boundaries', async ({
+test('given loaded readings when manual refresh and range changes occur between ticks then keeps the original minute boundaries and unchanged charts', async ({
   page,
 }) => {
   const scenario = new DashboardScenario(page);
+  scenario.changed = true;
   await scenario.open();
   await scenario.finish();
   const navigations: string[] = [];
@@ -140,6 +141,10 @@ test('given loaded readings when manual refresh and range changes occur between 
   await scenario.finish();
   await scenario.assertRefreshCount(2);
   expect(scenario.historyQueries).toHaveLength(1);
+  await expect(page.getByLabel('Current readings')).toContainText('26.0°C');
+  const summary = page.locator(`[id="history-${primaryDevice}"] section`).first();
+  await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
+  await expect(summary.locator('time').last()).toHaveText('06 Oct · 14:00');
   await scenario.at(80);
   await scenario.button().click();
   await scenario.finish();
@@ -259,7 +264,9 @@ test('given pending initial readings when errors and empty and populated respons
   scenario.empty = true;
   await scenario.button().click();
   await scenario.finish();
+  await expect(page.getByText('No readings yet')).toBeVisible();
   await expect(page.getByText('No readings available.')).toHaveCount(devices.length);
+  await expect(page.locator('[id^="history-"]')).toHaveCount(0);
   await expect(scenario.button()).toBeVisible();
   scenario.empty = false;
   scenario.changed = true;
@@ -328,112 +335,109 @@ for (const action of ['manual', 'automatic']) {
   }
 }
 
+// Manual retry is covered by the scheduled-error tests and the refresh-control state sequence.
 for (const failure of ['readings', 'history']) {
-  for (const recovery of ['automatic', 'manual']) {
-    test(`given an initial ${failure} error when ${recovery} retry succeeds then clears the error and displays readings and history`, async ({
-      page,
-    }) => {
-      const scenario = new DashboardScenario(page);
-      scenario.changed = true;
-      scenario.readingsError = failure === 'readings';
-      scenario.historyError = failure === 'history';
-      await scenario.open();
-      await scenario.finish();
+  test(`given an initial ${failure} error when the next tick succeeds then clears the error and displays readings and history`, async ({
+    page,
+  }) => {
+    const scenario = new DashboardScenario(page);
+    scenario.changed = true;
+    scenario.readingsError = failure === 'readings';
+    scenario.historyError = failure === 'history';
+    await scenario.open();
+    await scenario.finish();
 
-      const message =
-        failure === 'readings'
-          ? 'Latest readings unavailable'
-          : 'Unable to load chart history: Chart history unavailable';
+    const message =
+      failure === 'readings'
+        ? 'Latest readings unavailable'
+        : 'Unable to load chart history: Chart history unavailable';
 
-      await expect(page.getByText(message, { exact: true })).toBeVisible();
-      scenario.readingsError = false;
-      scenario.historyError = false;
+    await expect(page.getByText(message, { exact: true })).toBeVisible();
+    scenario.readingsError = false;
+    scenario.historyError = false;
 
-      if (recovery === 'manual') {
-        await scenario.at(15);
-        await scenario.button().click();
-      } else {
-        await scenario.at(60);
-      }
+    await scenario.at(60);
 
-      await scenario.finish();
-      await expect(page.getByText(message, { exact: true })).toHaveCount(0);
-      await expect(page.getByLabel('Current readings')).toContainText('26.0°C');
-      const summary = page.locator(`[id="history-${primaryDevice}"] section`).first();
-      await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
-      await expect(summary.locator('time').last()).toHaveText('06 Oct · 14:00');
-      await scenario.assertRefreshCount(2);
-    });
-  }
+    await scenario.finish();
+    await expect(page.getByText(message, { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel('Current readings')).toContainText('26.0°C');
+    const summary = page.locator(`[id="history-${primaryDevice}"] section`).first();
+    await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
+    await expect(summary.locator('time').last()).toHaveText('06 Oct · 14:00');
+    await scenario.assertRefreshCount(2);
+  });
 }
 
-for (const origin of ['initial', 'manual', 'automatic']) {
-  for (const historyFails of [false, true]) {
-    test(`given pending ${origin} requests when ticks pass before history ${historyFails ? 'fails' : 'succeeds'} then skips busy ticks and disables refresh until completion`, async ({
-      page,
-    }) => {
-      const scenario = new DashboardScenario(page);
-      const readings = Promise.withResolvers<void>();
-      const history = Promise.withResolvers<void>();
+// All origins share refreshMeasures; cover each origin and both history outcomes without a full matrix.
+for (const { origin, historyFails } of [
+  { origin: 'initial', historyFails: false },
+  { origin: 'manual', historyFails: false },
+  { origin: 'automatic', historyFails: true },
+]) {
+  test(`given pending ${origin} requests when ticks pass before history ${historyFails ? 'fails' : 'succeeds'} then skips busy ticks and disables refresh until completion`, async ({
+    page,
+  }) => {
+    const scenario = new DashboardScenario(page);
+    const readings = Promise.withResolvers<void>();
+    const history = Promise.withResolvers<void>();
 
-      if (origin === 'initial') {
-        scenario.readingsGate = readings.promise;
-        scenario.historyGate = history.promise;
-      }
+    if (origin === 'initial') {
+      scenario.readingsGate = readings.promise;
+      scenario.historyGate = history.promise;
+    }
 
-      await scenario.open();
+    await scenario.open();
 
-      if (origin !== 'initial') {
-        await scenario.finish();
-        scenario.changed = true;
-        scenario.readingsGate = readings.promise;
-        scenario.historyGate = history.promise;
-        await scenario.at(origin === 'manual' ? 55 : 60);
-
-        if (origin === 'manual') await scenario.button().click();
-      }
-
-      const refreshCount = origin === 'initial' ? 1 : 2;
-      const firstBusyTick = origin === 'automatic' ? 120 : 60;
-      await scenario.assertRefreshCount(refreshCount);
-      await expect(scenario.button()).toBeVisible();
-      await expect(scenario.button()).toBeDisabled();
-      await scenario.at(firstBusyTick);
-      await scenario.assertRefreshCount(refreshCount);
-      await scenario.at(firstBusyTick + 5);
-      readings.resolve();
-      await expect.poll(() => scenario.historyQueries.length).toBe(origin === 'initial' ? 1 : 2);
-      await expect(page.getByLabel('Current readings')).toContainText(
-        origin === 'initial' ? '25.0°C' : '26.0°C',
-      );
-      await expect(scenario.button()).toBeDisabled();
-      await scenario.at(firstBusyTick + 60);
-      await scenario.assertRefreshCount(refreshCount);
-      await scenario.at(firstBusyTick + 75);
-      scenario.historyError = historyFails;
-      history.resolve();
+    if (origin !== 'initial') {
       await scenario.finish();
-      await expect(scenario.button()).toBeEnabled();
+      scenario.changed = true;
+      scenario.readingsGate = readings.promise;
+      scenario.historyGate = history.promise;
+      await scenario.at(origin === 'manual' ? 55 : 60);
 
-      if (historyFails) {
-        await expect(
-          page.getByText('Unable to load chart history: Chart history unavailable', {
-            exact: true,
-          }),
-        ).toBeVisible();
-      } else {
-        await expect(
-          page.locator(`[id="history-${primaryDevice}"]`).getByTestId('high-value').first(),
-        ).toHaveText(origin === 'initial' ? '25.0°C' : '26.0°C');
-      }
+      if (origin === 'manual') await scenario.button().click();
+    }
 
-      await scenario.at(firstBusyTick + 119);
-      await scenario.assertRefreshCount(refreshCount);
-      await scenario.at(firstBusyTick + 120);
-      await scenario.finish();
-      await scenario.assertRefreshCount(refreshCount + 1);
-    });
-  }
+    const refreshCount = origin === 'initial' ? 1 : 2;
+    const firstBusyTick = origin === 'automatic' ? 120 : 60;
+    await scenario.assertRefreshCount(refreshCount);
+    await expect(scenario.button()).toBeVisible();
+    await expect(scenario.button()).toBeDisabled();
+    await scenario.at(firstBusyTick);
+    await scenario.assertRefreshCount(refreshCount);
+    await scenario.at(firstBusyTick + 5);
+    readings.resolve();
+    await expect.poll(() => scenario.historyQueries.length).toBe(origin === 'initial' ? 1 : 2);
+    await expect(page.getByLabel('Current readings')).toContainText(
+      origin === 'initial' ? '25.0°C' : '26.0°C',
+    );
+    await expect(scenario.button()).toBeDisabled();
+    await scenario.at(firstBusyTick + 60);
+    await scenario.assertRefreshCount(refreshCount);
+    await scenario.at(firstBusyTick + 75);
+    scenario.historyError = historyFails;
+    history.resolve();
+    await scenario.finish();
+    await expect(scenario.button()).toBeEnabled();
+
+    if (historyFails) {
+      await expect(
+        page.getByText('Unable to load chart history: Chart history unavailable', {
+          exact: true,
+        }),
+      ).toBeVisible();
+    } else {
+      await expect(
+        page.locator(`[id="history-${primaryDevice}"]`).getByTestId('high-value').first(),
+      ).toHaveText(origin === 'initial' ? '25.0°C' : '26.0°C');
+    }
+
+    await scenario.at(firstBusyTick + 119);
+    await scenario.assertRefreshCount(refreshCount);
+    await scenario.at(firstBusyTick + 120);
+    await scenario.finish();
+    await scenario.assertRefreshCount(refreshCount + 1);
+  });
 }
 
 for (const failure of ['readings', 'history']) {
@@ -469,21 +473,3 @@ for (const failure of ['readings', 'history']) {
     expect(await page.evaluate(() => Date.now())).toBeLessThan(startTime + 120_000);
   });
 }
-
-test('given successfully loaded history and unchanged latest IDs when the automatic tick runs then keeps the charts without another history request', async ({
-  page,
-}) => {
-  const scenario = new DashboardScenario(page);
-  scenario.changed = true;
-  await scenario.open();
-  await scenario.finish();
-  expect(scenario.historyQueries).toHaveLength(1);
-  await scenario.at(60);
-  await scenario.finish();
-  await scenario.assertRefreshCount(2);
-  expect(scenario.historyQueries).toHaveLength(1);
-  await expect(page.getByLabel('Current readings')).toContainText('26.0°C');
-  const summary = page.locator(`[id="history-${primaryDevice}"] section`).first();
-  await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
-  await expect(summary.locator('time').last()).toHaveText('06 Oct · 14:00');
-});
