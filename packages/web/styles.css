@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 :root {
   color: #eaf0e9;
   background: #10191b;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Avenir Next', Avenir, 'IBM Plex Sans', system-ui, sans-serif;
 }
 
 body {
@@ -44,10 +44,6 @@ body {
 .meter-history-heading,
 .meter-health-row {
   line-height: normal;
-}
-
-.meter-card .font-mono {
-  font-family: 'DM Mono', monospace;
 }
 
 .meter-temperature {
@@ -133,10 +129,4 @@ body {
 
 button {
   font: inherit;
-}
-
-.chart text {
-  fill: #82948a;
-  font-family: 'DM Mono', monospace;
-  font-size: 14px;
 }

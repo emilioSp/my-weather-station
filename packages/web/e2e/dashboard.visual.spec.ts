@@ -38,6 +38,9 @@ const fixture: DashboardFixture = JSON.parse(
   ),
 );
 
+// Freeze browser time so the header clock cannot change between runs.
+const clockTime = Date.parse('2026-10-06T12:00:00Z');
+
 // JUSTIFICATION: Development devices have string deviceName fields, as required by environment.ts.
 const devices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
@@ -70,6 +73,8 @@ for (const viewport of [
     { tag: '@visual' },
     async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      // Fix Date while keeping real timers, so the header clock is stable and charts still load.
+      await page.clock.setFixedTime(clockTime);
 
       // Use the app's fallback fonts so network availability cannot change the baseline.
       await page.route('https://fonts.googleapis.com/**', async (route) => {
@@ -95,10 +100,6 @@ for (const viewport of [
       });
 
       await page.goto('/');
-      // Pin the Linux fallback so browser font selection cannot change screenshot dimensions.
-      await page.addStyleTag({
-        content: '.meter-card .font-mono { font-family: "Liberation Mono", monospace; }',
-      });
 
       await expect(page.getByLabel('Current readings').locator('article')).toHaveCount(
         devices.length,

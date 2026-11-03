@@ -4,6 +4,7 @@ import type { Measure } from '@wx/shared';
 import type { IconType } from 'react-icons';
 import { FaArrowUp } from 'react-icons/fa6';
 
+import { IconButton } from '#components/primitives/IconButton.tsx';
 import { LinearChart } from '#components/weather-station/LinearChart.tsx';
 import type { ChartRange } from '#utils/chart-ranges.ts';
 import { getHistorySectionId } from '#utils/getHistorySectionId.util.ts';
@@ -55,14 +56,14 @@ export const HistoryChart = ({
           data-testid={`${sensor}-history-icon`}
         />
       </span>
-      <button
+      <IconButton
         aria-label={`Scroll back to top for ${sensor}`}
-        className="cursor-pointer text-[#9bad9e]"
+        className="text-[#9bad9e]"
+        title="Scroll back to top"
         onClick={scrollToTop}
-        type="button"
       >
-        <FaArrowUp aria-hidden="true" className="size-4" />
-      </button>
+        <FaArrowUp aria-hidden="true" className="size-5" />
+      </IconButton>
     </div>
     <div className="grid gap-4 px-3 pb-3 sm:px-[23px] sm:pb-[23px]">
       {isLoading

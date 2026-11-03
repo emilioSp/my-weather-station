@@ -100,7 +100,7 @@ export const WeatherCard = ({
         <WeatherCardMetric label="Heat index" value={formatTemperature(measure.heatIndex)} />
       </div>
       <div className="mt-[19px] border-t border-[#2b3a38] pt-[13px]">
-        <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
+        <div className="text-[14px] font-semibold tracking-[-0.01em] text-[#9bad9e] capitalize">
           Sensor health
         </div>
         <HealthRow label="Battery" value={`${measure.battery}%`} barValue={measure.battery} />
@@ -121,7 +121,9 @@ type WeatherCardMetricProps = {
 
 const WeatherCardMetric = ({ label, value }: WeatherCardMetricProps) => (
   <div className="border-t border-[#2b3a38] pt-[10px]">
-    <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">{label}</div>
+    <div className="text-[14px] font-semibold tracking-[-0.01em] text-[#9bad9e] capitalize">
+      {label}
+    </div>
     <b className="mt-[5px] block text-[20px] tracking-[-0.05em]">{value}</b>
   </div>
 );
@@ -135,7 +137,7 @@ type HealthRowProps = {
 const HealthRow = ({ label, value, barValue }: HealthRowProps) => (
   <div className="meter-health-row flex items-center justify-between border-b border-[#2b3a38]/65 py-2 text-sm font-bold last:border-0">
     <span>{label}</span>
-    <span className="font-mono text-[13px] font-normal text-[#9bad9e]">
+    <span className="text-[13px] font-normal text-[#9bad9e]">
       {value}
       <ProgressBar value={barValue} />
     </span>

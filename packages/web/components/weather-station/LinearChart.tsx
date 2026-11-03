@@ -171,7 +171,7 @@ const ChartCard = ({ metric, extrema, children }: ChartCardProps) => {
     <section className="rounded-2xl border border-[#2b3a38] bg-[#192524]/82 p-3 sm:p-[23px]">
       <div className="grid items-center gap-4 sm:grid-cols-[1fr_auto]">
         <div>
-          <div className="font-mono text-[13px] tracking-[0.1em] text-[#9bad9e] uppercase">
+          <div className="text-[14px] font-semibold tracking-[-0.01em] text-[#9bad9e] capitalize">
             {details.label}
           </div>
         </div>
@@ -205,7 +205,7 @@ type ExtremaProps = {
 const Extrema = ({ label, metric, value, measuredAt }: ExtremaProps) => (
   <div className="grid gap-[5px]">
     <div className="flex items-baseline gap-1 whitespace-nowrap">
-      <span className="font-mono text-[11px] tracking-[0.1em] text-[#9bad9e] uppercase">
+      <span className="text-[14px] font-semibold tracking-[-0.01em] text-[#9bad9e] capitalize">
         {label}
       </span>
       <b className="text-[15px] tracking-[-0.05em]" data-testid={`${label.toLowerCase()}-value`}>
@@ -213,10 +213,7 @@ const Extrema = ({ label, metric, value, measuredAt }: ExtremaProps) => (
       </b>
     </div>
     {measuredAt !== null && (
-      <time
-        className="font-mono text-[13px] whitespace-nowrap text-[#9bad9e]"
-        dateTime={measuredAt}
-      >
+      <time className="text-[13px] whitespace-nowrap text-[#9bad9e]" dateTime={measuredAt}>
         {formatChartTime(Date.parse(measuredAt)).join(' · ')}
       </time>
     )}
@@ -255,9 +252,7 @@ type ChartReadoutProps = {
 
 const ChartReadout = ({ metric, measure }: ChartReadoutProps) => (
   <>
-    <div className="mb-2 font-mono text-xs text-[#9bad9e]">
-      {formatMeasuredAt(measure.measuredAt)}
-    </div>
+    <div className="mb-2 text-xs text-[#9bad9e]">{formatMeasuredAt(measure.measuredAt)}</div>
     <TooltipRow
       label={chartMetricDetails[metric].label}
       value={formatMeasureValue({
