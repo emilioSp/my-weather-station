@@ -26,6 +26,11 @@ type Row = {
 
 type Fixture = { initial: Row[]; changed: Row[] };
 
+type DashboardResponses = {
+  readings: { status: number; json: Row[] | { message: string } };
+  history: { status: number; json: Record<string, Row[]> | { message: string } };
+};
+
 const fixture: Fixture = JSON.parse(
   readFileSync('tests/fixtures/weather-station/automatic-refresh.json', 'utf8'),
 );
@@ -34,14 +39,24 @@ const startTime = Date.parse('2026-10-06T12:00:00Z');
 
 const primaryDevice = devices[0].deviceName;
 
-// Each test explicitly selects its responses and gates. No implicit setup or generated scenarios.
+const initialReadings = devices.map(({ deviceName }, index) => ({
+  ...fixture.initial[index],
+  device_name: deviceName,
+}));
+
+const changedReadings = devices.map(({ deviceName }, index) => ({
+  ...fixture.changed[index],
+  device_name: deviceName,
+}));
+
+const initialHistory = Object.fromEntries(initialReadings.map((row) => [row.device_name, [row]]));
+
+const changedHistory = Object.fromEntries(
+  changedReadings.map((row, index) => [row.device_name, [initialReadings[index], row]]),
+);
+
+// Control browser time and count requests. Each test defines its own responses and delays.
 class DashboardScenario {
-  public changed = false;
-  public empty = false;
-  public readingsError = false;
-  public historyError = false;
-  public readingsGate = Promise.resolve();
-  public historyGate = Promise.resolve();
   public requestedDevices: string[] = [];
   public historyQueries: { p_start: string; p_end: string }[] = [];
   public readonly page: Page;
@@ -53,45 +68,6 @@ class DashboardScenario {
   public async open() {
     await this.page.clock.install({ time: startTime });
     await this.page.clock.pauseAt(startTime);
-    await this.page.route('**/rest/v1/measures**', async (route) => {
-      const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
-      this.requestedDevices.push(name);
-      await this.readingsGate;
-      const index = devices.findIndex(({ deviceName }) => deviceName === name);
-      const row = (this.changed ? fixture.changed : fixture.initial)[index];
-      await route.fulfill({
-        status: this.readingsError ? 500 : 200,
-        contentType: 'application/json',
-        body: JSON.stringify(
-          this.readingsError
-            ? { message: 'Latest readings unavailable' }
-            : this.empty
-              ? []
-              : [{ ...row, device_name: name }],
-        ),
-      });
-    });
-    await this.page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      this.historyQueries.push(route.request().postDataJSON());
-      await this.historyGate;
-      await route.fulfill({
-        status: this.historyError ? 500 : 200,
-        contentType: 'application/json',
-        body: JSON.stringify(
-          this.historyError
-            ? { message: 'Chart history unavailable' }
-            : Object.fromEntries(
-                devices.map(({ deviceName }, index) => [
-                  deviceName,
-                  (this.changed
-                    ? [fixture.initial[index], fixture.changed[index]]
-                    : [fixture.initial[index]]
-                  ).map((row) => ({ ...row, device_name: deviceName })),
-                ]),
-              ),
-        ),
-      });
-    });
     await this.page.goto('/', { waitUntil: 'domcontentloaded' });
   }
 
@@ -128,7 +104,27 @@ test('given loaded readings when manual refresh and range changes occur between 
   page,
 }) => {
   const scenario = new DashboardScenario(page);
-  scenario.changed = true;
+
+  const responses: DashboardResponses = {
+    readings: { status: 200, json: changedReadings },
+    history: { status: 200, json: changedHistory },
+  };
+
+  await page.route('**/rest/v1/measures**', async (route) => {
+    const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+    scenario.requestedDevices.push(name);
+    const response = responses.readings;
+    await route.fulfill({
+      ...response,
+      json: Array.isArray(response.json)
+        ? response.json.filter((row) => row.device_name === name)
+        : response.json,
+    });
+  });
+  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+    scenario.historyQueries.push(route.request().postDataJSON());
+    await route.fulfill(responses.history);
+  });
   await scenario.open();
   await scenario.finish();
   const navigations: string[] = [];
@@ -165,6 +161,27 @@ test('given a hidden dashboard when a minute passes and visibility returns then 
   page,
 }) => {
   const scenario = new DashboardScenario(page);
+
+  const responses: DashboardResponses = {
+    readings: { status: 200, json: initialReadings },
+    history: { status: 200, json: initialHistory },
+  };
+
+  await page.route('**/rest/v1/measures**', async (route) => {
+    const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+    scenario.requestedDevices.push(name);
+    const response = responses.readings;
+    await route.fulfill({
+      ...response,
+      json: Array.isArray(response.json)
+        ? response.json.filter((row) => row.device_name === name)
+        : response.json,
+    });
+  });
+  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+    scenario.historyQueries.push(route.request().postDataJSON());
+    await route.fulfill(responses.history);
+  });
   await scenario.open();
   await scenario.finish();
   await scenario.at(20);
@@ -195,6 +212,27 @@ test('given changed readings when an automatic tick runs in the six-hour range t
   page,
 }) => {
   const scenario = new DashboardScenario(page);
+
+  const responses: DashboardResponses = {
+    readings: { status: 200, json: initialReadings },
+    history: { status: 200, json: initialHistory },
+  };
+
+  await page.route('**/rest/v1/measures**', async (route) => {
+    const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+    scenario.requestedDevices.push(name);
+    const response = responses.readings;
+    await route.fulfill({
+      ...response,
+      json: Array.isArray(response.json)
+        ? response.json.filter((row) => row.device_name === name)
+        : response.json,
+    });
+  });
+  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+    scenario.historyQueries.push(route.request().postDataJSON());
+    await route.fulfill(responses.history);
+  });
   await scenario.open();
   await scenario.finish();
 
@@ -204,7 +242,8 @@ test('given changed readings when an automatic tick runs in the six-hour range t
     await expect(page.getByText(label, { exact: true })).toBeVisible();
   }
 
-  scenario.changed = true;
+  responses.readings = { status: 200, json: changedReadings };
+  responses.history = { status: 200, json: changedHistory };
   await scenario.at(60);
   await scenario.finish();
   await scenario.assertRefreshCount(2);
@@ -250,8 +289,28 @@ test('given pending initial readings when errors and empty and populated respons
 }) => {
   const scenario = new DashboardScenario(page);
   const pending = Promise.withResolvers<void>();
-  scenario.readingsGate = pending.promise;
-  scenario.readingsError = true;
+
+  const responses: DashboardResponses = {
+    readings: { status: 500, json: { message: 'Latest readings unavailable' } },
+    history: { status: 200, json: initialHistory },
+  };
+
+  await page.route('**/rest/v1/measures**', async (route) => {
+    const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+    scenario.requestedDevices.push(name);
+    await pending.promise;
+    const response = responses.readings;
+    await route.fulfill({
+      ...response,
+      json: Array.isArray(response.json)
+        ? response.json.filter((row) => row.device_name === name)
+        : response.json,
+    });
+  });
+  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+    scenario.historyQueries.push(route.request().postDataJSON());
+    await route.fulfill(responses.history);
+  });
   await scenario.open();
   await expect(page.getByText('Loading current readings...')).toBeVisible();
   await expect(scenario.button()).toBeVisible();
@@ -260,21 +319,20 @@ test('given pending initial readings when errors and empty and populated respons
   await scenario.finish();
   await expect(page.getByText('Latest readings unavailable')).toBeVisible();
   await expect(scenario.button()).toBeVisible();
-  scenario.readingsError = false;
-  scenario.empty = true;
+  responses.readings = { status: 200, json: [] };
   await scenario.button().click();
   await scenario.finish();
   await expect(page.getByText('No readings yet')).toBeVisible();
   await expect(page.getByText('No readings available.')).toHaveCount(devices.length);
   await expect(page.locator('[id^="history-"]')).toHaveCount(0);
   await expect(scenario.button()).toBeVisible();
-  scenario.empty = false;
-  scenario.changed = true;
+  responses.readings = { status: 200, json: changedReadings };
+  responses.history = { status: 200, json: changedHistory };
   await scenario.button().click();
   await scenario.finish();
   await expect(page.getByLabel('Current readings')).toContainText('26.0°C');
   await expect(scenario.button()).toBeVisible();
-  scenario.readingsError = true;
+  responses.readings = { status: 500, json: { message: 'Latest readings unavailable' } };
   await scenario.button().click();
   await scenario.finish();
   await expect(page.getByText('Latest readings unavailable')).toBeVisible();
@@ -287,14 +345,40 @@ for (const action of ['manual', 'automatic']) {
       page,
     }) => {
       const scenario = new DashboardScenario(page);
+
+      const responses: DashboardResponses = {
+        readings: { status: 200, json: initialReadings },
+        history: { status: 200, json: initialHistory },
+      };
+
+      await page.route('**/rest/v1/measures**', async (route) => {
+        const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+        scenario.requestedDevices.push(name);
+        const response = responses.readings;
+        await route.fulfill({
+          ...response,
+          json: Array.isArray(response.json)
+            ? response.json.filter((row) => row.device_name === name)
+            : response.json,
+        });
+      });
+      await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+        scenario.historyQueries.push(route.request().postDataJSON());
+        await route.fulfill(responses.history);
+      });
       await scenario.open();
       await scenario.finish();
       await expect(
         page.locator(`[id="history-${primaryDevice}"]`).getByTestId('high-value').first(),
       ).toHaveText('25.0°C');
-      scenario.changed = true;
-      scenario.readingsError = failure === 'readings';
-      scenario.historyError = failure === 'history';
+      responses.readings =
+        failure === 'readings'
+          ? { status: 500, json: { message: 'Latest readings unavailable' } }
+          : { status: 200, json: changedReadings };
+      responses.history =
+        failure === 'history'
+          ? { status: 500, json: { message: 'Chart history unavailable' } }
+          : { status: 200, json: changedHistory };
 
       if (action === 'manual') {
         await scenario.at(55);
@@ -320,8 +404,8 @@ for (const action of ['manual', 'automatic']) {
 
       await expect(scenario.button()).toBeVisible();
       await expect(scenario.button()).toBeEnabled();
-      scenario.readingsError = false;
-      scenario.historyError = false;
+      responses.readings = { status: 200, json: changedReadings };
+      responses.history = { status: 200, json: changedHistory };
       const historyCount = scenario.historyQueries.length;
       await scenario.at(action === 'manual' ? 60 : 120);
       await scenario.finish();
@@ -341,9 +425,33 @@ for (const failure of ['readings', 'history']) {
     page,
   }) => {
     const scenario = new DashboardScenario(page);
-    scenario.changed = true;
-    scenario.readingsError = failure === 'readings';
-    scenario.historyError = failure === 'history';
+
+    const responses: DashboardResponses = {
+      readings:
+        failure === 'readings'
+          ? { status: 500, json: { message: 'Latest readings unavailable' } }
+          : { status: 200, json: changedReadings },
+      history:
+        failure === 'history'
+          ? { status: 500, json: { message: 'Chart history unavailable' } }
+          : { status: 200, json: changedHistory },
+    };
+
+    await page.route('**/rest/v1/measures**', async (route) => {
+      const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+      scenario.requestedDevices.push(name);
+      const response = responses.readings;
+      await route.fulfill({
+        ...response,
+        json: Array.isArray(response.json)
+          ? response.json.filter((row) => row.device_name === name)
+          : response.json,
+      });
+    });
+    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      scenario.historyQueries.push(route.request().postDataJSON());
+      await route.fulfill(responses.history);
+    });
     await scenario.open();
     await scenario.finish();
 
@@ -353,8 +461,8 @@ for (const failure of ['readings', 'history']) {
         : 'Unable to load chart history: Chart history unavailable';
 
     await expect(page.getByText(message, { exact: true })).toBeVisible();
-    scenario.readingsError = false;
-    scenario.historyError = false;
+    responses.readings = { status: 200, json: changedReadings };
+    responses.history = { status: 200, json: changedHistory };
 
     await scenario.at(60);
 
@@ -378,21 +486,45 @@ for (const { origin, historyFails } of [
     page,
   }) => {
     const scenario = new DashboardScenario(page);
+
+    const responses: DashboardResponses = {
+      readings: { status: 200, json: initialReadings },
+      history: { status: 200, json: initialHistory },
+    };
+
     const readings = Promise.withResolvers<void>();
     const history = Promise.withResolvers<void>();
 
-    if (origin === 'initial') {
-      scenario.readingsGate = readings.promise;
-      scenario.historyGate = history.promise;
-    }
+    const gates = {
+      readings: origin === 'initial' ? readings.promise : Promise.resolve(),
+      history: origin === 'initial' ? history.promise : Promise.resolve(),
+    };
 
+    await page.route('**/rest/v1/measures**', async (route) => {
+      const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+      scenario.requestedDevices.push(name);
+      await gates.readings;
+      const response = responses.readings;
+      await route.fulfill({
+        ...response,
+        json: Array.isArray(response.json)
+          ? response.json.filter((row) => row.device_name === name)
+          : response.json,
+      });
+    });
+    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      scenario.historyQueries.push(route.request().postDataJSON());
+      await gates.history;
+      await route.fulfill(responses.history);
+    });
     await scenario.open();
 
     if (origin !== 'initial') {
       await scenario.finish();
-      scenario.changed = true;
-      scenario.readingsGate = readings.promise;
-      scenario.historyGate = history.promise;
+      responses.readings = { status: 200, json: changedReadings };
+      responses.history = { status: 200, json: changedHistory };
+      gates.readings = readings.promise;
+      gates.history = history.promise;
       await scenario.at(origin === 'manual' ? 55 : 60);
 
       if (origin === 'manual') await scenario.button().click();
@@ -415,7 +547,11 @@ for (const { origin, historyFails } of [
     await scenario.at(firstBusyTick + 60);
     await scenario.assertRefreshCount(refreshCount);
     await scenario.at(firstBusyTick + 75);
-    scenario.historyError = historyFails;
+
+    if (historyFails) {
+      responses.history = { status: 500, json: { message: 'Chart history unavailable' } };
+    }
+
     history.resolve();
     await scenario.finish();
     await expect(scenario.button()).toBeEnabled();
@@ -445,11 +581,37 @@ for (const failure of ['readings', 'history']) {
     page,
   }) => {
     const scenario = new DashboardScenario(page);
+
+    const responses: DashboardResponses = {
+      readings: { status: 200, json: initialReadings },
+      history: { status: 200, json: initialHistory },
+    };
+
+    await page.route('**/rest/v1/measures**', async (route) => {
+      const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+      scenario.requestedDevices.push(name);
+      const response = responses.readings;
+      await route.fulfill({
+        ...response,
+        json: Array.isArray(response.json)
+          ? response.json.filter((row) => row.device_name === name)
+          : response.json,
+      });
+    });
+    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      scenario.historyQueries.push(route.request().postDataJSON());
+      await route.fulfill(responses.history);
+    });
     await scenario.open();
     await scenario.finish();
-    scenario.changed = true;
-    scenario.readingsError = failure === 'readings';
-    scenario.historyError = failure === 'history';
+    responses.readings =
+      failure === 'readings'
+        ? { status: 500, json: { message: 'Latest readings unavailable' } }
+        : { status: 200, json: changedReadings };
+    responses.history =
+      failure === 'history'
+        ? { status: 500, json: { message: 'Chart history unavailable' } }
+        : { status: 200, json: changedHistory };
     await scenario.at(60);
     await scenario.finish();
 
@@ -459,8 +621,8 @@ for (const failure of ['readings', 'history']) {
         : 'Unable to load chart history: Chart history unavailable';
 
     await expect(page.getByText(message, { exact: true })).toBeVisible();
-    scenario.readingsError = false;
-    scenario.historyError = false;
+    responses.readings = { status: 200, json: changedReadings };
+    responses.history = { status: 200, json: changedHistory };
     await scenario.at(75);
     await scenario.button().click();
     await scenario.finish();
