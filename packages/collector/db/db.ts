@@ -26,7 +26,8 @@ export class Database {
       query_timeout: environment.POSTGRES_TIMEOUT_MS,
     },
     acquireConnectionTimeout: environment.POSTGRES_TIMEOUT_MS,
-    pool: { min: 2, max: 15 },
+    // Raw test transactions require one persistent connection and sequential tests.
+    pool: process.env.NODE_ENV === 'test' ? { min: 1, max: 1 } : { min: 2, max: 15 },
   });
 
   public getClient(): Knex {
