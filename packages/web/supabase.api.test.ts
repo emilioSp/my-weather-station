@@ -90,23 +90,21 @@ const seedMeasures = async () => {
 };
 
 describe('Supabase API', () => {
-  it('given null API responses when normalizing measures and history then returns empty rows and history', () => {
+  it('given a null measure response when normalizing it then returns empty rows without an error', () => {
     expect(toMeasureResult({ data: null, error: null })).toEqual({
       rows: [],
       error: null,
     });
+  });
+
+  it('given null history when normalizing it then returns empty history', () => {
     expect(toMeasureHistory(null)).toEqual({});
   });
 
-  it('given stored readings when fetching a named device and chart history then returns its latest reading and history keyed by name', async () => {
+  it('given two stored kitchen readings when fetching the kitchen then returns only its latest reading', async () => {
     const measures = await seedMeasures();
 
     const latest = await supabaseApi.getLatestMeasure({ deviceName: deviceNames.kitchen });
-
-    const history = await supabaseApi.getChartHistory({
-      measuredAfter: new Date('2020-01-01T00:00:00Z'),
-      measuredBefore: new Date('2020-01-02T00:00:00Z'),
-    });
 
     expect(latest.error).toBeNull();
     expect(latest.rows).toHaveLength(1);
@@ -116,6 +114,16 @@ describe('Supabase API', () => {
       temperature: 20,
       deviceType: METER_TYPES.INDOOR,
     });
+  });
+
+  it('given stored readings for multiple named meters when fetching chart history then returns readings keyed by device name', async () => {
+    const measures = await seedMeasures();
+
+    const history = await supabaseApi.getChartHistory({
+      measuredAfter: new Date('2020-01-01T00:00:00Z'),
+      measuredBefore: new Date('2020-01-02T00:00:00Z'),
+    });
+
     expect(history.error).toBeNull();
     expect(history.history[deviceNames.kitchen]).toMatchObject([
       {
@@ -157,7 +165,14 @@ describe('Supabase API', () => {
     ]);
   });
 
-  it('given an unknown device and a time range before existing readings when querying latest measures and history then returns empty results without errors', async () => {
+  it('given an unknown device when querying its latest measure then returns no rows without an error', async () => {
+    const latest = await supabaseApi.getLatestMeasure({ deviceName: deviceNames.missing });
+
+    expect(latest.error).toBeNull();
+    expect(latest.rows).toEqual([]);
+  });
+
+  it('given a time range before all stored readings when querying chart history then returns empty history without an error', async () => {
     const { rows } = await database.query<{ end_at: Date }>(`
       SELECT COALESCE(MIN(measured_at), '2000-01-01T00:00:00Z'::timestamptz)
         - INTERVAL '1 day' AS end_at
@@ -167,12 +182,7 @@ describe('Supabase API', () => {
     const measuredBefore = rows[0].end_at;
     const measuredAfter = new Date(measuredBefore.getTime() - 24 * 60 * 60 * 1000);
 
-    const latest = await supabaseApi.getLatestMeasure({ deviceName: deviceNames.missing });
-
     const history = await supabaseApi.getChartHistory({ measuredAfter, measuredBefore });
-
-    expect(latest.error).toBeNull();
-    expect(latest.rows).toEqual([]);
     expect(history.error).toBeNull();
     expect(history.history).toEqual({});
   });

@@ -28,21 +28,25 @@ type TemperaturePair = {
 };
 
 describe('weather dashboard utilities', () => {
-  it('given a UTC timestamp humidity and temperature when formatting dashboard values then returns local times percent and Celsius', () => {
-    const measuredAt = new Date('2026-01-01T12:34:56Z');
+  it('given a UTC timestamp when formatting a measurement then returns Rome time including seconds', () => {
+    expect(formatMeasuredAt('2026-01-01T12:34:56Z')).toBe('01 Jan · 13:34:56');
+  });
 
-    expect(formatMeasuredAt(measuredAt.toISOString())).toBe('01 Jan · 13:34:56');
-    expect(formatChartTime(measuredAt.getTime())).toEqual(['01 Jan', '13:34']);
-    expect(formatMeasureValue({ value: 50.4, metric: WEATHER_METRICS.HUMIDITY })).toBe('50%');
-    expect(
-      formatMeasureValue({
-        value: 20,
-        metric: WEATHER_METRICS.TEMPERATURE,
-      }),
-    ).toBe('20.0°C');
+  it('given a UTC timestamp when formatting a chart label then returns the Rome date and minute', () => {
+    expect(formatChartTime(Date.parse('2026-01-01T12:34:56Z'))).toEqual(['01 Jan', '13:34']);
   });
 
   it.each([
+    { label: 'humidity', value: 50.4, metric: WEATHER_METRICS.HUMIDITY, expected: '50%' },
+    { label: 'temperature', value: 20, metric: WEATHER_METRICS.TEMPERATURE, expected: '20.0°C' },
+  ])(
+    'given a $label value when formatting it then returns $expected',
+    ({ value, metric, expected }) => {
+      expect(formatMeasureValue({ value, metric })).toBe(expected);
+    },
+  );
+
+  describe.each([
     {
       label: 'winter midnight',
       measuredAt: '2026-01-06T23:35:59Z',
@@ -67,13 +71,15 @@ describe('weather dashboard utilities', () => {
       date: '25 Oct',
       time: '02:35',
     },
-  ])(
-    'given $label when formatting a measurement then shows the Rome date and time',
-    ({ measuredAt, date, time }) => {
+  ])('Rome formatting: $label', ({ label, measuredAt, date, time }) => {
+    it(`given ${label} when formatting a measurement then shows the Rome date and time with seconds`, () => {
       expect(formatMeasuredAt(measuredAt)).toBe(`${date} · ${time}:59`);
+    });
+
+    it(`given ${label} when formatting a chart label then shows the Rome date and minute`, () => {
       expect(formatChartTime(Date.parse(measuredAt))).toEqual([date, time]);
-    },
-  );
+    });
+  });
 
   it('given readings before at and within the last day when filtering then includes only boundary and later readings', () => {
     const end = new Date('2026-01-02T00:00:00Z');
@@ -94,7 +100,7 @@ describe('weather dashboard utilities', () => {
     ).toEqual(['edge', 'inside']);
   });
 
-  it('given unsorted or empty readings when finding timestamps and extrema then returns the latest time dated extremes or null', () => {
+  it('given unordered readings when finding the latest timestamp then returns 2 January at 06:00 UTC', () => {
     const { oldest, older, newer, newest }: ExtremaFixture = JSON.parse(
       readFileSync(
         new URL('../tests/fixtures/dashboard/unsorted-extrema.json', import.meta.url),
@@ -102,8 +108,27 @@ describe('weather dashboard utilities', () => {
       ),
     );
 
-    expect(getLatestTimestamp([oldest, older, newer, newest])).toBe(Date.parse(newest.measuredAt));
+    expect(getLatestTimestamp([older, newest, oldest, newer])).toBe(
+      Date.parse('2026-01-02T06:00:00Z'),
+    );
+  });
+
+  it('given no readings when finding the latest timestamp then returns null', () => {
     expect(getLatestTimestamp([])).toBeNull();
+  });
+
+  it('given no readings when finding temperature extrema then returns null', () => {
+    expect(getRangeExtrema({ measures: [], metric: WEATHER_METRICS.TEMPERATURE })).toBeNull();
+  });
+
+  it('given unordered temperature readings with tied extremes when finding extrema then returns the earliest low and high dates', () => {
+    const { oldest, older, newer, newest }: ExtremaFixture = JSON.parse(
+      readFileSync(
+        new URL('../tests/fixtures/dashboard/unsorted-extrema.json', import.meta.url),
+        'utf8',
+      ),
+    );
+
     expect(
       getRangeExtrema({
         measures: [older, newest, oldest, newer],
@@ -112,10 +137,9 @@ describe('weather dashboard utilities', () => {
     ).toEqual({
       low: 10,
       high: 30,
-      lowMeasuredAt: oldest.measuredAt,
-      highMeasuredAt: newer.measuredAt,
+      lowMeasuredAt: '2026-01-01T00:00:00Z',
+      highMeasuredAt: '2026-01-02T00:00:00Z',
     });
-    expect(getRangeExtrema({ measures: [], metric: WEATHER_METRICS.TEMPERATURE })).toBeNull();
   });
 
   it('given close temperatures when finding extrema then compares unrounded values', () => {
@@ -159,9 +183,14 @@ describe('weather dashboard utilities', () => {
     },
   );
 
-  it('given weak medium and strong signals when calculating percentages then returns zero fifty and one hundred', () => {
-    expect(getSignalPercentage(-125)).toBe(0);
-    expect(getSignalPercentage(-75)).toBe(50);
-    expect(getSignalPercentage(-10)).toBe(100);
-  });
+  it.each([
+    { label: 'weak', signal: -125, expected: 0 },
+    { label: 'medium', signal: -75, expected: 50 },
+    { label: 'strong', signal: -10, expected: 100 },
+  ])(
+    'given a $label signal when calculating its percentage then returns $expected percent',
+    ({ signal, expected }) => {
+      expect(getSignalPercentage(signal)).toBe(expected);
+    },
+  );
 });

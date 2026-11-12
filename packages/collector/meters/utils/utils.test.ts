@@ -12,11 +12,16 @@ describe('meter calculations', () => {
     expect(calculateDewPoint({ humidity: 20, temperature: 12 })).toBe(-10.3);
   });
 
-  it('given moderate hot dry and hot humid readings when calculating heat indexes then returns 19.7 31.9 and 40.8 degrees', () => {
-    expect(calculateHeatIndex({ temperature: 20, humidity: 50 })).toBe(19.7);
-    expect(calculateHeatIndex({ temperature: 35, humidity: 10 })).toBe(31.9);
-    expect(calculateHeatIndex({ temperature: 30, humidity: 90 })).toBe(40.8);
-  });
+  it.each([
+    { label: 'moderate', temperature: 20, humidity: 50, expected: 19.7 },
+    { label: 'hot dry', temperature: 35, humidity: 10, expected: 31.9 },
+    { label: 'hot humid', temperature: 30, humidity: 90, expected: 40.8 },
+  ])(
+    'given $label readings when calculating heat index then returns $expected degrees Celsius',
+    ({ temperature, humidity, expected }) => {
+      expect(calculateHeatIndex({ temperature, humidity })).toBe(expected);
+    },
+  );
 
   it('given a timestamp with milliseconds when formatting a measure then returns UTC time at second precision', () => {
     expect(

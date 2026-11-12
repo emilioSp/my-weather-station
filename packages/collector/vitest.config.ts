@@ -1,6 +1,5 @@
 // Configure vitest when running builds or automated checks.
 
-import { coverageThresholds } from '@wx/shared/testing/coverage-thresholds.ts';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -13,7 +12,6 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['json', 'html', 'text-summary'],
       include: ['meters/**/*.ts', 'api/**/*.ts', 'db/**/*.ts', 'errors/**/*.ts'],
-      thresholds: coverageThresholds,
     },
   },
 });

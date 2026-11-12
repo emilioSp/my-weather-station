@@ -8,8 +8,7 @@
   },
   "exports": {
     ".": "./types.ts",
-    "./utils/*": "./utils/*",
-    "./testing/*": "./testing/*"
+    "./utils/*": "./utils/*"
   },
   "scripts": {
     "build": "tsc",

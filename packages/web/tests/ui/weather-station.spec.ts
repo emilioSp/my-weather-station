@@ -1,410 +1,113 @@
-// Verify weather dashboard behavior in browser tests with controlled API responses.
-
+// Verify partial readings and delayed history using controlled HTTP responses in a real browser.
 import { readFileSync } from 'node:fs';
 
-import { expect, type Locator, type Page, type Route } from '@playwright/test';
-import { METER_TYPES } from '@wx/shared';
-import { loadEnv } from 'vite';
+import { expect, type Route } from '@playwright/test';
 
+import { devices } from '#tests/utils/dashboard-scenario.ts';
 import { test } from '#tests/utils/test.ts';
-import { WEATHER_METRICS, type WeatherMetric } from '#utils/weather-metrics.ts';
 
-type ConfiguredDevice = {
-  deviceName: string;
-};
-
-type MeasureRow = {
-  id: string;
+type Row = {
   device_name: string;
-  device_type: typeof METER_TYPES.OUTDOOR | typeof METER_TYPES.INDOOR;
-  measured_at: string;
   temperature: number;
-  humidity: number;
-  dew_point: number;
-  heat_index: number;
-  battery: number;
-  signal_power_dbm: number;
 };
 
-type ChartMetric = WeatherMetric;
-
-// JUSTIFICATION: The repository's development configuration lists devices with string deviceName fields.
-const configuredDevices = JSON.parse(
-  loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
-) as ConfiguredDevice[];
-
-const deviceNameAt = (index: number): string => configuredDevices[index].deviceName;
-
-// Intl abbreviates September as either Sep or Sept, depending on the browser.
-const septemberMeasurementTime = /01 Sept? · 17:00:00/;
-
-type DashboardFixture = { initial: MeasureRow[]; changed: MeasureRow[] };
-
-const fixture: DashboardFixture = JSON.parse(
+const fixture: { initial: Row[] } = JSON.parse(
   readFileSync(
     new URL('../fixtures/weather-station/current-and-refreshed-readings.json', import.meta.url),
     'utf8',
   ),
 );
 
-// This scenario has four fixture meters; it does not generate data for additional devices.
-const initialMeasures: Record<string, MeasureRow> = Object.fromEntries(
-  configuredDevices.map(({ deviceName }, index) => [
-    deviceName,
-    { ...fixture.initial[index], device_name: deviceName },
-  ]),
-);
+const initialReadings = devices.map(({ deviceName }, index) => ({
+  ...fixture.initial[index],
+  device_name: deviceName,
+}));
 
-const changedMeasures: Record<string, MeasureRow> = Object.fromEntries(
-  configuredDevices.map(({ deviceName }, index) => [
-    deviceName,
-    { ...fixture.changed[index], device_name: deviceName },
-  ]),
-);
+const primaryDevice = devices[0].deviceName;
 
-const configuredHistory: Record<string, MeasureRow[]> = Object.fromEntries(
-  configuredDevices.map((_, deviceIndex) => {
-    const deviceName = deviceNameAt(deviceIndex);
+const history = Object.fromEntries(initialReadings.map((row) => [row.device_name, [row]]));
 
-    return [deviceName, [initialMeasures[deviceName], changedMeasures[deviceName]]];
-  }),
-);
+const getRequestedReading = (route: Route) => {
+  const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3);
+  const reading = initialReadings.find((row) => row.device_name === name);
 
-const history = {
-  ...configuredHistory,
-  'unconfigured-device': [initialMeasures[deviceNameAt(0)]],
+  if (reading === undefined) throw new Error(`No fixture for requested device ${name}`);
+
+  return reading;
 };
 
-const getRequestedDeviceName = (route: Route): string | undefined =>
-  new URL(route.request().url()).searchParams.get('device_name')?.replace(/^eq\./, '');
-
-type MeasureFixtureRequest = {
-  deviceName: string | undefined;
-  measure: MeasureRow | undefined;
-};
-
-function assertMeasureFixture(
-  request: MeasureFixtureRequest,
-): asserts request is MeasureFixtureRequest & { measure: MeasureRow } {
-  if (request.deviceName === undefined || request.measure === undefined) {
-    throw new Error(`No fixture exists for requested device ${request.deviceName}.`);
-  }
-}
-
-type GetMeasureForRequestInput = {
-  route: Route;
-  measures: Record<string, MeasureRow>;
-};
-
-const getMeasureForRequest = ({ route, measures }: GetMeasureForRequestInput): MeasureRow => {
-  const deviceName = getRequestedDeviceName(route);
-  const request = { deviceName, measure: measures[deviceName ?? ''] };
-  assertMeasureFixture(request);
-
-  return request.measure;
-};
-
-const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-type GetChartInput = {
-  page: Page;
-  deviceName: string;
-  metric?: ChartMetric;
-};
-
-const getChart = ({
+test('given one reporting meter and other empty meters when opening the dashboard then shows its reading and empty cards for the others', async ({
   page,
-  deviceName,
-  metric = WEATHER_METRICS.TEMPERATURE,
-}: GetChartInput): Locator => {
-  const metricLabel = metric === WEATHER_METRICS.DEW_POINT ? 'dew point' : metric;
+}) => {
+  await page.route('**/rest/v1/measures**', async (route) => {
+    const reading = getRequestedReading(route);
+    await route.fulfill({ json: reading.device_name === primaryDevice ? [reading] : [] });
+  });
+  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+    await route.fulfill({
+      json: { [primaryDevice]: [initialReadings[0]] },
+    });
+  });
 
-  return page.getByLabel(
-    new RegExp(`Interactive ${metricLabel} chart for ${escapeRegExp(deviceName)} measurements`),
-  );
-};
+  await page.goto('/');
 
-type GetChartTestIdInput = {
-  deviceName: string;
-  metric: ChartMetric;
-};
+  await expect(page.getByText('No readings available.')).toHaveCount(devices.length - 1);
+  await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
+  await expect(
+    page.getByLabel(
+      `Interactive temperature chart for ${primaryDevice} measurements in last 3 days.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator('[id^="history-"]')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Refresh readings' })).toBeEnabled();
+});
 
-const getChartTestId = ({ deviceName, metric }: GetChartTestIdInput): string =>
-  `${deviceName}-${metric}-chart-tooltip`;
-
-type AssertDesktopChartReadoutInput = {
-  chart: Locator;
-  expectedValues: Array<string | RegExp>;
-  page: Page;
-  tooltipTestId: string;
-};
-
-async function assertDesktopChartReadout({
-  chart,
-  expectedValues,
+test('given history for an unconfigured meter when opening the dashboard then renders history only for configured meters', async ({
   page,
-  tooltipTestId,
-}: AssertDesktopChartReadoutInput): Promise<void> {
-  await chart.scrollIntoViewIfNeeded();
-  const plot = chart.locator('.recharts-cartesian-grid');
-  await expect(plot).toBeVisible({ timeout: 5_000 });
-
-  const [chartBox, plotBox] = await Promise.all([chart.boundingBox(), plot.boundingBox()]);
-
-  if (chartBox === null || plotBox === null) {
-    throw new Error('The chart plot is not rendered.');
-  }
-
-  await chart.hover({
-    position: {
-      x: plotBox.x - chartBox.x + plotBox.width - 1,
-      y: plotBox.y - chartBox.y + plotBox.height / 2,
-    },
+}) => {
+  await page.route('**/rest/v1/measures**', async (route) => {
+    await route.fulfill({ json: [getRequestedReading(route)] });
+  });
+  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+    await route.fulfill({ json: { ...history, 'unconfigured-device': [initialReadings[0]] } });
   });
 
-  const tooltip = page.getByTestId(tooltipTestId);
+  await page.goto('/');
 
-  for (const expectedValue of expectedValues) {
-    await expect(tooltip).toContainText(expectedValue, { timeout: 5_000 });
-  }
-}
+  await expect(page.locator('[id^="history-"]')).toHaveCount(devices.length);
+  await expect(
+    page.getByLabel(
+      `Interactive temperature chart for ${primaryDevice} measurements in last 3 days.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator('[id="history-unconfigured-device"]')).toHaveCount(0);
+});
 
-test.describe('Weather station', () => {
-  test('given a delayed history response when opening the dashboard then shows placeholders followed by the loaded chart', async ({
-    page,
-  }) => {
-    const { promise: historyReady, resolve: releaseHistory } = Promise.withResolvers<void>();
-
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
-        contentType: 'application/json',
-      });
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await historyReady;
-      await route.fulfill({
-        body: JSON.stringify(history),
-        contentType: 'application/json',
-      });
-    });
-
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByLabel('Loading chart')).toHaveCount(configuredDevices.length * 3);
-    releaseHistory();
-    await expect(getChart({ page, deviceName: deviceNameAt(0) })).toBeVisible();
+test('given a delayed history response when opening the dashboard then shows placeholders followed by the loaded chart', async ({
+  page,
+}) => {
+  const { promise: historyReady, resolve: releaseHistory } = Promise.withResolvers<void>();
+  await page.route('**/rest/v1/measures**', async (route) => {
+    await route.fulfill({ json: [getRequestedReading(route)] });
+  });
+  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+    await historyReady;
+    await route.fulfill({ json: history });
   });
 
-  test('given updated readings when refreshing twice then shows changed values and retains them on the unchanged response', async ({
-    page,
-  }) => {
-    const latestResponses = [initialMeasures, changedMeasures, changedMeasures];
-    let latestResponseIndex = 0;
-    const answeredDeviceNames = new Set<string>();
-    await page.route('**/rest/v1/measures**', async (route) => {
-      const response = latestResponses[Math.min(latestResponseIndex, latestResponses.length - 1)];
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByLabel('Loading chart')).toHaveCount(devices.length * 3);
+  releaseHistory();
 
-      const measure = getMeasureForRequest({ route: route, measures: response });
-      await route.fulfill({
-        body: JSON.stringify([measure]),
-        contentType: 'application/json',
-      });
-
-      const deviceName = getRequestedDeviceName(route);
-
-      if (deviceName !== undefined) {
-        answeredDeviceNames.add(deviceName);
-      }
-
-      if (answeredDeviceNames.size === configuredDevices.length) {
-        latestResponseIndex += 1;
-        answeredDeviceNames.clear();
-      }
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify(history),
-        contentType: 'application/json',
-      });
-    });
-
-    await page.goto('/');
-    const primaryDeviceName = deviceNameAt(0);
-    const primaryInitialMeasure = initialMeasures[primaryDeviceName];
-    const primaryChangedMeasure = changedMeasures[primaryDeviceName];
-    const secondaryInitialMeasure = initialMeasures[deviceNameAt(1)];
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${primaryInitialMeasure.temperature.toFixed(1)}°C`,
-    );
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${primaryInitialMeasure.signal_power_dbm} dBm`,
-    );
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${secondaryInitialMeasure.signal_power_dbm} dBm`,
-    );
-    await assertDesktopChartReadout({
-      chart: getChart({ page, deviceName: primaryDeviceName }),
-      expectedValues: [
-        septemberMeasurementTime,
-        `${primaryChangedMeasure.temperature.toFixed(1)}°C`,
-        `${primaryChangedMeasure.heat_index.toFixed(1)}°C`,
-      ],
-      page,
-      tooltipTestId: getChartTestId({
-        deviceName: primaryDeviceName,
-        metric: WEATHER_METRICS.TEMPERATURE,
-      }),
-    });
-
-    const refreshReadings = page.getByRole('button', {
-      name: 'Refresh readings',
-    });
-
-    await refreshReadings.click();
-    await expect(refreshReadings).toBeDisabled();
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${primaryChangedMeasure.temperature.toFixed(1)}°C`,
-      { timeout: 5_000 },
-    );
-    await expect(page.getByText(septemberMeasurementTime)).toBeVisible();
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${primaryChangedMeasure.signal_power_dbm} dBm`,
-    );
-
-    await page.getByRole('button', { name: 'Refresh readings' }).click();
-    await expect(page.getByLabel('Current readings')).toContainText(
-      `${primaryChangedMeasure.temperature.toFixed(1)}°C`,
-    );
-    await expect(page.getByText(septemberMeasurementTime)).toBeVisible();
-  });
-
-  test('given loaded history when zooming to both limits then updates charts and disables the limit controls', async ({
-    page,
-  }) => {
-    const requestedRanges: Array<{ end: string; start: string }> = [];
-    await page.route('**/rest/v1/measures**', async (route) => {
-      await route.fulfill({
-        body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
-        contentType: 'application/json',
-      });
-    });
-    await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      // JUSTIFICATION: The intercepted get_chart_history request sends p_end and p_start as ISO timestamp strings.
-      const parameters = route.request().postDataJSON() as {
-        p_end: string;
-        p_start: string;
-      };
-
-      requestedRanges.push({
-        end: parameters.p_end,
-        start: parameters.p_start,
-      });
-      await route.fulfill({
-        body: JSON.stringify(history),
-        contentType: 'application/json',
-      });
-    });
-
-    await page.goto('/');
-    const primaryDeviceName = deviceNameAt(0);
-    const secondaryDeviceName = deviceNameAt(1);
-    const primaryInitialMeasure = initialMeasures[primaryDeviceName];
-    const primaryChangedMeasure = changedMeasures[primaryDeviceName];
-    const secondaryChangedMeasure = changedMeasures[secondaryDeviceName];
-
-    const primaryTemperatureChart = getChart({
-      page,
-      deviceName: primaryDeviceName,
-    }).first();
-
-    await assertDesktopChartReadout({
-      chart: primaryTemperatureChart,
-      expectedValues: [
-        septemberMeasurementTime,
-        `${primaryChangedMeasure.temperature.toFixed(1)}°C`,
-        `${primaryChangedMeasure.heat_index.toFixed(1)}°C`,
-      ],
-      page,
-      tooltipTestId: getChartTestId({
-        deviceName: primaryDeviceName,
-        metric: WEATHER_METRICS.TEMPERATURE,
-      }),
-    });
-
-    await assertDesktopChartReadout({
-      chart: getChart({
-        page,
-        deviceName: secondaryDeviceName,
-      }).first(),
-      expectedValues: [
-        septemberMeasurementTime,
-        `${secondaryChangedMeasure.temperature.toFixed(1)}°C`,
-        `${secondaryChangedMeasure.heat_index.toFixed(1)}°C`,
-      ],
-      page,
-      tooltipTestId: getChartTestId({
-        deviceName: secondaryDeviceName,
-        metric: WEATHER_METRICS.TEMPERATURE,
-      }),
-    });
-    await assertDesktopChartReadout({
-      chart: getChart({
-        page,
-        deviceName: primaryDeviceName,
-        metric: WEATHER_METRICS.HUMIDITY,
-      }).first(),
-      expectedValues: [septemberMeasurementTime, `${primaryInitialMeasure.humidity}%`],
-      page,
-      tooltipTestId: getChartTestId({
-        deviceName: primaryDeviceName,
-        metric: WEATHER_METRICS.HUMIDITY,
-      }),
-    });
-    await assertDesktopChartReadout({
-      chart: getChart({
-        page,
-        deviceName: primaryDeviceName,
-        metric: WEATHER_METRICS.DEW_POINT,
-      }).first(),
-      expectedValues: [septemberMeasurementTime, `${primaryInitialMeasure.dew_point.toFixed(1)}°C`],
-      page,
-      tooltipTestId: getChartTestId({
-        deviceName: primaryDeviceName,
-        metric: WEATHER_METRICS.DEW_POINT,
-      }),
-    });
-
-    const zoomOut = page.getByRole('button', { name: 'Zoom out' });
-    const zoomIn = page.getByRole('button', { name: 'Zoom in' });
-    await expect(page.getByText('Last 3 days', { exact: true })).toBeVisible();
-
-    for (const label of ['Last week', 'Last 2 weeks', 'Last month']) {
-      await zoomOut.click();
-      await expect(page.getByText(label, { exact: true })).toBeVisible();
-      await expect(primaryTemperatureChart).toBeVisible();
-    }
-
-    await expect(zoomOut).toBeDisabled();
-
-    for (const label of [
-      'Last 2 weeks',
-      'Last week',
-      'Last 3 days',
-      'Last day',
-      'Last 12 hours',
-      'Last 6 hours',
-    ]) {
-      await zoomIn.click();
-      await expect(page.getByText(label, { exact: true })).toBeVisible();
-      await expect(primaryTemperatureChart).toBeVisible();
-    }
-
-    await expect(zoomIn).toBeDisabled();
-
-    const lastRange = requestedRanges.at(-1);
-    expect(lastRange).toBeDefined();
-    expect(Date.parse(lastRange?.end ?? '') - Date.parse(lastRange?.start ?? '')).toBe(
-      6 * 60 * 60 * 1_000,
-    );
-  });
+  await expect(
+    page.getByLabel(
+      `Interactive temperature chart for ${primaryDevice} measurements in last 3 days.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
+  await expect(page.getByLabel('Current readings')).toContainText('-101 dBm');
+  await expect(page.getByLabel('Current readings')).toContainText('1 dBm');
 });

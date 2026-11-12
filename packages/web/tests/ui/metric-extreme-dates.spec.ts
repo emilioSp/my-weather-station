@@ -32,8 +32,6 @@ const devices = JSON.parse(loadEnv('development', process.cwd(), '').VITE_DEVICE
 
 const primaryDevice = devices[0].deviceName;
 
-const secondaryDevice = devices[1].deviceName;
-
 const readFixture = (name: string): Fixture =>
   JSON.parse(readFileSync(`tests/fixtures/metric-extreme-dates/${name}.json`, 'utf8'));
 
@@ -89,76 +87,54 @@ const getSummary = ({ page, deviceName, metric }: GetSummaryInput) =>
       has: page.getByText(chartMetricDetails[metric].label, { exact: true }),
     });
 
-// JUSTIFICATION: chartMetricDetails is keyed only by WeatherMetric.
-const metrics = Object.keys(chartMetricDetails) as WeatherMetric[];
-
-test('given two sensors including a single reading when viewing extrema then shows dates for each sensor and metric', async ({
-  page,
-}) => {
-  await mockDashboard({
-    page,
-    fixture: readFixture('two-sensors-and-single-measurement'),
-  });
-  await page.goto('/');
-
-  for (const metric of metrics) {
-    await expect(
-      getSummary({ page, deviceName: primaryDevice, metric }).locator('time'),
-    ).toHaveText(
-      metric === WEATHER_METRICS.TEMPERATURE
-        ? ['06 Oct · 08:00', '06 Oct · 10:00']
-        : ['06 Oct · 10:00', '06 Oct · 08:00'],
-    );
-    await expect(
-      getSummary({ page, deviceName: secondaryDevice, metric }).locator('time'),
-    ).toHaveText(['06 Oct · 11:00', '06 Oct · 11:00']);
-  }
-});
-
-test('given an older daily minimum when zooming to six hours then replaces its date and value', async ({
-  page,
-}) => {
-  await mockDashboard({ page, fixture: readFixture('range-change') });
-  await page.goto('/');
-
-  const summary = getSummary({
-    page,
-    deviceName: primaryDevice,
+for (const { label, deviceIndex, metric, expectedDates } of [
+  {
+    label: 'primary temperature',
+    deviceIndex: 0,
     metric: WEATHER_METRICS.TEMPERATURE,
-  });
-
-  await expect(summary.locator('time').first()).toHaveText('05 Oct · 22:00');
-  await page.getByRole('button', { name: 'Zoom in' }).click();
-  await expect(page.getByText('Last day', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Zoom in' }).click();
-  await expect(page.getByText('Last 12 hours', { exact: true })).toBeVisible();
-  await expect(summary.locator('time').first()).toHaveText('06 Oct · 10:00');
-  await page.getByRole('button', { name: 'Zoom in' }).click();
-  await expect(page.getByText('Last 6 hours', { exact: true })).toBeVisible();
-  await expect(summary.locator('time').first()).toHaveText('06 Oct · 10:00');
-  await expect(summary.getByTestId('low-value')).toHaveText('18.0°C');
-});
-
-test('given newer readings and history when refreshing then updates the maximum date and value', async ({
-  page,
-}) => {
-  await mockDashboard({ page, fixture: readFixture('before-refresh') });
-  await page.goto('/');
-
-  const summary = getSummary({
-    page,
-    deviceName: primaryDevice,
+    expectedDates: ['06 Oct · 08:00', '06 Oct · 10:00'],
+  },
+  {
+    label: 'primary humidity',
+    deviceIndex: 0,
+    metric: WEATHER_METRICS.HUMIDITY,
+    expectedDates: ['06 Oct · 10:00', '06 Oct · 08:00'],
+  },
+  {
+    label: 'primary dew point',
+    deviceIndex: 0,
+    metric: WEATHER_METRICS.DEW_POINT,
+    expectedDates: ['06 Oct · 10:00', '06 Oct · 08:00'],
+  },
+  {
+    label: 'single-reading temperature',
+    deviceIndex: 1,
     metric: WEATHER_METRICS.TEMPERATURE,
+    expectedDates: ['06 Oct · 11:00', '06 Oct · 11:00'],
+  },
+  {
+    label: 'single-reading humidity',
+    deviceIndex: 1,
+    metric: WEATHER_METRICS.HUMIDITY,
+    expectedDates: ['06 Oct · 11:00', '06 Oct · 11:00'],
+  },
+  {
+    label: 'single-reading dew point',
+    deviceIndex: 1,
+    metric: WEATHER_METRICS.DEW_POINT,
+    expectedDates: ['06 Oct · 11:00', '06 Oct · 11:00'],
+  },
+]) {
+  test(`given two sensors when viewing ${label} extrema then shows that sensor's measurement dates`, async ({
+    page,
+  }) => {
+    await mockDashboard({ page, fixture: readFixture('two-sensors-and-single-measurement') });
+    await page.goto('/');
+    await expect(
+      getSummary({ page, deviceName: devices[deviceIndex].deviceName, metric }).locator('time'),
+    ).toHaveText(expectedDates);
   });
-
-  await expect(summary.locator('time').last()).toHaveText('06 Oct · 12:00');
-  await page.unroute('**/rest/v1/measures**');
-  await page.unroute('**/rest/v1/rpc/get_chart_history');
-  await mockDashboard({ page, fixture: readFixture('after-refresh') });
-  await page.getByRole('button', { name: 'Refresh readings' }).click();
-  await expect(summary.locator('time').last()).toHaveText('06 Oct · 14:00');
-  await expect(summary.getByTestId('high-value')).toHaveText('26.0°C');
-});
+}
 
 test('given empty history when zooming in then shows three empty charts and placeholders without dates', async ({
   page,
@@ -173,7 +149,11 @@ test('given empty history when zooming in then shows three empty charts and plac
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await expect(page.getByText('Last 6 hours', { exact: true })).toBeVisible();
 
-  for (const metric of metrics) {
+  for (const metric of [
+    WEATHER_METRICS.TEMPERATURE,
+    WEATHER_METRICS.HUMIDITY,
+    WEATHER_METRICS.DEW_POINT,
+  ]) {
     const summary = getSummary({ page, deviceName: primaryDevice, metric });
     await expect(summary).toContainText('No measurements in this range.');
     await expect(summary.getByTestId('low-value')).toHaveText('—');

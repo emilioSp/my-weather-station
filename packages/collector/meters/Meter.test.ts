@@ -102,13 +102,24 @@ describe('meters', () => {
     expect(sensor.getAdvertisement).toHaveBeenCalledTimes(8);
   });
 
-  it('given indoor outdoor and unknown meter types when creating strategies then returns matching instances and rejects the unknown type', () => {
-    expect(createMeter(indoorReading.meter)).toBeInstanceOf(IndoorMeter);
-    expect(createMeter(outdoorReading.meter)).toBeInstanceOf(OutdoorMeter);
+  it.each([
+    { label: 'indoor', meter: indoorReading.meter, strategy: IndoorMeter },
+    { label: 'outdoor', meter: outdoorReading.meter, strategy: OutdoorMeter },
+  ])(
+    'given an $label meter when creating its strategy then returns the matching strategy',
+    ({ meter, strategy }) => {
+      expect(createMeter(meter)).toBeInstanceOf(strategy);
+    },
+  );
+
+  it('given an unknown meter type when creating its strategy then rejects the unknown type', () => {
     expect(() =>
-      // JUSTIFICATION: This test deliberately passes an invalid runtime type to exercise the factory's rejection branch.
+      // JUSTIFICATION: Deliberately pass an invalid runtime type to test factory rejection.
       createMeter({ ...indoorReading.meter, type: 'unknown' as typeof METER_TYPES.INDOOR }),
     ).toThrow('Unknown meter type unknown');
+  });
+
+  it('given a configured indoor meter when reading its configuration then returns that configuration', () => {
     expect(new IndoorMeter(indoorReading.meter).getMeter()).toEqual(indoorReading.meter);
   });
 });

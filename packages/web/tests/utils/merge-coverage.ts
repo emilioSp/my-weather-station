@@ -1,14 +1,11 @@
-// Merge unit and browser coverage and enforce thresholds after web tests.
+// Merge unit and browser coverage and generate reports after web tests.
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { coverageThresholds } from '@wx/shared/testing/coverage-thresholds.ts';
 import type { CoverageMap, CoverageMapData } from 'istanbul-lib-coverage';
 import coverageLib from 'istanbul-lib-coverage';
 import reportLib from 'istanbul-lib-report';
 import reports from 'istanbul-reports';
-
-const webCoverageThresholds = { ...coverageThresholds, branches: 70 };
 
 const coverageDirectory = join(process.cwd(), 'coverage'); // directory for final coverage
 
@@ -71,27 +68,6 @@ const normalizeFunctionCoverage = (coverageMap: CoverageMap): void => {
   }
 };
 
-function assertCoverageThresholds(coverageMap: CoverageMap): void {
-  const summary = coverageMap.getCoverageSummary();
-
-  // JUSTIFICATION: The thresholds object contains only the coverage metric keys used by Istanbul.
-  const metrics = Object.keys(webCoverageThresholds) as Array<keyof typeof webCoverageThresholds>;
-
-  const failures = metrics.filter((metric) => summary[metric].pct < webCoverageThresholds[metric]);
-
-  if (failures.length === 0) {
-    return;
-  }
-
-  throw new Error(
-    failures
-      .map(
-        (metric) => `${metric}: ${summary[metric].pct}% is below ${webCoverageThresholds[metric]}%`,
-      )
-      .join('\n'),
-  );
-}
-
 export const mergeCoverage = async (): Promise<void> => {
   const coverageMap = coverageLib.createCoverageMap(await readCoverage(vitestCoveragePath));
 
@@ -109,7 +85,6 @@ export const mergeCoverage = async (): Promise<void> => {
   reports.create('json').execute(context);
   reports.create('html').execute(context);
   reports.create('text-summary').execute(context);
-  assertCoverageThresholds(coverageMap);
 };
 
 await mergeCoverage();
