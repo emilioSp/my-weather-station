@@ -1,10 +1,36 @@
-// Verify measure queries and response mapping against local Supabase during integration checks.
+// Verify real Supabase queries using unique test data and cleanup limited to inserted rows.
+
+import { randomUUID } from 'node:crypto';
 
 import { METER_TYPES } from '@wx/shared';
 import { Client } from 'pg';
-import { afterAll, afterEach, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+
+const { deviceNames, suffix } = await vi.hoisted(async () => {
+  const { randomUUID } = await import('node:crypto');
+  const suffix = randomUUID();
+
+  const names = {
+    kitchen: `test-kitchen-${suffix}`,
+    office: `test-office-${suffix}`,
+    garden: `test-garden-${suffix}`,
+    livingRoom: `test-living-room-${suffix}`,
+    missing: `test-missing-${suffix}`,
+  };
+
+  vi.stubEnv(
+    'VITE_DEVICES',
+    JSON.stringify([
+      { deviceName: names.garden, icon: 'FaSeedling' },
+      { deviceName: names.livingRoom, icon: 'FaCouch' },
+    ]),
+  );
+
+  return { deviceNames: names, suffix };
+});
 
 import supabaseApi from '#supabase.api.ts';
+import storedReadings from '#tests/fixtures/supabase/stored-readings.json';
 import { toMeasureHistory } from '#utils/toMeasureHistory.util.ts';
 import { toMeasureResult } from '#utils/toMeasureResult.util.ts';
 
@@ -18,26 +44,49 @@ const database = new Client({
 
 await database.connect();
 
-afterEach(async () => {
-  await database.query('TRUNCATE TABLE measures');
-});
-
 afterAll(async () => {
   await database.end();
+  vi.unstubAllEnvs();
 });
 
 const seedMeasures = async () => {
-  await database.query(`
-    INSERT INTO measures (
-      id, device_id, device_name, device_type, address, temperature, dew_point,
-      heat_index, humidity, battery, signal_power_dbm, measured_at
-    ) VALUES
-      ('00000000-0000-0000-0000-000000000001', 'kitchen-device', 'kitchen', 'indoor', 'aa:bb', 10.0, 5.0, 11.0, 50, 80, -60, '2020-01-01T00:00:00Z'),
-      ('00000000-0000-0000-0000-000000000002', 'kitchen-device', 'kitchen', 'indoor', 'aa:bb', 20.0, 15.0, 21.0, 60, 90, -50, '2020-01-01T12:00:00Z'),
-      ('00000000-0000-0000-0000-000000000003', 'office-device', 'office', 'indoor', 'ee:ff', 15.0, 10.0, 16.0, 55, 85, -55, '2020-01-01T06:00:00Z'),
-      ('00000000-0000-0000-0000-000000000004', 'garden-device', 'garden', 'outdoor', 'cc:dd', 5.0, 0.0, 6.0, 70, 70, -70, '2020-01-01T06:00:00Z'),
-      ('00000000-0000-0000-0000-000000000005', 'living-room-device', 'living room', 'indoor', 'aa:cc', 18.0, 12.0, 19.0, 60, 80, -60, '2020-01-01T06:00:00Z')
-  `);
+  const measures = storedReadings.map((reading) => ({
+    ...reading,
+    id: randomUUID(),
+    device_name: `test-${reading.device_name}-${suffix}`,
+  }));
+
+  // Register cleanup before inserting so partial setup and assertion failures are covered.
+  onTestFinished(async () => {
+    await database.query('DELETE FROM measures WHERE id = ANY($1::uuid[])', [
+      measures.map(({ id }) => id),
+    ]);
+  });
+
+  for (const measure of measures) {
+    await database.query(
+      `INSERT INTO measures (
+        id, device_id, device_name, device_type, address, temperature, dew_point,
+        heat_index, humidity, battery, signal_power_dbm, measured_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+      [
+        measure.id,
+        measure.device_name,
+        measure.device_name,
+        measure.device_type,
+        measure.address,
+        measure.temperature,
+        measure.dew_point,
+        measure.heat_index,
+        measure.humidity,
+        measure.battery,
+        measure.signal_power_dbm,
+        measure.measured_at,
+      ],
+    );
+  }
+
+  return measures;
 };
 
 describe('Supabase API', () => {
@@ -50,9 +99,9 @@ describe('Supabase API', () => {
   });
 
   it('given stored readings when fetching a named device and chart history then returns its latest reading and history keyed by name', async () => {
-    await seedMeasures();
+    const measures = await seedMeasures();
 
-    const latest = await supabaseApi.getLatestMeasure({ deviceName: 'kitchen' });
+    const latest = await supabaseApi.getLatestMeasure({ deviceName: deviceNames.kitchen });
 
     const history = await supabaseApi.getChartHistory({
       measuredAfter: new Date('2020-01-01T00:00:00Z'),
@@ -62,56 +111,65 @@ describe('Supabase API', () => {
     expect(latest.error).toBeNull();
     expect(latest.rows).toHaveLength(1);
     expect(latest.rows[0]).toMatchObject({
-      id: '00000000-0000-0000-0000-000000000002',
-      deviceName: 'kitchen',
+      id: measures[1].id,
+      deviceName: deviceNames.kitchen,
       temperature: 20,
       deviceType: METER_TYPES.INDOOR,
     });
     expect(history.error).toBeNull();
-    expect(history.history.kitchen).toMatchObject([
+    expect(history.history[deviceNames.kitchen]).toMatchObject([
       {
-        id: '00000000-0000-0000-0000-000000000001',
-        deviceName: 'kitchen',
+        id: measures[0].id,
+        deviceName: deviceNames.kitchen,
         temperature: 10,
       },
       {
-        id: '00000000-0000-0000-0000-000000000002',
-        deviceName: 'kitchen',
+        id: measures[1].id,
+        deviceName: deviceNames.kitchen,
         temperature: 20,
       },
     ]);
-    expect(history.history.office).toMatchObject([
+    expect(history.history[deviceNames.office]).toMatchObject([
       {
-        id: '00000000-0000-0000-0000-000000000003',
-        deviceName: 'office',
+        id: measures[2].id,
+        deviceName: deviceNames.office,
         temperature: 15,
       },
     ]);
-    expect(history.history.garden).toMatchObject([
+    expect(history.history[deviceNames.garden]).toMatchObject([
       {
-        id: '00000000-0000-0000-0000-000000000004',
-        deviceName: 'garden',
+        id: measures[3].id,
+        deviceName: deviceNames.garden,
         temperature: 5,
       },
     ]);
   });
 
-  it('given stored readings including kitchen when fetching configured meters then returns garden and living room in order without kitchen', async () => {
+  it('given stored readings including an unconfigured kitchen when fetching configured meters then returns garden and living room in configuration order', async () => {
     await seedMeasures();
 
     const latest = await supabaseApi.getLatestMeasures();
 
     expect(latest.error).toBeNull();
-    expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual(['garden', 'living room']);
+    expect(latest.rows.map(({ deviceName }) => deviceName)).toEqual([
+      deviceNames.garden,
+      deviceNames.livingRoom,
+    ]);
   });
 
-  it('given an empty database when querying latest measures and history then returns empty results without errors', async () => {
-    const latest = await supabaseApi.getLatestMeasure({ deviceName: 'kitchen' });
+  it('given an unknown device and a time range before existing readings when querying latest measures and history then returns empty results without errors', async () => {
+    const { rows } = await database.query<{ end_at: Date }>(`
+      SELECT COALESCE(MIN(measured_at), '2000-01-01T00:00:00Z'::timestamptz)
+        - INTERVAL '1 day' AS end_at
+      FROM measures
+    `);
 
-    const history = await supabaseApi.getChartHistory({
-      measuredAfter: new Date('2020-01-01T00:00:00Z'),
-      measuredBefore: new Date('2020-01-02T00:00:00Z'),
-    });
+    const measuredBefore = rows[0].end_at;
+    const measuredAfter = new Date(measuredBefore.getTime() - 24 * 60 * 60 * 1000);
+
+    const latest = await supabaseApi.getLatestMeasure({ deviceName: deviceNames.missing });
+
+    const history = await supabaseApi.getChartHistory({ measuredAfter, measuredBefore });
 
     expect(latest.error).toBeNull();
     expect(latest.rows).toEqual([]);
