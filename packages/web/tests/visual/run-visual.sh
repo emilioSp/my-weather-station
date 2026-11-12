@@ -2,7 +2,7 @@
 # Run or update visual snapshots in the same Linux browser environment used by CI.
 set -euo pipefail
 
-repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 playwright_version="$(node -p "require(process.argv[1]).devDependencies['@playwright/test']" "$repository_root/package.json")"
 
 # Keep Linux dependencies in disposable volumes, away from the host's node_modules.

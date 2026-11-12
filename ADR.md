@@ -125,4 +125,4 @@ Run the existing browser tests in Chromium and WebKit, Safari's browser engine, 
 
 The owner requested Date in the web UI and an ADR because of Safari. See the [date formatter](packages/web/utils/formatMeasuredAt.util.ts),
 [history query boundary](packages/web/supabase.api.ts), [dashboard hook](packages/web/hooks/useWeatherStation.ts), and
-[browser date tests](packages/web/e2e/metric-extreme-dates.spec.ts).
+[browser date tests](packages/web/tests/ui/metric-extreme-dates.spec.ts).

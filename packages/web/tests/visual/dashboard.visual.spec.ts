@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { expect } from '@playwright/test';
 import { loadEnv } from 'vite';
 
-import { test } from '#e2e/utils/test.ts';
+import { test } from '#tests/utils/test.ts';
 
 type ConfiguredDevice = {
   deviceName: string;
@@ -30,10 +30,7 @@ type DashboardFixture = {
 
 const fixture: DashboardFixture = JSON.parse(
   readFileSync(
-    new URL(
-      '../tests/fixtures/weather-station/current-and-refreshed-readings.json',
-      import.meta.url,
-    ),
+    new URL('../fixtures/weather-station/current-and-refreshed-readings.json', import.meta.url),
     'utf8',
   ),
 );

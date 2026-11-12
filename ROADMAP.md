@@ -58,8 +58,8 @@ Temperature, humidity, and dew point charts show the measurement dates for their
 
 The owner confirmed acceptance during the constitution initialization interview. See the
 [implementation commit](https://github.com/emilioSp/my-weather-station/commit/52b4944),
-[specification](.specs/20261006-204022-show-measurement-dates-for-metric-lows-and-highs/spec.md), and [browser tests](packages/web/e2e/metric-extreme-dates.spec.ts). The
-specification workflow still says `candidate-ready`; acceptance here comes from the owner's explicit confirmation, not that workflow status.
+[specification](.specs/20261006-204022-show-measurement-dates-for-metric-lows-and-highs/spec.md), and [browser tests](packages/web/tests/ui/metric-extreme-dates.spec.ts).
+The specification workflow still says `candidate-ready`; acceptance here comes from the owner's explicit confirmation, not that workflow status.
 
 ### R-07: Adapt the UI to the Raspberry Pi touchscreen
 
@@ -69,7 +69,7 @@ The default history range is three days. Documentation and visual snapshots use 
 #### Evidence
 
 The owner confirmed completion. See the [responsive styles](packages/web/styles.css), [history charts](packages/web/components/weather-station/HistoryChart.tsx),
-[reading cards](packages/web/components/weather-station/WeatherCard.tsx), and [visual tests](packages/web/e2e/dashboard.visual.spec.ts).
+[reading cards](packages/web/components/weather-station/WeatherCard.tsx), and [visual tests](packages/web/tests/visual/dashboard.visual.spec.ts).
 
 ## Now
 
