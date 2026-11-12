@@ -1,6 +1,6 @@
 // Verify meter decoding and factory rejection with controlled sensor advertisements.
 import { METER_TYPES } from '@wx/shared';
-import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
   Object.assign(process.env, {
@@ -21,6 +21,7 @@ import { OutdoorMeter } from '#meters/OutdoorMeter.ts';
 import { incompleteIndoorReading } from '#tests/fixtures/meters/incomplete-indoor-reading.ts';
 import { indoorReading } from '#tests/fixtures/meters/indoor-reading.ts';
 import { outdoorReading } from '#tests/fixtures/meters/outdoor-split-reading.ts';
+import { setupDatabaseTest } from '#tests/setup-db.ts';
 
 const sensor = vi.hoisted(() => ({
   getAdvertisement: vi.fn<typeof import('#api/sensor.api.ts').getAdvertisement>(),
@@ -28,17 +29,14 @@ const sensor = vi.hoisted(() => ({
 
 vi.mock('#api/sensor.api.ts', () => sensor);
 
-afterEach(async () => {
-  await database.getClient().raw('TRUNCATE TABLE measures');
+afterEach(() => {
   sensor.getAdvertisement.mockReset();
-});
-
-afterAll(async () => {
-  await database.close();
 });
 
 describe('meters', () => {
   it('given a complete indoor advertisement when reading the meter then returns decoded values and persists the device name', async () => {
+    await setupDatabaseTest();
+
     sensor.getAdvertisement.mockResolvedValue(indoorReading.advertisement);
     const measure = await new IndoorMeter(indoorReading.meter).read();
 
@@ -57,6 +55,8 @@ describe('meters', () => {
   });
 
   it('given no advertisement followed by a complete advertisement when reading the meter then retries and stores the complete reading', async () => {
+    await setupDatabaseTest();
+
     sensor.getAdvertisement
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(indoorReading.advertisement);
@@ -70,10 +70,14 @@ describe('meters', () => {
       humidity: 60,
       battery: 80,
     });
-    expect(await database.getClient()('measures').select('id')).toEqual([{ id: measure.id }]);
+    expect(await database.getClient()('measures').where({ id: measure.id }).select('id')).toEqual([
+      { id: measure.id },
+    ]);
   });
 
   it('given separate outdoor advertisements when reading the meter then combines temperature humidity and battery values', async () => {
+    await setupDatabaseTest();
+
     sensor.getAdvertisement
       .mockResolvedValueOnce(outdoorReading.advertisements[0])
       .mockResolvedValueOnce(outdoorReading.advertisements[1]);
@@ -89,6 +93,8 @@ describe('meters', () => {
   });
 
   it('given incomplete indoor advertisements when reading the meter then throws NoCompleteReadingError after eight attempts', async () => {
+    await setupDatabaseTest();
+
     sensor.getAdvertisement.mockResolvedValue(incompleteIndoorReading.advertisement);
     await expect(new IndoorMeter(indoorReading.meter).read()).rejects.toBeInstanceOf(
       NoCompleteReadingError,

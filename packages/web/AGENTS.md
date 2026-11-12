@@ -24,14 +24,39 @@ main.tsx
 - Use `useMemo` and `useCallback` only when React Compiler does not optimize the case and the benefit exceeds the maintenance cost.
 - Do not use nested ternaries in JSX. Use guard clauses or single-level conditions.
 
-## E2E tests
+## Tests
 
+- Import Playwright's coverage-enabled `test` from `#tests/utils/test.ts`.
 - Do not use XPath locators. Use `data-testid` attributes instead.
 - Assert user-visible results, not loading indicators alone.
 - Do not use fixed waits. Wait for an expected UI value or state.
-- Do not add browser tests for layout scenarios (columns, rows, element positions, scroll) that are already covered by the existing visual snapshot tests. The snapshot
-  tests compare full-page screenshots against baselines and catch layout regressions more reliably than asserting computed styles or bounding boxes. Reserve e2e tests for
-  scenarios that snapshots cannot verify: dynamic states (loading, errors, toggles), interactions (touch, click), and text content that changes over time.
+- Keep scenario data in `tests/fixtures/` and browser test support in `tests/utils/`.
+
+### Visual
+
+- Live in `tests/visual/`, with reference screenshots beside the spec.
+- Compare screenshots to verify appearance and layout across viewports and browsers.
+- Use fixed, mocked HTTP responses to keep screenshots stable. These are not full-stack E2E tests.
+- Run with `npm run test:visual -w @wx/web` in the Linux Docker environment. Update snapshots only after intentional UI changes and review the image diffs.
+- Do not duplicate layout checks in UI or E2E tests when visual snapshots already cover them.
+
+### UI
+
+- Live in `tests/ui/` and exercise the application in a real browser with mocked HTTP responses.
+- Use mocks when the scenario needs controlled failures, pending requests, or response timing. These tests verify UI behavior, not the Supabase integration.
+- Use real E2E tests for normal data loading, refresh, and interactions that do not need HTTP mocks.
+- Run in the `mocked-http-chromium` and `mocked-http-webkit` projects against the Vite server on port `4173`, which also serves visual tests.
+
+### E2E
+
+- Live in `tests/e2e/` and exercise the full browser → local Supabase HTTP API → PostgreSQL flow. Do not mock HTTP responses, the API module, or the database.
+- Require local Supabase to be running with the collector migrations applied.
+- Run in the `chromium` and `webkit` projects sequentially against a separate Vite server on port `4174`, configured with a unique device name per run.
+- Seed committed measurements with unique IDs and recent timestamps. Insert newer measurements before testing refresh behavior.
+- Use fixture teardown with `try/finally` to delete only the inserted IDs, including on failures. Never truncate tables or assume the local database is empty.
+- Do not use transaction rollback for isolation: Supabase reads through separate connections and cannot see uncommitted test data.
+- Browser clock control is allowed, but it does not change PostgreSQL's clock. Keep measurement timestamps inside the requested range and out of the database's future.
+- `npm run test:e2e -w @wx/web` currently runs both UI and E2E tests, excluding visual tests. Select `--project=chromium --project=webkit` to run only real E2E tests.
 
 ## Styling and responsive layout
 

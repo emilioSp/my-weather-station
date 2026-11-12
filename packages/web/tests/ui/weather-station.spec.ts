@@ -6,7 +6,7 @@ import { expect, type Locator, type Page, type Route } from '@playwright/test';
 import { METER_TYPES } from '@wx/shared';
 import { loadEnv } from 'vite';
 
-import { test } from '#e2e/utils/test.ts';
+import { test } from '#tests/utils/test.ts';
 import { WEATHER_METRICS, type WeatherMetric } from '#utils/weather-metrics.ts';
 
 type ConfiguredDevice = {
@@ -42,10 +42,7 @@ type DashboardFixture = { initial: MeasureRow[]; changed: MeasureRow[] };
 
 const fixture: DashboardFixture = JSON.parse(
   readFileSync(
-    new URL(
-      '../tests/fixtures/weather-station/current-and-refreshed-readings.json',
-      import.meta.url,
-    ),
+    new URL('../fixtures/weather-station/current-and-refreshed-readings.json', import.meta.url),
     'utf8',
   ),
 );
@@ -108,12 +105,6 @@ const getMeasureForRequest = ({ route, measures }: GetMeasureForRequestInput): M
 };
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-type PlotBox = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
-
-function assertTouchPlotBox(box: PlotBox | null): asserts box is PlotBox {
-  if (box === null) throw new Error('The configured temperature chart plot is not rendered.');
-}
 
 type GetChartInput = {
   page: Page;
@@ -285,69 +276,6 @@ test.describe('Weather station', () => {
       `${primaryChangedMeasure.temperature.toFixed(1)}°C`,
     );
     await expect(page.getByText(septemberMeasurementTime)).toBeVisible();
-  });
-
-  test.describe('at the smartphone viewport', () => {
-    test.use({ hasTouch: true, isMobile: true });
-
-    test('given a smartphone chart when touching and dragging then replaces the prompt with the reading time and temperatures', async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
-      await page.route('**/rest/v1/measures**', async (route) => {
-        await route.fulfill({
-          body: JSON.stringify([getMeasureForRequest({ route: route, measures: initialMeasures })]),
-          contentType: 'application/json',
-        });
-      });
-      await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-        await route.fulfill({
-          body: JSON.stringify(history),
-          contentType: 'application/json',
-        });
-      });
-
-      await page.goto('/');
-
-      const primaryDeviceName = deviceNameAt(0);
-      const primaryChangedMeasure = changedMeasures[primaryDeviceName];
-      const touchChart = getChart({ page, deviceName: primaryDeviceName });
-
-      const touchReadout = page.getByTestId(`${primaryDeviceName}-temperature-touch-readout`);
-
-      await expect(touchReadout.getByText('Touch and drag.')).toBeVisible();
-      await touchChart.scrollIntoViewIfNeeded();
-      const plot = touchChart.locator('.recharts-cartesian-grid');
-      await expect(plot).toBeVisible({ timeout: 5_000 });
-      const plotBox = await plot.boundingBox();
-
-      assertTouchPlotBox(plotBox);
-
-      const touchPosition = {
-        x: plotBox.x + plotBox.width - 1,
-        y: plotBox.y + plotBox.height / 2,
-      };
-
-      await touchChart.evaluate((chartWrapper, position) => {
-        const dispatchTouchEvent = (type: string) => {
-          const event = new Event(type, { bubbles: true });
-          Object.defineProperty(event, 'touches', {
-            value: [{ clientX: position.x, clientY: position.y }],
-          });
-          chartWrapper.parentElement?.dispatchEvent(event);
-        };
-
-        dispatchTouchEvent('touchstart');
-        dispatchTouchEvent('touchmove');
-      }, touchPosition);
-      await expect(touchReadout.getByText('Touch and drag.')).toBeHidden();
-      await expect(touchReadout).toContainText(septemberMeasurementTime);
-      await expect(touchReadout).toContainText(`${primaryChangedMeasure.temperature.toFixed(1)}°C`);
-      await expect(touchReadout).toContainText(`${primaryChangedMeasure.heat_index.toFixed(1)}°C`);
-      await touchChart.evaluate((chartWrapper) => {
-        chartWrapper.parentElement?.dispatchEvent(new Event('touchend', { bubbles: true }));
-      });
-    });
   });
 
   test('given loaded history when zooming to both limits then updates charts and disables the limit controls', async ({

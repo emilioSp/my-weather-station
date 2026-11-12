@@ -4,13 +4,14 @@ import pg from 'pg';
 
 import { environment } from '#environment.ts';
 
-// Keep PostgreSQL timestamp (1114) and timestamptz (1184) values as strings at the database boundary.
-pg.types.setTypeParser(1114, (value) => value);
+// Converts NUMERIC from string to number, with possible precision loss.
+pg.types.setTypeParser(pg.types.builtins.NUMERIC, Number);
 
-pg.types.setTypeParser(1184, (value) => value);
+// Keeps TIMESTAMP as a string instead of converting it to Date.
+pg.types.setTypeParser(pg.types.builtins.TIMESTAMP, String);
 
-// PostgreSQL numeric (1700) readings must be numbers rather than driver-returned strings.
-pg.types.setTypeParser(1700, Number);
+// Keeps TIMESTAMPTZ as a string instead of converting it to Date.
+pg.types.setTypeParser(pg.types.builtins.TIMESTAMPTZ, String);
 
 export class Database {
   private readonly client = knex({
@@ -25,7 +26,8 @@ export class Database {
       query_timeout: environment.POSTGRES_TIMEOUT_MS,
     },
     acquireConnectionTimeout: environment.POSTGRES_TIMEOUT_MS,
-    pool: { min: 2, max: 15 },
+    // Raw test transactions require one persistent connection and sequential tests.
+    pool: process.env.NODE_ENV === 'test' ? { min: 1, max: 1 } : { min: 2, max: 15 },
   });
 
   public getClient(): Knex {

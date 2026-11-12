@@ -34,7 +34,7 @@ Automatic refresh performs the same action as pressing Refresh readings for ever
 
 As with the existing manual action, unchanged reading IDs do not cause a history reload when history is already successfully loaded. Failed-history recovery is specified in REQ4.
 
-Verified by: [AC3](#ac3-automatic-refresh-updates-current-readings), [AC4](#ac4-automatic-refresh-updates-history-for-the-selected-range), [AC5](#ac5-unchanged-readings-do-not-reload-successful-history). Existing manual-action coverage: [weather-station.spec.ts](../../packages/web/e2e/weather-station.spec.ts), “given updated readings when refreshing twice then shows changed values and retains them on the unchanged response”; [metric-extreme-dates.spec.ts](../../packages/web/e2e/metric-extreme-dates.spec.ts), “given newer readings and history when refreshing then updates the maximum date and value”.
+Verified by: [AC3](#ac3-automatic-refresh-updates-current-readings), [AC4](#ac4-automatic-refresh-updates-history-for-the-selected-range), [AC5](#ac5-unchanged-readings-do-not-reload-successful-history). Existing manual-action coverage: [weather-station.spec.ts](../../packages/web/tests/ui/weather-station.spec.ts), “given updated readings when refreshing twice then shows changed values and retains them on the unchanged response”; [metric-extreme-dates.spec.ts](../../packages/web/tests/ui/metric-extreme-dates.spec.ts), “given newer readings and history when refreshing then updates the maximum date and value”.
 
 #### AC3: Automatic refresh updates current readings
 

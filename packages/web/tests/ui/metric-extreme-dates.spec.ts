@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
 import { loadEnv } from 'vite';
 
-import { test } from '#e2e/utils/test.ts';
+import { test } from '#tests/utils/test.ts';
 import { WEATHER_METRICS, chartMetricDetails, type WeatherMetric } from '#utils/weather-metrics.ts';
 
 type MeasureRow = {

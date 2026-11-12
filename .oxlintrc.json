@@ -17,7 +17,7 @@
   "ignorePatterns": [".agents/**", ".pi/**", "coverage/**"],
   "overrides": [
     {
-      "files": ["packages/web/e2e/**/*.spec.ts"],
+      "files": ["packages/web/tests/**/*.spec.ts"],
       "rules": {
         "test-titles/valid-title": ["error", "^given .+ when .+ then .+$"]
       }

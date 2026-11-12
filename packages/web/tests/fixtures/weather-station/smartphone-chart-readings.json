@@ -1,0 +1,16 @@
+[
+  {
+    "minutesAgo": 60,
+    "temperature": 20,
+    "heatIndex": 19.5,
+    "humidity": 67,
+    "dewPoint": 12
+  },
+  {
+    "minutesAgo": 30,
+    "temperature": 25,
+    "heatIndex": 24.5,
+    "humidity": 65,
+    "dewPoint": 13
+  }
+]

@@ -8,7 +8,7 @@
  */
 import { test as base } from '@playwright/test';
 
-import { saveCoverage } from '#e2e/utils/save-coverage.ts';
+import { saveCoverage } from '#tests/utils/save-coverage.ts';
 
 export const test = base.extend({
   page: async ({ page, browserName }, use, testInfo) => {

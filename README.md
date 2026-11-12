@@ -153,13 +153,37 @@ npx playwright install chromium webkit
 To run only the Safari engine tests:
 
 ```sh
-npm run test:e2e -w @wx/web -- --project=webkit
+npm run test:e2e -w @wx/web -- --project=mocked-http-webkit --project=webkit --no-deps
+```
+
+### Real-data browser tests
+
+`npm run test:e2e -w @wx/web` includes real local Supabase scenarios in `packages/web/tests/e2e/`. Start Supabase and apply the collector migrations first, as described
+in the local development setup. The other browser scenarios still use controlled HTTP responses.
+
+The `chromium` and `webkit` projects run `tests/e2e/` against real Supabase; `mocked-http-chromium` and `mocked-http-webkit` run `tests/ui/` with simulated HTTP
+responses.
+
+The real-data projects run sequentially in Chromium and WebKit, using a separate Vite server on port `4174` and a unique device name per run. Tests insert committed
+measurements with recent timestamps and delete only their own row IDs during fixture cleanup, including after failures. Existing development data is not deleted. A
+forcibly terminated test process can leave its inserted rows behind.
+
+To run only the real-data scenarios in both browsers:
+
+```sh
+npm run test:e2e -w @wx/web -- --project=chromium --project=webkit
+```
+
+To run only their WebKit project without its Chromium dependency:
+
+```sh
+npm run test:e2e -w @wx/web -- --project=webkit --no-deps
 ```
 
 ### Visual snapshots
 
 Full-page dashboard screenshots cover desktop (1280 × 700), tablet (1024 × 714), and smartphone (390 × 844) in Chromium and WebKit. The reference PNGs live in
-`packages/web/e2e/dashboard.visual.spec.ts-snapshots/`.
+`packages/web/tests/visual/dashboard.visual.spec.ts-snapshots/`.
 
 Run comparisons in the same Linux container used by CI. The root `npm run test:visual` shortcut forwards to this command:
 

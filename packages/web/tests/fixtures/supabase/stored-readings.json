@@ -1,0 +1,62 @@
+[
+  {
+    "device_name": "kitchen",
+    "device_type": "indoor",
+    "address": "aa:bb",
+    "temperature": 10,
+    "dew_point": 5,
+    "heat_index": 11,
+    "humidity": 50,
+    "battery": 80,
+    "signal_power_dbm": -60,
+    "measured_at": "2020-01-01T00:00:00Z"
+  },
+  {
+    "device_name": "kitchen",
+    "device_type": "indoor",
+    "address": "aa:bb",
+    "temperature": 20,
+    "dew_point": 15,
+    "heat_index": 21,
+    "humidity": 60,
+    "battery": 90,
+    "signal_power_dbm": -50,
+    "measured_at": "2020-01-01T12:00:00Z"
+  },
+  {
+    "device_name": "office",
+    "device_type": "indoor",
+    "address": "ee:ff",
+    "temperature": 15,
+    "dew_point": 10,
+    "heat_index": 16,
+    "humidity": 55,
+    "battery": 85,
+    "signal_power_dbm": -55,
+    "measured_at": "2020-01-01T06:00:00Z"
+  },
+  {
+    "device_name": "garden",
+    "device_type": "outdoor",
+    "address": "cc:dd",
+    "temperature": 5,
+    "dew_point": 0,
+    "heat_index": 6,
+    "humidity": 70,
+    "battery": 70,
+    "signal_power_dbm": -70,
+    "measured_at": "2020-01-01T06:00:00Z"
+  },
+  {
+    "device_name": "living-room",
+    "device_type": "indoor",
+    "address": "aa:cc",
+    "temperature": 18,
+    "dew_point": 12,
+    "heat_index": 19,
+    "humidity": 60,
+    "battery": 80,
+    "signal_power_dbm": -60,
+    "measured_at": "2020-01-01T06:00:00Z"
+  }
+]

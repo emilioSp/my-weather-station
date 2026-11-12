@@ -64,6 +64,14 @@ index.ts
 - Domain errors use PascalCase names ending in `Error.ts`.
 - Utilities use the `.util.ts` suffix.
 
+## Database tests
+
+Tests use real PostgreSQL. Call `await setupDatabaseTest()` from `#tests/setup-db.ts` in each test that queries the database. It starts a transaction and registers an
+automatic rollback with `onTestFinished`, including when the test fails. The helper closes the pool after the test file.
+
+Do not truncate tables or delete existing data for cleanup. Do not assume the database is empty. Tests run sequentially with a single pool connection in test mode; the
+production pool is unchanged.
+
 ## Database migrations
 
 - Create migrations with:
