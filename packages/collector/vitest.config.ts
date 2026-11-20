@@ -5,8 +5,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['**/*.test.ts'],
-    fileParallelism: false, // shared Postgres
-    // BEGIN/ROLLBACK test isolation shares one connection, so test transactions must not overlap.
+    // BEGIN/ROLLBACK test isolation shares one connection, so test transactions in the same file must not overlap.
+    // file parallelization is safe because each test file gets its own connection and transaction.
     maxConcurrency: 1,
     coverage: {
       provider: 'v8',
