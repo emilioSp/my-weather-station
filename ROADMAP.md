@@ -4,18 +4,19 @@ This roadmap records owner-accepted outcomes and deferred ideas. Now and Next ar
 
 Roadmap items are planning context, not permission to implement. The owner selects work and approves its requirements before implementation.
 
-| ID   | Title                                                                                              | Status    | Summary                                                                                    |
-| ---- | -------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------ |
-| R-01 | [Collect and store meter readings](#r-01-collect-and-store-meter-readings)                         | Completed | Collect readings from indoor and outdoor SwitchBot meters and store them in PostgreSQL.    |
-| R-02 | [Display named meters and history](#r-02-display-named-meters-and-history)                         | Completed | Show current readings and history charts for configured, named meters.                     |
-| R-03 | [Switch temperature units](#r-03-switch-temperature-units)                                         | Removed   | Temperature unit selection was removed; all displays use Celsius.                          |
-| R-04 | [Date chart lows and highs](#r-04-date-chart-lows-and-highs)                                       | Completed | Show the measurement dates associated with chart lows and highs.                           |
-| R-05 | [Monitor Raspberry Pi CPU temperature](#r-05-monitor-raspberry-pi-cpu-temperature)                 | Later     | Display and monitor the Raspberry Pi's CPU temperature in the application.                 |
-| R-06 | [Show chart trends](#r-06-show-chart-trends)                                                       | Later     | Show tendencies on existing charts to make rising and falling measurements easier to spot. |
-| R-07 | [Adapt the UI to the Raspberry Pi touchscreen](#r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen) | Completed | Adapt the dashboard to the owner's 7-inch 1024×714 IPS HDMI capacitive touchscreen.        |
-| R-08 | [Add forecasts](#r-08-add-forecasts)                                                               | Later     | Add forecasting capabilities with scope still to be defined.                               |
-| R-09 | [Add alerts](#r-09-add-alerts)                                                                     | Later     | Notify the owner about conditions using rules and delivery methods still to be defined.    |
-| R-10 | [Refresh the dashboard automatically](#r-10-refresh-the-dashboard-automatically)                   | Later     | Keep the page up to date without requiring a manual refresh.                               |
+| ID   | Title                                                                                                 | Status    | Summary                                                                                    |
+| ---- | ----------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------ |
+| R-01 | [Collect and store meter readings](#r-01-collect-and-store-meter-readings)                            | Completed | Collect readings from indoor and outdoor SwitchBot meters and store them in PostgreSQL.    |
+| R-02 | [Display named meters and history](#r-02-display-named-meters-and-history)                            | Completed | Show current readings and history charts for configured, named meters.                     |
+| R-03 | [Switch temperature units](#r-03-switch-temperature-units)                                            | Removed   | Temperature unit selection was removed; all displays use Celsius.                          |
+| R-04 | [Date chart lows and highs](#r-04-date-chart-lows-and-highs)                                          | Completed | Show the measurement dates associated with chart lows and highs.                           |
+| R-05 | [Monitor Raspberry Pi CPU temperature](#r-05-monitor-raspberry-pi-cpu-temperature)                    | Later     | Display and monitor the Raspberry Pi's CPU temperature in the application.                 |
+| R-06 | [Show chart trends](#r-06-show-chart-trends)                                                          | Later     | Show tendencies on existing charts to make rising and falling measurements easier to spot. |
+| R-07 | [Adapt the UI to the Raspberry Pi touchscreen](#r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen)    | Completed | Adapt the dashboard to the owner's 7-inch 1024×714 IPS HDMI capacitive touchscreen.        |
+| R-08 | [Add forecasts](#r-08-add-forecasts)                                                                  | Later     | Add forecasting capabilities with scope still to be defined.                               |
+| R-09 | [Add alerts](#r-09-add-alerts)                                                                        | Later     | Notify the owner about conditions using rules and delivery methods still to be defined.    |
+| R-10 | [Refresh the dashboard automatically](#r-10-refresh-the-dashboard-automatically)                      | Later     | Keep the page up to date without requiring a manual refresh.                               |
+| R-11 | [Replace PostgREST with a small Node.js backend](#r-11-replace-postgrest-with-a-small-nodejs-backend) | Later     | Serve dashboard reads through Node.js and decide whether to use external hosting.          |
 
 ## Completed
 
@@ -133,3 +134,43 @@ Automatically refresh the dashboard so the page stays up to date without a manua
 #### Completed when
 
 The page updates automatically without user action. Refresh timing and which displayed data should update must be defined before implementation.
+
+### R-11: Replace PostgREST with a small Node.js backend
+
+#### Objective
+
+Remove PostgREST from the dashboard's data path. Add a small Node.js service that uses Knex to read current measurements and chart history from the existing Supabase
+PostgreSQL database. Decide whether to use an external hosting provider or run the service on existing infrastructure.
+
+#### Why replace PostgREST?
+
+On November 25, 2026, the Supabase Data API returned `HTTP 504 / PGRST003` for all three sensors' latest-reading requests. PostgREST timed out waiting for a connection
+from its internal PostgreSQL pool, before the queries could run. The dashboard could not load the readings and never reached the chart history request. The collector kept
+writing through Knex, which connects to PostgreSQL without going through PostgREST.
+
+A database snapshot during the incident showed eight client connections. The only visible PostgREST `authenticator` session was idle on `LISTEN "pgrst"`, with no open
+transaction or blocking PID, and the role had no connection limit. The cause of the pool timeout remains unknown. The evidence does not establish a bug in `supabase-js`
+or PostgreSQL 18, or show that earlier incidents had the same cause. The proposed service would bypass the layer that timed out without replacing the database.
+
+#### Hosting options
+
+Starting prices are planning estimates. Confirm pricing, runtime limits, and PostgreSQL connectivity before choosing a provider.
+
+| Provider                                                                       |               Starting price | What to expect                                                                                             |
+| ------------------------------------------------------------------------------ | ---------------------------: | ---------------------------------------------------------------------------------------------------------- |
+| [DigitalOcean App Platform](https://www.digitalocean.com/pricing/app-platform) |                     $5/month | Always-on managed Node.js service                                                                          |
+| [Koyeb](https://www.koyeb.com/pricing)                                         |                    Free tier | Managed Node.js hosting with idle suspension on the free tier                                              |
+| [Fly.io](https://fly.io/pricing/)                                              |            About $2.19/month | Small VM with configurable auto-stop. Pricing varies by region                                             |
+| [Scalingo](https://scalingo.com/pricing)                                       |                  €7.20/month | Always-on managed container                                                                                |
+| [Clever Cloud](https://www.clever.cloud/pricing/)                              |                  Usage-based | Managed Node.js hosting with trial credits                                                                 |
+| [Google Cloud Run](https://cloud.google.com/run/pricing)                       | Usage-based with a free tier | Managed container that can scale to zero                                                                   |
+| [Vercel Hobby](https://vercel.com/docs/plans/hobby)                            |        Free for personal use | Node.js functions with database pooling to manage                                                          |
+| [Render](https://render.com/pricing)                                           |                    Free tier | Managed Node.js service; free instances spin down after 15 minutes idle. Always-on Starter costs $7/month. |
+| [Heroku Basic](https://www.heroku.com/pricing/)                                |                     $7/month | Always-on managed Node.js service                                                                          |
+| [Hetzner Cloud](https://www.hetzner.com/cloud/)                                | About €5.49/month before VAT | Self-managed European VPS                                                                                  |
+| [AWS Lightsail](https://aws.amazon.com/lightsail/pricing/)                     |                     $5/month | Self-managed VPS with predictable pricing                                                                  |
+
+#### Completed when
+
+The dashboard loads current readings and chart history through the Node.js service without using PostgREST, and the hosting decision is recorded. This would supersede
+[ADR-002](ADR.md#adr-002-postgresql-storage-with-separate-write-and-read-clients) for dashboard reads.

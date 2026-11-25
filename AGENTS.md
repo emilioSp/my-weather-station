@@ -46,3 +46,9 @@ If a change on the UI is needed then, regenerate visual snapshots and then test 
 ```sh
 npm run test:visual -w @wx/web
 ```
+
+If you only change documentation, just run
+
+```sh
+npm run fmt
+```
