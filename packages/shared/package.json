@@ -8,14 +8,30 @@
   },
   "exports": {
     ".": "./types.ts",
-    "./utils/*": "./utils/*"
+    "./utils/*": "./utils/*",
+    "./db.ts": {
+      "node": "./db.ts"
+    },
+    "./shared-environment.ts": {
+      "node": "./shared-environment.ts"
+    }
   },
   "scripts": {
+    "new:migration": "knex migrate:make",
+    "migrate": "node --env-file=.env.prod ../../node_modules/knex/bin/cli.js migrate:latest",
+    "migrate:local": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:latest",
+    "rollback": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:rollback",
+    "rollback:local": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:rollback",
     "build": "tsc",
     "test:unit": "vitest run --config vitest.config.ts",
     "test:coverage": "vitest run --coverage --config vitest.config.ts"
   },
   "dependencies": {
+    "knex": "3.3.0",
+    "pg": "8.23.0",
     "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
   }
 }

@@ -1,4 +1,4 @@
-// Validate application configuration at startup before external resources are used.
+// Validate collector device and BLE configuration at startup.
 
 import { z } from 'zod';
 
@@ -32,12 +32,6 @@ export const environmentSchema = z.object({
   DEVICES: devicesSchema,
   BLE_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
   SCAN_RETRIES: z.coerce.number().int().positive().default(8),
-  POSTGRES_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
-  POSTGRES_HOST: z.string().trim().min(1),
-  POSTGRES_PORT: z.coerce.number().int().positive().max(65535),
-  POSTGRES_DB: z.string().trim().min(1),
-  POSTGRES_USER: z.string().trim().min(1),
-  POSTGRES_PASSWORD: z.string().min(1),
 });
 
 type Environment = z.infer<typeof environmentSchema>;

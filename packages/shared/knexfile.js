@@ -15,7 +15,13 @@ const config = {
     max: 15,
   },
   migrations: {
+    directory: './migrations',
     tableName: 'knex_migrations',
+    extension: 'ts',
+    loadExtensions: ['.ts'],
+  },
+  seeds: {
+    directory: '../collector/seeds',
   },
 };
 

@@ -3,8 +3,8 @@
 import { setTimeout } from 'node:timers/promises';
 
 import type { Measure } from '@wx/shared';
+import database from '@wx/shared/db.ts';
 
-import database from '#db/db.ts';
 import { environment } from '#environment.ts';
 import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
 import { createMeter } from '#meters/meter.factory.ts';

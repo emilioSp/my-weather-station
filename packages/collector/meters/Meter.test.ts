@@ -13,7 +13,8 @@ vi.hoisted(() => {
   });
 });
 
-import database from '#db/db.ts';
+import database from '@wx/shared/db.ts';
+
 import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
 import { IndoorMeter } from '#meters/IndoorMeter.ts';
 import { createMeter } from '#meters/meter.factory.ts';

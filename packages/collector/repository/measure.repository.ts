@@ -1,10 +1,10 @@
 // Persist complete measurements and map stored rows at the collector database boundary.
 
 import type { Measure, WeatherReading } from '@wx/shared';
+import database from '@wx/shared/db.ts';
 import { toCamelCaseKeys } from '@wx/shared/utils/toCamelCaseKeys.util.ts';
 import { toSnakeCaseKeys } from '@wx/shared/utils/toSnakeCaseKeys.util.ts';
 
-import database from '#db/db.ts';
 import type { Advertisement, Meter } from '#types.ts';
 
 type StoreMeasureInput = Pick<Meter, 'type' | 'deviceName'> &

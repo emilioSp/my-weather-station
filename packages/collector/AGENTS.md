@@ -9,7 +9,7 @@ This workspace reads BLE advertisements from SwitchBot indoor and outdoor meters
 This workspace owns:
 
 - `Dockerfile` and `Dockerfile.dockerignore`
-- `knexfile.js` and `migrations/`
+- `seeds/local-measure.ts` for development data
 - BLE, meter, database, and collector configuration code
 
 `packages/shared` owns stored-row types and shared utilities. Do not duplicate them here.
@@ -26,9 +26,8 @@ index.ts
      -> IndoorMeter.ts or OutdoorMeter.ts
         -> api/sensor.api.ts
            -> @stoprocent/noble
-        -> db/measure.repository.ts
-           -> db/db.ts
-              -> PostgreSQL
+        -> repository/measure.repository.ts
+           -> @wx/shared/db.ts -> PostgreSQL
 ```
 
 ## Meter strategies
@@ -43,8 +42,9 @@ index.ts
 ## Boundaries
 
 - `api/sensor.api.ts` is the BLE boundary. It manages Noble scanning, finds peripherals, and converts BLE data into `Advertisement` values. It does not decode meter data.
-- `db/db.ts` owns the Knex connection and PostgreSQL type parsers.
-- `db/measure.repository.ts` stores measures. Map database keys with `toSnakeCaseKeys` and `toCamelCaseKeys` from the `@wx/shared/utils/` subpaths at this boundary.
+- `@wx/shared/db.ts` owns the PostgreSQL pool and type parsers.
+- `repository/measure.repository.ts` stores measures. Map database keys with `toSnakeCaseKeys` and `toCamelCaseKeys` from the `@wx/shared/utils/` subpaths at this
+  boundary.
 - `errors/` contains domain errors. `NoCompleteReadingError` represents an incomplete reading after all scan attempts.
 
 ## Types, configuration, and utilities
@@ -74,26 +74,12 @@ production pool is unchanged.
 
 ## Database migrations
 
-- Create migrations with:
-
-```sh
-npm run new:migration -w @wx/collector -- <name>
-```
-
-- Store migrations in `migrations/`.
-- Write migration changes as raw SQL through Knex.
-- Apply local migrations with:
-
-```sh
-npm run migrate:local -w @wx/collector
-```
-
-- Keep `seeds/local-measure.ts` in sync with the `measures` schema after every migration.
+`@wx/shared` owns the database migrations. Apply them with `npm run migrate:local -w @wx/shared`. Keep `seeds/local-measure.ts` in sync with the `measures` schema.
 
 ## Docker and Supabase local
 
 - Supabase CLI owns the local PostgreSQL and API stack.
-- The collector connects to Supabase local PostgreSQL through `packages/collector/.env` on port `54322`.
+- The collector loads device and BLE settings from `packages/collector/.env` and connects to local Supabase PostgreSQL using `packages/shared/.env`.
 - The Docker build context is the repository root because it contains the lockfile and `packages/shared`.
 - `docker-build-and-push` passes `../..` as the build context.
 - Keep the Docker ignore file named `Dockerfile.dockerignore`. A plain `.dockerignore` in this workspace does not apply to the root build context.

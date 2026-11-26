@@ -22,7 +22,7 @@ normalization. Consumers import it by package name.
 ## Consequences
 
 Both apps use a common data contract and mapping logic. Shared schema changes can affect both apps and must be checked across workspaces. BLE and browser APIs remain
-outside the shared package.
+outside the shared domain code. `@wx/shared/db.ts` is a separate Node-only export used by the collector and API for PostgreSQL; browser code does not import it.
 
 Owner confirmation during the initialization interview. See the [root workspace manifest](../../package.json), [shared schemas](../../packages/shared/types.ts),
 [shared compiler configuration](../../packages/shared/tsconfig.json), and [repository guidelines](../../AGENTS.md).

@@ -1,0 +1,11 @@
+**
+!package.json
+!package-lock.json
+!packages/
+!packages/*/
+!packages/*/package.json
+!packages/shared/db.ts
+!packages/shared/shared-environment.ts
+!packages/api/src/
+!packages/api/src/**
+**/*.test.ts

@@ -7,14 +7,9 @@
     "#*": "./*"
   },
   "scripts": {
-    "store-measure": "node --env-file=.env index.ts",
+    "store-measure": "node --env-file=.env --env-file=../shared/.env index.ts",
     "ble-raw": "node ble-raw.ts",
-    "new:migration": "knex migrate:make -x ts",
-    "migrate": "node --env-file=.env.prod ../../node_modules/knex/bin/cli.js migrate:latest",
-    "migrate:local": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:latest",
-    "rollback": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:rollback",
-    "rollback:local": "node --env-file=.env ../../node_modules/knex/bin/cli.js migrate:rollback",
-    "seed:local": "NODE_ENV=development node --env-file=.env ../../node_modules/knex/bin/cli.js seed:run --specific local-measure.ts",
+    "seed:local": "NODE_ENV=development node --env-file=.env --env-file=../shared/.env ../../node_modules/knex/bin/cli.js --knexfile ../shared/knexfile.js seed:run --specific local-measure.ts",
     "build": "tsc",
     "dev": "npm run seed:local",
     "test:unit": "vitest run --config vitest.config.ts",
@@ -25,11 +20,9 @@
     "@stoprocent/noble": "2.8.0",
     "@wx/shared": "*",
     "knex": "3.3.0",
-    "pg": "8.23.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "26.2.0",
-    "@types/pg": "8.23.1"
+    "@types/node": "26.2.0"
   }
 }

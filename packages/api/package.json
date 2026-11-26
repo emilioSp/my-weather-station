@@ -1,0 +1,26 @@
+{
+  "name": "@wx/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#app": "./src/app.ts",
+    "#application-errors/*": "./src/application-errors/*",
+    "#error-manager": "./src/error-manager.ts",
+    "#repository/*": "./src/repository/*",
+    "#router/*": "./src/router/*",
+    "#schema/*": "./src/schema/*",
+    "#service/*": "./src/service/*"
+  },
+  "scripts": {
+    "start": "node --env-file=../shared/.env src/index.ts",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.11",
+    "@wx/shared": "*",
+    "hono": "4.13.22",
+    "zod": "4.4.3"
+  }
+}
