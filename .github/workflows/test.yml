@@ -18,7 +18,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run supabase:start
-      - run: npm run migrate:local -w @wx/collector
+      - run: npm run migrate:local -w @wx/shared
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run lint
       - run: npm run typecheck

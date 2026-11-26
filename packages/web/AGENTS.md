@@ -50,7 +50,7 @@ main.tsx
 ### E2E
 
 - Live in `tests/e2e/` and exercise the full browser → local Supabase HTTP API → PostgreSQL flow. Do not mock HTTP responses, the API module, or the database.
-- Require local Supabase to be running with the collector migrations applied.
+- Require local Supabase to be running with the shared database migrations applied.
 - Run in the `chromium` and `webkit` projects sequentially against a separate Vite server on port `4174`, configured with a unique device name per run.
 - Seed committed measurements with unique IDs and recent timestamps. Insert newer measurements before testing refresh behavior.
 - Use fixture teardown with `try/finally` to delete only the inserted IDs, including on failures. Never truncate tables or assume the local database is empty.

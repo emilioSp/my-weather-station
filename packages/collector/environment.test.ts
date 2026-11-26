@@ -6,24 +6,12 @@ import { describe, expect, it, vi } from 'vitest';
 vi.hoisted(() => {
   Object.assign(process.env, {
     DEVICES: '[{"type":"indoor","deviceId":"test","deviceName":"test meter"}]',
-    POSTGRES_HOST: '127.0.0.1',
-    POSTGRES_PORT: '54322',
-    POSTGRES_DB: 'postgres',
-    POSTGRES_USER: 'postgres',
-    POSTGRES_PASSWORD: 'postgres',
   });
 });
 
 import { environmentSchema } from '#environment.ts';
 
-const environmentInput = (devices: unknown[]) => ({
-  DEVICES: JSON.stringify(devices),
-  POSTGRES_HOST: '127.0.0.1',
-  POSTGRES_PORT: '54322',
-  POSTGRES_DB: 'postgres',
-  POSTGRES_USER: 'postgres',
-  POSTGRES_PASSWORD: 'postgres',
-});
+const environmentInput = (devices: unknown[]) => ({ DEVICES: JSON.stringify(devices) });
 
 describe('environment', () => {
   it('given named devices with surrounding spaces when parsing configuration then trims device names', () => {

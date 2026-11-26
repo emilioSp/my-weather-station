@@ -3,12 +3,12 @@
 import { type Measure, type WeatherReading, weatherReadingSchema } from '@wx/shared';
 
 import { getAdvertisement } from '#api/sensor.api.ts';
-import { storeMeasure } from '#db/measure.repository.ts';
 import { environment } from '#environment.ts';
 import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
 import { calculateDewPoint } from '#meters/utils/calculateDewPoint.util.ts';
 import { calculateHeatIndex } from '#meters/utils/calculateHeatIndex.util.ts';
 import { formatMeasure } from '#meters/utils/formatMeasure.util.ts';
+import { storeMeasure } from '#repository/measure.repository.ts';
 import {
   type Advertisement,
   type Meter as MeterConfiguration,

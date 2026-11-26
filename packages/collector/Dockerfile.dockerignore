@@ -14,8 +14,8 @@ packages/web/*
 **/AGENTS.md
 packages/collector/Dockerfile
 packages/collector/Dockerfile.dockerignore
-packages/collector/knexfile.js
-packages/collector/migrations
+packages/shared/knexfile.js
+packages/shared/migrations
 packages/collector/seeds
 **/coverage
 **/dist

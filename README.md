@@ -5,22 +5,23 @@ PostgreSQL, and shows them in a web app.
 
 ## Repository layout
 
-An npm workspaces monorepo with three workspaces.
+An npm workspaces monorepo.
 
 ```text
 packages/collector  @wx/collector  BLE daemon. Reads the meters and writes to PostgreSQL.
-                                    Owns .env, Dockerfile, knexfile.js and migrations/.
+                                    Owns .env, Dockerfile, and the development seed.
 packages/web        @wx/web        React + Vite app. Reads the measures from Supabase.
-packages/shared     @wx/shared     Domain schemas, the camelCase <-> snake_case mapping,
-                                  and UUID normalization.
+packages/api        @wx/api        Hono backend scaffold. Not used by the web app yet.
+packages/shared     @wx/shared     Shared domain schemas, key mapping, UUID normalization,
+                                  and the Node-only PostgreSQL client and migrations.
 ```
 
 The root holds shared tooling: the workspace globs, the Oxlint and Oxfmt configuration, the TypeScript base config and the lockfile.
 
 ### How the workspaces fit together
 
-The `workspaces` field in the root `package.json` holds directory globs, not package names. `["packages/*"]` finds all three workspaces. To add one, create the directory
-with its own `package.json` and run `npm install`. The root file does not change.
+The `workspaces` field in the root `package.json` holds directory globs, not package names. `["packages/*"]` finds all workspaces. To add one, create the directory with
+its own `package.json` and run `npm install`. The root file does not change.
 
 `npm install` creates a single `node_modules` at the root, plus a symlink there for every workspace. A workspace therefore imports another by package name, with no build
 step:
@@ -59,26 +60,22 @@ Create `packages/collector/.env`:
 DEVICES=[{"deviceId":"ae67de586d5f7a96cce7f6179f1c740f","type":"outdoor","deviceName":"garden"},{"deviceId":"f2c1f72ae2258e5affbe6f8e7bc147b3","type":"indoor","deviceName":"kitchen"}]
 BLE_TIMEOUT_MS=15000
 SCAN_RETRIES=8
-POSTGRES_TIMEOUT_MS=15000
-POSTGRES_HOST=localhost
-POSTGRES_PORT=54322
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
 ```
 
 `DEVICES` is a JSON array of meter identifiers, strategy types, and required unique `deviceName` values. On macOS, use the Noble peripheral ID in `deviceId`. On Raspberry
 Pi Linux, use the Bluetooth address from `ble-raw.ts` in `address`, including the colons. Meters are read sequentially. `BLE_TIMEOUT_MS` is the timeout of one scan
-attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of attempts and defaults to 8. `POSTGRES_TIMEOUT_MS` is the connection, query, and pool timeout
-for PostgreSQL. It defaults to 15 seconds.
+attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of attempts and defaults to 8.
 
-The npm scripts use Node.js native `.env` support. No environment package is required.
+### Shared database
+
+`packages/shared/.env` contains the local Supabase PostgreSQL settings for the collector, API, and Knex. `POSTGRES_TIMEOUT_MS` sets the connection, query, and pool
+timeout and defaults to 15 seconds.
 
 Start Supabase local, then apply the Knex schema and create the dataset:
 
 ```sh
 npm run supabase:start
-npm run migrate:local -w @wx/collector
+npm run migrate:local -w @wx/shared
 npm run seed:local -w @wx/collector
 ```
 
@@ -88,6 +85,24 @@ npm run seed:local -w @wx/collector
 
 The web app reads the `measures` table through the local Supabase API. `packages/web/.env` contains the local endpoint and public key. `packages/web/.env.prod` contains
 the production values. Vite loads `.env` during development. Its build command uses the `prod` mode, which gives `.env.prod` priority.
+
+### API scaffold
+
+Start local Supabase with `npm run supabase:start`. The placeholder endpoint queries PostgreSQL without using any tables, so no migrations are needed for this workspace.
+The `name` query parameter is optional and defaults to `World`.
+
+```sh
+npm start -w @wx/api
+curl 'http://localhost:3000/hello-world?name=Emilio'
+npm run test:unit -w @wx/api
+```
+
+Build the image from the repository root. Pass the `POSTGRES_*` variables at runtime, with a `POSTGRES_HOST` reachable from inside the container. The API's HTTP `PORT`
+defaults to `3000`.
+
+```sh
+docker build -f packages/api/Dockerfile -t wx-api .
+```
 
 ### How to add a new meter
 
@@ -115,16 +130,19 @@ A script that concerns one workspace lives in that workspace, so run it with `-w
 ```sh
 npm run store-measure -w @wx/collector              # run the collector continuously
 npm run dev -w @wx/web                              # web app in development mode
-npm run new:migration -w @wx/collector -- <name>    # create a migration
-npm run migrate:local -w @wx/collector              # apply migrations to local Supabase
-npm run migrate -w @wx/collector                    # apply migrations to production
-npm run rollback:local -w @wx/collector             # undo the last local migration
+npm run new:migration -w @wx/shared -- <name>       # create a migration
+npm run migrate:local -w @wx/shared                 # apply migrations to local Supabase
+npm run migrate -w @wx/shared                       # apply migrations to production
+npm run rollback:local -w @wx/shared                # undo the last local batch
 npm run seed:local -w @wx/collector                 # replace local measures with one year of test data
 ```
 
 The collector reads and stores measurements for each configured meter, then waits five minutes before starting the next cycle.
 
-`seed:local` runs only with `NODE_ENV=development` and uses `packages/collector/.env`. It deletes every row from the local `measures` table before it creates the test
+Migrations live in `packages/shared/migrations/`. Local commands load `packages/shared/.env`. To apply migrations in production, put the production `POSTGRES_*` settings
+in the untracked `packages/shared/.env.prod`.
+
+`seed:local` uses the collector’s device settings and the shared local database settings. It deletes every row from the local `measures` table before creating the test
 dataset.
 
 The root keeps only the scripts that act on every workspace:
@@ -158,8 +176,8 @@ npm run test:e2e -w @wx/web -- --project=mocked-http-webkit --project=webkit --n
 
 ### Real-data browser tests
 
-`npm run test:e2e -w @wx/web` includes real local Supabase scenarios in `packages/web/tests/e2e/`. Start Supabase and apply the collector migrations first, as described
-in the local development setup. The other browser scenarios still use controlled HTTP responses.
+`npm run test:e2e -w @wx/web` includes real local Supabase scenarios in `packages/web/tests/e2e/`. Start Supabase and apply the shared database migrations first, as
+described in the local development setup. The other browser scenarios still use controlled HTTP responses.
 
 The `chromium` and `webkit` projects run `tests/e2e/` against real Supabase; `mocked-http-chromium` and `mocked-http-webkit` run `tests/ui/` with simulated HTTP
 responses.
@@ -237,9 +255,8 @@ packages/collector/index.ts
       └── meters/Meter strategy
           ├── api/sensor.api.ts
           │   └── @stoprocent/noble
-          ├── db/measure.repository.ts
-          │   └── db/db.ts
-          │       └── PostgreSQL
+          ├── repository/measure.repository.ts
+          │   └── @wx/shared/db.ts → PostgreSQL
           └── errors/NoCompleteReadingError.ts
 ```
 
@@ -249,13 +266,13 @@ measure.
 The folders have clear responsibilities:
 
 - `api/` handles external resources, including BLE advertisements.
-- `db/` manages the PostgreSQL connection and stores measures.
+- `repository/` stores measures using the shared PostgreSQL client.
 - `errors/` contains domain errors.
 - `meters/` contains business logic that converts advertisements into measures.
 
 `OutdoorMeter` and `IndoorMeter` extend the abstract `Meter` class and implement `MeterInterface`, which exposes `getMeter()` for the device ID and type, and `read()` for
 the stored measure. Each strategy owns its meter-specific decoding. The shared `Meter` class reads advertisements through `api/sensor.api.ts`, calculates dew point and
-heat index with `meters/utils/`, stores the reading through `db/measure.repository.ts`, and returns the inserted row.
+heat index with `meters/utils/`, stores the reading through `repository/measure.repository.ts`, and returns the inserted row.
 
 ### Web app
 
@@ -281,8 +298,8 @@ Both apps write to and read from the same table, through two different clients. 
 The mapping matters because the database columns are snake_case while the domain types are camelCase. Knex can do this on its own, but only for Knex: the Supabase client
 returns raw columns. Keeping one rule in `packages/shared` means both clients produce the same shape.
 
-`packages/shared` compiles without `@types/node` and without the DOM library, so a `Buffer` or a `document` in shared code fails the type check. That is what keeps BLE
-types in the collector and browser types in the web app.
+The API and collector import their PostgreSQL client from the Node-only `@wx/shared/db.ts` export. Each process has its own pool. The web app imports only the
+platform-neutral schemas and utilities.
 
 ## Output
 

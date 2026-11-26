@@ -22,7 +22,7 @@ The [collector](../packages/collector/package.json) owns BLE and database writes
 | SwitchBot indoor and outdoor meters  | Supply measurements through Bluetooth Low Energy advertisements.       |
 | `@stoprocent/noble`                  | Reads BLE advertisements in the collector.                             |
 | PostgreSQL                           | Stores measurements and serves chart history through SQL functions.    |
-| Knex and `pg`                        | Provide collector database access and schema migrations.               |
+| Knex and `pg`                        | Provide shared backend database access and schema migrations.          |
 | Supabase and `@supabase/supabase-js` | Expose measurement queries and chart-history RPC calls to the browser. |
 | Supabase CLI and Docker              | Run the local PostgreSQL and API stack for development and tests.      |
 

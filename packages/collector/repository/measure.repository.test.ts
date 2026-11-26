@@ -5,7 +5,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
   Object.assign(process.env, {
-    DEVICES: '[{"type":"indoor","deviceId":"test","deviceName":"test meter"}]',
     POSTGRES_HOST: '127.0.0.1',
     POSTGRES_PORT: '54322',
     POSTGRES_DB: 'postgres',
@@ -14,8 +13,9 @@ vi.hoisted(() => {
   });
 });
 
-import database from '#db/db.ts';
-import { storeMeasure } from '#db/measure.repository.ts';
+import database from '@wx/shared/db.ts';
+
+import { storeMeasure } from '#repository/measure.repository.ts';
 import { setupDatabaseTest } from '#tests/setup-db.ts';
 
 describe('storeMeasure', () => {

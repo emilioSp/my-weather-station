@@ -1,7 +1,6 @@
 // Isolate collector database tests with rollback and close the pool after each test file.
+import database from '@wx/shared/db.ts';
 import { afterAll, onTestFinished } from 'vitest';
-
-import database from '#db/db.ts';
 
 afterAll(async () => {
   await database.close();
