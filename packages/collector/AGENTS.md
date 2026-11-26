@@ -97,4 +97,4 @@ npm run migrate:local -w @wx/collector
 - The Docker build context is the repository root because it contains the lockfile and `packages/shared`.
 - `docker-build-and-push` passes `../..` as the build context.
 - Keep the Docker ignore file named `Dockerfile.dockerignore`. A plain `.dockerignore` in this workspace does not apply to the root build context.
-- `DEPLOY.md` at the repository root contains collector deployment instructions.
+- [Collector deployment instructions](../../docs/deployment.md) are in `docs/deployment.md`.

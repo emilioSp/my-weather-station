@@ -4,6 +4,17 @@
 
 My Weather Station reads SwitchBot meters, stores measurements in PostgreSQL, and shows them in a web app.
 
+## Project documentation
+
+Read [CHANGELOG.md](CHANGELOG.md), the [roadmap index](docs/roadmap/README.md), and the [ADR index](docs/adr/README.md) at session start. Read individual records when
+relevant.
+
+- Keep one file per roadmap item and per ADR, with stable IDs and status in front matter. Keep the indexes in sync.
+- Roadmap items use **Objective** and **Completed When**. Update only items relevant to the work, link the specification when one exists, and record completion only after
+  owner acceptance.
+- ADRs use **Context**, **Decision**, an optional **Alternatives considered**, and **Consequences**. Record only significant architectural decisions. When replacing a
+  decision, link the old and new records.
+
 ## Workspaces
 
 This repository is an npm workspaces monorepo:

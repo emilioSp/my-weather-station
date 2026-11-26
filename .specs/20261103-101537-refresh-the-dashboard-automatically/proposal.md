@@ -8,7 +8,7 @@ The open dashboard becomes stale unless the owner presses Refresh readings or re
 
 ## Goal and scope
 
-Deliver [R-10](../../ROADMAP.md#r-10-refresh-the-dashboard-automatically): keep the dashboard up to date without user action, using periodic data requests rather than page reloads. Make refresh failures recoverable while keeping the refresh control visible. Show errors instead of retaining stale data in the failed section.
+Deliver [R-10](../../docs/roadmap/r-10-refresh-the-dashboard-automatically.md): keep the dashboard up to date without user action, using periodic data requests rather than page reloads. Make refresh failures recoverable while keeping the refresh control visible. Show errors instead of retaining stale data in the failed section.
 
 ## Out of scope
 

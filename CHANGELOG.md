@@ -8,9 +8,9 @@ omitted.
 
 ## 2026-11-02
 
-Completed [R-07](ROADMAP.md#r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen): adapted the dashboard to the owner's 1024×714 Raspberry Pi touchscreen. Three meter cards
-now fit in one row, history charts remain visible, cards navigate to their history sections, and each section has a scroll-to-top button. The default history range is
-three days. Updated the documented tablet resolution and regenerated visual snapshots.
+Completed [R-07](docs/roadmap/r-07-adapt-the-ui-to-the-raspberry-pi-touchscreen.md): adapted the dashboard to the owner's 1024×714 Raspberry Pi touchscreen. Three meter
+cards now fit in one row, history charts remain visible, cards navigate to their history sections, and each section has a scroll-to-top button. The default history range
+is three days. Updated the documented tablet resolution and regenerated visual snapshots.
 
 Pinned the card monospace fallback to Liberation Mono in Chromium and WebKit visual tests to prevent screenshot dimensions changing during font selection. Regenerated the
 WebKit references; production fonts are unchanged.
@@ -22,7 +22,7 @@ TypeScript API compatibility: import shared functions from `@wx/shared/utils/<mo
 singleton's `getClient()` and `close()` methods and the default Supabase singleton's query methods. Web history query inputs use `Date` values.
 
 Replaced Temporal in the web app with native `Date` and `Intl` after Safari failed without Temporal support. Rome date formats and elapsed history ranges are unchanged;
-the collector still uses Temporal. No polyfill or dependency was added. See [ADR-004](ADR.md#adr-004-use-date-and-intl-in-the-web-app-for-safari-compatibility).
+the collector still uses Temporal. No polyfill or dependency was added. See [ADR-004](docs/adr/0004-use-date-and-intl-in-the-web-app-for-safari-compatibility.md).
 
 Initialized the mission, tech stack, roadmap, changelog, and architecture decision records through an owner interview.
 

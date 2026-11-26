@@ -223,7 +223,7 @@ In GitHub, open **Settings** → **Pages** and set **Source** to **GitHub Action
 
 ### Collector
 
-See [DEPLOY.md](DEPLOY.md).
+See the [collector deployment guide](docs/deployment.md).
 
 ## Architecture
 
@@ -323,3 +323,11 @@ For example, `-89 dBm` is a very weak signal. BLE packets can be missed, so read
 
 Distance, walls, metal objects, battery condition, and radio interference change the value. Move the computer or the Bluetooth adapter closer to improve reception. The
 value is measured when the packet is received, so it changes between readings.
+
+## Project constitution
+
+- [Mission](docs/MISSION.md)
+- [Tech stack](docs/TECH_STACK.md)
+- [Roadmap](docs/roadmap/README.md)
+- [Changelog](CHANGELOG.md)
+- [Architecture decision records](docs/adr/README.md)
