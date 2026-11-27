@@ -1,7 +1,6 @@
 # Deployment
 
-This guide shows how to publish both Docker images and run the collector on a Raspberry Pi 3 with 64-bit Raspberry Pi OS. Only the collector runs on the Pi; the API host
-has not been selected yet.
+This guide shows how to publish both Docker images and run the collector on a Raspberry Pi 3 with 64-bit Raspberry Pi OS. The API runs separately on Render.
 
 ## Requirements
 
@@ -36,7 +35,7 @@ docker buildx imagetools inspect espatola/my-weather-station-collector:latest
 
 ### API
 
-Build and push the AMD64 image for a hosted service such as Render:
+The API runs on Render Free at <https://my-weather-station-api.onrender.com/>. Build and push the AMD64 image:
 
 ```sh
 npm run docker-build-and-push -w @wx/api

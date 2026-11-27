@@ -20,9 +20,13 @@ A database snapshot during the incident showed eight client connections. The onl
 transaction or blocking PID, and the role had no connection limit. The cause of the pool timeout remains unknown. The evidence does not establish a bug in `supabase-js`
 or PostgreSQL 18, or show that earlier incidents had the same cause. The proposed service would bypass the layer that timed out without replacing the database.
 
-**Hosting options**
+**Hosting decision**
 
-Starting prices are planning estimates. Confirm pricing, runtime limits, and PostgreSQL connectivity before choosing a provider.
+The API is deployed on Render Free at <https://my-weather-station-api.onrender.com/>. The dashboard still needs to switch from PostgREST to this API.
+
+**Hosting options considered**
+
+Starting prices below are planning estimates from the hosting comparison.
 
 | Provider                                                                       |               Starting price | What to expect                                                                                             |
 | ------------------------------------------------------------------------------ | ---------------------------: | ---------------------------------------------------------------------------------------------------------- |

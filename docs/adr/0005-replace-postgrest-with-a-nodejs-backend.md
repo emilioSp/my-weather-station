@@ -40,4 +40,4 @@ coordinated attack is considered low. Requests from multiple IPs can still run h
 
 - The web app will remove its Supabase client layer and read current measurements and chart history from the Node.js API.
 - The Node.js service will own the call to the existing chart-history SQL function.
-- The service needs a deployment location that can reach PostgreSQL. No hosting choice has been made.
+- The service runs on Render Free. See [R-11](../roadmap/r-11-replace-postgrest-with-a-small-nodejs-backend.md) for the base URL.
