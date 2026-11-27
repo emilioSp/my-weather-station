@@ -1,9 +1,7 @@
-// Persist complete measurements and map stored rows at the collector database boundary.
+// Persist complete BLE readings and return the stored measurement row.
 
 import type { Measure, WeatherReading } from '@wx/shared';
 import database from '@wx/shared/db.ts';
-import { toCamelCaseKeys } from '@wx/shared/utils/toCamelCaseKeys.util.ts';
-import { toSnakeCaseKeys } from '@wx/shared/utils/toSnakeCaseKeys.util.ts';
 
 import type { Advertisement, Meter } from '#types.ts';
 
@@ -24,22 +22,20 @@ export const storeMeasure = async ({
   signalPowerDBM,
 }: StoreMeasureInput): Promise<Measure> => {
   const [storedMeasure] = await database
-    .getClient()('measures')
-    .insert(
-      toSnakeCaseKeys({
-        deviceId,
-        address,
-        deviceName,
-        deviceType,
-        temperature,
-        dewPoint,
-        heatIndex,
-        humidity,
-        battery,
-        signalPowerDBM,
-      }),
-    )
+    .getClient()<Measure>('measures')
+    .insert({
+      device_id: deviceId,
+      address,
+      device_name: deviceName,
+      device_type: deviceType,
+      temperature,
+      dew_point: dewPoint,
+      heat_index: heatIndex,
+      humidity,
+      battery,
+      signal_power_dbm: signalPowerDBM,
+    })
     .returning('*');
 
-  return toCamelCaseKeys<Measure>(storedMeasure);
+  return storedMeasure;
 };

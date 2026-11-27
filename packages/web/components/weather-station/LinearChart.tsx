@@ -58,7 +58,7 @@ export const LinearChart = ({ meterTheme, metric, range, sensor, measures }: Lin
     () =>
       measures.map((measure) => ({
         ...measure,
-        timestamp: Date.parse(measure.measuredAt),
+        timestamp: Date.parse(measure.measured_at),
       })),
     [measures],
   );
@@ -252,7 +252,7 @@ type ChartReadoutProps = {
 
 const ChartReadout = ({ metric, measure }: ChartReadoutProps) => (
   <>
-    <div className="mb-2 text-xs text-[#9bad9e]">{formatMeasuredAt(measure.measuredAt)}</div>
+    <div className="mb-2 text-xs text-[#9bad9e]">{formatMeasuredAt(measure.measured_at)}</div>
     <TooltipRow
       label={chartMetricDetails[metric].label}
       value={formatMeasureValue({
@@ -261,7 +261,7 @@ const ChartReadout = ({ metric, measure }: ChartReadoutProps) => (
       })}
     />
     {metric === WEATHER_METRICS.TEMPERATURE && (
-      <TooltipRow label="Heat index" value={formatTemperature(measure.heatIndex)} />
+      <TooltipRow label="Heat index" value={formatTemperature(measure.heat_index)} />
     )}
   </>
 );

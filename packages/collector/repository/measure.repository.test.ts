@@ -1,4 +1,4 @@
-// Verify stored measure mapping against PostgreSQL during collector integration checks.
+// Verify stored measurement rows against PostgreSQL during collector integration checks.
 
 import { METER_TYPES } from '@wx/shared';
 import { describe, expect, it, vi } from 'vitest';
@@ -19,48 +19,40 @@ import { storeMeasure } from '#repository/measure.repository.ts';
 import { setupDatabaseTest } from '#tests/setup-db.ts';
 
 describe('storeMeasure', () => {
-  it('given a complete measure when storing it then persists snake-case columns and returns a camel-case row', async () => {
+  it('given a complete measure when storing it then persists snake-case columns and returns the same snake-case row', async () => {
     await setupDatabaseTest();
 
     const measure = await storeMeasure({
       type: METER_TYPES.INDOOR,
-      deviceName: 'repository meter',
+      deviceName: 'kitchen',
       deviceId: 'repository-device',
       address: 'aa:bb:cc',
-      temperature: 20.5,
+      temperature: 20,
       dewPoint: 10.2,
       heatIndex: 21.1,
       humidity: 55,
       battery: 80,
-      signalPowerDBM: -48,
+      signalPowerDBM: -55,
     });
 
+    expect(measure).not.toHaveProperty('deviceName');
+    expect(measure).not.toHaveProperty('signalPowerDBM');
+    expect(measure.measured_at).toEqual(expect.any(String));
+    expect(await database.getClient()('measures').where({ id: measure.id }).first()).toEqual(
+      measure,
+    );
     expect(measure).toMatchObject({
-      deviceId: 'repository-device',
-      deviceName: 'repository meter',
-      address: 'aa:bb:cc',
-      deviceType: METER_TYPES.INDOOR,
-      temperature: 20.5,
-      dewPoint: 10.2,
-      heatIndex: 21.1,
-      humidity: 55,
-      battery: 80,
-      signalPowerDBM: -48,
-    });
-    expect(measure.measuredAt).toEqual(expect.any(String));
-
-    expect(await database.getClient()('measures').where({ id: measure.id }).first()).toMatchObject({
       id: measure.id,
       device_id: 'repository-device',
       address: 'aa:bb:cc',
-      device_name: 'repository meter',
+      device_name: 'kitchen',
       device_type: METER_TYPES.INDOOR,
-      temperature: 20.5,
+      temperature: 20,
       dew_point: 10.2,
       heat_index: 21.1,
       humidity: 55,
       battery: 80,
-      signal_power_dbm: -48,
+      signal_power_dbm: -55,
     });
   });
 });

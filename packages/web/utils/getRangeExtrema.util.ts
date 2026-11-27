@@ -25,9 +25,10 @@ export const getRangeExtrema = ({
 
   const { low, high } = measures.reduce(
     (result, measure) => {
-      const isEarlierThanLow = Date.parse(measure.measuredAt) < Date.parse(result.low.measuredAt);
+      const isEarlierThanLow = Date.parse(measure.measured_at) < Date.parse(result.low.measured_at);
 
-      const isEarlierThanHigh = Date.parse(measure.measuredAt) < Date.parse(result.high.measuredAt);
+      const isEarlierThanHigh =
+        Date.parse(measure.measured_at) < Date.parse(result.high.measured_at);
 
       return {
         low:
@@ -48,7 +49,7 @@ export const getRangeExtrema = ({
   return {
     low: low[metric],
     high: high[metric],
-    lowMeasuredAt: low.measuredAt,
-    highMeasuredAt: high.measuredAt,
+    lowMeasuredAt: low.measured_at,
+    highMeasuredAt: high.measured_at,
   };
 };

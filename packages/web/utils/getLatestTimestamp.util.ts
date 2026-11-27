@@ -2,7 +2,7 @@
 import type { Measure } from '@wx/shared';
 
 export const getLatestTimestamp = (measures: Measure[]): number | null => {
-  const timestamps = measures.map((measure) => Date.parse(measure.measuredAt));
+  const timestamps = measures.map((measure) => Date.parse(measure.measured_at));
 
   return timestamps.length === 0 ? null : Math.max(...timestamps);
 };

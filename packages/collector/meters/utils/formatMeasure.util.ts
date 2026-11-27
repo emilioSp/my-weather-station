@@ -3,9 +3,9 @@
 import type { Measure } from '@wx/shared';
 
 export const formatMeasure = (measure: Measure): Measure => {
-  const measuredAt = Temporal.Instant.from(measure.measuredAt)
+  const measured_at = Temporal.Instant.from(measure.measured_at)
     .toZonedDateTimeISO('UTC')
     .toString({ smallestUnit: 'second' });
 
-  return { ...measure, measuredAt };
+  return { ...measure, measured_at };
 };
