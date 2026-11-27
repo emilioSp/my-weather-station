@@ -2,7 +2,7 @@
 export const WEATHER_METRICS = {
   TEMPERATURE: 'temperature',
   HUMIDITY: 'humidity',
-  DEW_POINT: 'dewPoint',
+  DEW_POINT: 'dew_point',
 } as const;
 
 export type WeatherMetric = (typeof WEATHER_METRICS)[keyof typeof WEATHER_METRICS];
@@ -13,5 +13,5 @@ export const chartMetricDetails: Record<
 > = {
   temperature: { label: 'Temperature', unit: '°C', decimalPlaces: 1 },
   humidity: { label: 'Humidity', unit: '%', decimalPlaces: 0 },
-  dewPoint: { label: 'Dew point', unit: '°C', decimalPlaces: 1 },
+  dew_point: { label: 'Dew point', unit: '°C', decimalPlaces: 1 },
 };
