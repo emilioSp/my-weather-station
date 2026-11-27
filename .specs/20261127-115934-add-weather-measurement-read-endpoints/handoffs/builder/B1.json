@@ -1,0 +1,58 @@
+{
+  "status": "done",
+  "summary": "Added the latest measurement and chart history GET endpoints to the Hono API. Both use the shared Knex client and preserve PostgreSQL JSON keys. Updated API usage in README.md. All nine acceptance criteria and npm run check passed.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; measurement.router.test.ts verified that kitchen at 09:00 and 10:00 plus garden at 11:00 on Jan 2 return 200 with exactly one snake_case kitchen object at 10:00 UTC and 20 °C.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; with a kitchen reading and no office reading, office returned 200 and JSON null. Different case and a trailing space also returned null.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; GET /get-latest-measure with no query and with device_name=%20 each returned 400.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; with kitchen at 08:59, 10:00, 09:00 and back_yard at 09:30 and 10:01 on Jan 2, the 09:00–10:00 request returned 200 with kitchen [09:00, 10:00] and back_yard [09:30], no other entries, and exact snake_case and device keys. Equivalent offset bounds returned the same data; fractional bounds excluded readings just outside the range.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC5",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; a lone Jan 3 09:00 kitchen reading returned 200 and {} for Jan 2 09:00–10:00.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC6",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; end-only, start without a time zone, blank end, and Jan 2 10:00 start after 09:00 end all returned 400.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC7",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; with Jan 2 now fixed at 10:00 and kitchen readings at 09:00, 10:00, and 10:01, a 09:00 start with no end returned 200 with only 09:00 and 10:00; the clock was read once.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC8",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; with Jan 2 now fixed at 10:00 and kitchen readings at 09:00, 10:00, and 10:01, the 09:00–11:00 request returned 200 with only 09:00 and 10:00; the clock was read once.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC9",
+      "probe": "npm run test:unit -w @wx/api -- --reporter=verbose --silent; with July 1 now and readings on Apr 30 23:59, May 1 00:00 and June 1 00:00, Jan 1–June 1 returned 200 with May 1 and June 1 only. Inspected measurement.service.ts to confirm the 31-day cutoff is computed in Node from the effective end before invoking the repository.",
+      "probeStatus": "passed"
+    }
+  ],
+  "notes": [
+    "Integration tests use transaction-local fixture rows and the real public.get_chart_history SQL function. The SQL function, collector, web data path, and hello-world route were not changed.",
+    "Root npm run check passed, including 68 Playwright browser tests. No UI change was made."
+  ],
+  "escalations": [],
+  "version": "1.0.0",
+  "specId": "20261127-115934-add-weather-measurement-read-endpoints"
+}

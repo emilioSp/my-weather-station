@@ -3,8 +3,8 @@
   "specDirectory": ".specs",
   "builder": {
     "required": true,
-    "model": "openai-codex/gpt-6.1-sol",
-    "thinking": "high"
+    "model": "openai-codex/gpt-6.2-sol",
+    "thinking": "medium"
   },
   "verifier": {
     "required": true,
@@ -12,8 +12,10 @@
     "thinking": "medium"
   },
   "simplifier": {
-    "required": false,
-    "model": "openai-codex/gpt-6.1-sol",
-    "thinking": "high"
+    "required": false
+  },
+  "scorer": {
+    "required": true,
+    "model": "openrouter/typesafe/jev-1.14"
   }
 }

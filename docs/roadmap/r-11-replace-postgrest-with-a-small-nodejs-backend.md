@@ -40,5 +40,5 @@ Starting prices are planning estimates. Confirm pricing, runtime limits, and Pos
 
 ## Completed When
 
-The dashboard loads current readings and chart history through the Node.js service without using PostgREST, and the hosting decision is recorded. This would supersede
-[ADR-002](../adr/0002-postgresql-storage-with-separate-write-and-read-clients.md) for dashboard reads.
+The dashboard loads current readings and chart history through the Node.js service without using PostgREST, and the hosting decision is recorded.
+[ADR-005](../adr/0005-replace-postgrest-with-a-nodejs-backend.md) records the decision to replace PostgREST for dashboard reads.
