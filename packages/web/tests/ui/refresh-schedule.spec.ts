@@ -14,6 +14,45 @@ import {
 } from '#tests/utils/dashboard-scenario.ts';
 import { test } from '#tests/utils/test.ts';
 
+test('given one meter reports later than another when the older meter updates without changing the maximum timestamp then keeps its card and skips the history request', async ({
+  page,
+}) => {
+  const scenario = new DashboardScenario(page);
+  const laggingDevice = devices[1].deviceName;
+
+  const responses: DashboardResponses = {
+    readings: {
+      status: 200,
+      json: { ...initialReadings, [primaryDevice]: changedReadings[primaryDevice] },
+    },
+    history: { status: 200, json: initialHistory },
+  };
+
+  await scenario.mockDashboardResponses(responses);
+  await page.goto('/');
+
+  const laggingCard = page.getByLabel('Current readings').locator('article').nth(1);
+  await expect(laggingCard).toContainText('20.0°C');
+  responses.readings = {
+    status: 200,
+    json: {
+      ...initialReadings,
+      [primaryDevice]: changedReadings[primaryDevice],
+      [laggingDevice]: {
+        ...changedReadings[laggingDevice],
+        measured_at: '2026-10-06T11:00:00Z',
+      },
+    },
+  };
+
+  await scenario.button().click();
+  await scenario.assertRefreshCount(2);
+  await expect(scenario.button()).toBeEnabled();
+
+  await expect(laggingCard).toContainText('20.0°C');
+  expect(scenario.historyQueries).toHaveLength(1);
+});
+
 test('given loaded readings when manual refresh and range changes occur between ticks then keeps the original minute boundaries and unchanged charts', async ({
   page,
 }) => {

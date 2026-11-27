@@ -13,6 +13,7 @@ export const WeatherStation = () => {
     currentRange,
     isRefreshing,
     latestMeasuredAt,
+    latestError,
     historyError,
     isHistoryLoading,
     measurementsByDeviceName,
@@ -25,15 +26,15 @@ export const WeatherStation = () => {
     <main className="mx-auto max-w-[1440px] px-3 pt-[22px] pb-12 sm:px-[clamp(20px,4vw,64px)]">
       <WeatherStationHeader
         isRefreshing={isRefreshing}
-        latestMeasuredAt={currentMeasurements?.error === null ? latestMeasuredAt : null}
+        latestMeasuredAt={latestMeasuredAt}
         onRefresh={refreshMeasurements}
       />
       <div className="pt-4">
-        {currentMeasurements === null && <WeatherStationLoading />}
-        {currentMeasurements?.error && <WeatherStationError message={currentMeasurements.error} />}
-        {currentMeasurements?.error === null && (
+        {currentMeasurements === null && latestError === null && <WeatherStationLoading />}
+        {latestError !== null && <WeatherStationError message={latestError} />}
+        {currentMeasurements !== null && (
           <>
-            <CurrentReadings measurementsByDeviceName={currentMeasurements.byDeviceName} />
+            <CurrentReadings measurementsByDeviceName={currentMeasurements} />
             <MeasurementHistory
               isRefreshing={isRefreshing}
               error={historyError}
