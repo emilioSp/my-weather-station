@@ -96,8 +96,8 @@ export const WeatherCard = ({
       </div>
       <div className="mt-7 grid grid-cols-2 gap-x-3 gap-y-[18px]">
         <WeatherCardMetric label="Humidity" value={`${measure.humidity}%`} />
-        <WeatherCardMetric label="Dew point" value={formatTemperature(measure.dewPoint)} />
-        <WeatherCardMetric label="Heat index" value={formatTemperature(measure.heatIndex)} />
+        <WeatherCardMetric label="Dew point" value={formatTemperature(measure.dew_point)} />
+        <WeatherCardMetric label="Heat index" value={formatTemperature(measure.heat_index)} />
       </div>
       <div className="mt-[19px] border-t border-[#2b3a38] pt-[13px]">
         <div className="text-[14px] font-semibold tracking-[-0.01em] text-[#9bad9e] capitalize">
@@ -106,8 +106,8 @@ export const WeatherCard = ({
         <HealthRow label="Battery" value={`${measure.battery}%`} barValue={measure.battery} />
         <HealthRow
           label="Signal"
-          value={`${measure.signalPowerDBM} dBm`}
-          barValue={getSignalPercentage(measure.signalPowerDBM)}
+          value={`${measure.signal_power_dbm} dBm`}
+          barValue={getSignalPercentage(measure.signal_power_dbm)}
         />
       </div>
     </article>
