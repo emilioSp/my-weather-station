@@ -5,6 +5,8 @@ import { expect, type Page } from '@playwright/test';
 import type { Measurement } from '@wx/shared';
 import { loadEnv } from 'vite';
 
+import type { LatestMeasurements } from '#types.ts';
+
 // JUSTIFICATION: environment.ts validates development device names as strings.
 export const devices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
@@ -15,7 +17,7 @@ export const devices = JSON.parse(
 type Fixture = { initial: Measurement[]; changed: Measurement[] };
 
 export type DashboardResponses = {
-  readings: { status: number; json: Measurement[] | { error: { message: string } } };
+  readings: { status: number; json: LatestMeasurements | { error: { message: string } } };
   history: { status: number; json: Record<string, Measurement[]> | { error: { message: string } } };
 };
 
@@ -30,27 +32,29 @@ export const startTime = Date.parse('2026-10-06T12:00:00Z');
 
 export const primaryDevice = devices[0].deviceName;
 
-export const initialReadings = devices.map(({ deviceName }, index) => ({
-  ...fixture.initial[index],
-  device_name: deviceName,
-}));
+const readingsByDevice = (rows: Measurement[]) =>
+  Object.fromEntries(
+    devices.map(({ deviceName }, index) => [
+      deviceName,
+      { ...rows[index], device_name: deviceName },
+    ]),
+  );
 
-export const changedReadings = devices.map(({ deviceName }, index) => ({
-  ...fixture.changed[index],
-  device_name: deviceName,
-}));
+export const initialReadings = readingsByDevice(fixture.initial);
+
+export const changedReadings = readingsByDevice(fixture.changed);
 
 export const initialHistory = Object.fromEntries(
-  initialReadings.map((row) => [row.device_name, [row]]),
+  Object.entries(initialReadings).map(([name, row]) => [name, [row]]),
 );
 
 export const changedHistory = Object.fromEntries(
-  changedReadings.map((row, index) => [row.device_name, [initialReadings[index], row]]),
+  Object.entries(changedReadings).map(([name, row]) => [name, [initialReadings[name], row]]),
 );
 
 // Control browser time and count requests. Each test defines its own responses and delays.
 export class DashboardScenario {
-  public requestedDevices: string[] = [];
+  public latestQueries: string[][] = [];
   public historyQueries: Record<string, string>[] = [];
   public readonly page: Page;
 
@@ -60,15 +64,8 @@ export class DashboardScenario {
 
   public async mockDashboardResponses(responses: DashboardResponses) {
     await this.page.route('**/get-latest-measure?*', async (route) => {
-      const name = new URL(route.request().url()).searchParams.get('device_name') ?? '';
-      this.requestedDevices.push(name);
-      const response = responses.readings;
-      await route.fulfill({
-        ...response,
-        json: Array.isArray(response.json)
-          ? (response.json.find((row) => row.device_name === name) ?? null)
-          : response.json,
-      });
+      this.latestQueries.push(new URL(route.request().url()).searchParams.getAll('device_names'));
+      await route.fulfill(responses.readings);
     });
     await this.page.route('**/get-chart-history?*', async (route) => {
       this.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));
@@ -86,10 +83,9 @@ export class DashboardScenario {
   }
 
   public async assertRefreshCount(count: number) {
-    await expect.poll(() => this.requestedDevices.length).toBe(count * devices.length);
-
-    for (const { deviceName } of devices) {
-      expect(this.requestedDevices.filter((name) => name === deviceName)).toHaveLength(count);
-    }
+    const expectedNames = devices.map(({ deviceName }) => deviceName);
+    await expect
+      .poll(() => this.latestQueries)
+      .toEqual(Array.from({ length: count }, () => expectedNames));
   }
 }

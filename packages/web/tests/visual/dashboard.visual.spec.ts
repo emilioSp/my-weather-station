@@ -31,6 +31,13 @@ const devices = JSON.parse(
   loadEnv('development', process.cwd(), '').VITE_DEVICES ?? '[]',
 ) as ConfiguredDevice[];
 
+const latest = Object.fromEntries(
+  devices.map(({ deviceName }, index) => [
+    deviceName,
+    { ...fixture.changed[index], device_name: deviceName },
+  ]),
+);
+
 const history = Object.fromEntries(
   devices.map(({ deviceName }, index) => [
     deviceName,
@@ -66,14 +73,7 @@ for (const viewport of [
         await route.abort();
       });
       await page.route('**/get-latest-measure?*', async (route) => {
-        const deviceName = new URL(route.request().url()).searchParams.get('device_name');
-
-        const index = devices.findIndex((device) => device.deviceName === deviceName);
-
-        await route.fulfill({
-          contentType: 'application/json',
-          body: JSON.stringify({ ...fixture.changed[index], device_name: deviceName }),
-        });
+        await route.fulfill({ json: latest });
       });
       await page.route('**/get-chart-history?*', async (route) => {
         await route.fulfill({

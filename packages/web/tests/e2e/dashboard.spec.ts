@@ -33,7 +33,9 @@ test('given 18 and 20 degree readings when opening the dashboard then the API su
   const latest = await latestResponse;
   expect(latest.ok()).toBe(true);
   expect(latest.request().method()).toBe('GET');
-  expect(new URL(latest.url()).searchParams.get('device_name')).toBe(measurementStore.deviceName);
+  expect(new URL(latest.url()).searchParams.getAll('device_names')).toEqual([
+    measurementStore.deviceName,
+  ]);
   await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
 
   const history = await historyResponse;
