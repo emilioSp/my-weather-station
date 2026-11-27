@@ -205,7 +205,7 @@ test('given changed readings when an automatic tick runs in the six-hour range t
 
   for (const [index, { deviceName }] of devices.entries()) {
     await expect(page.getByLabel('Current readings').locator('article').nth(index)).toContainText(
-      `${changedReadings[index].temperature.toFixed(1)}°C`,
+      `${changedReadings[deviceName].temperature.toFixed(1)}°C`,
     );
     await expect(page.locator(`[id="history-${deviceName}"] .recharts-line-curve`)).toHaveCount(3);
   }

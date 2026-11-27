@@ -32,16 +32,9 @@ test(`given pending initial requests when ticks pass before history succeeds the
   };
 
   await page.route('**/get-latest-measure?*', async (route) => {
-    const name = new URL(route.request().url()).searchParams.get('device_name') ?? '';
-    scenario.requestedDevices.push(name);
+    scenario.latestQueries.push(new URL(route.request().url()).searchParams.getAll('device_names'));
     await gates.readings;
-    const response = responses.readings;
-    await route.fulfill({
-      ...response,
-      json: Array.isArray(response.json)
-        ? (response.json.find((row) => row.device_name === name) ?? null)
-        : response.json,
-    });
+    await route.fulfill(responses.readings);
   });
   await page.route('**/get-chart-history?*', async (route) => {
     scenario.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));
@@ -116,16 +109,9 @@ test(`given pending manual requests when ticks pass before history succeeds then
   };
 
   await page.route('**/get-latest-measure?*', async (route) => {
-    const name = new URL(route.request().url()).searchParams.get('device_name') ?? '';
-    scenario.requestedDevices.push(name);
+    scenario.latestQueries.push(new URL(route.request().url()).searchParams.getAll('device_names'));
     await gates.readings;
-    const response = responses.readings;
-    await route.fulfill({
-      ...response,
-      json: Array.isArray(response.json)
-        ? (response.json.find((row) => row.device_name === name) ?? null)
-        : response.json,
-    });
+    await route.fulfill(responses.readings);
   });
   await page.route('**/get-chart-history?*', async (route) => {
     scenario.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));
@@ -216,16 +202,9 @@ test(`given pending automatic requests when ticks pass before history fails then
   };
 
   await page.route('**/get-latest-measure?*', async (route) => {
-    const name = new URL(route.request().url()).searchParams.get('device_name') ?? '';
-    scenario.requestedDevices.push(name);
+    scenario.latestQueries.push(new URL(route.request().url()).searchParams.getAll('device_names'));
     await gates.readings;
-    const response = responses.readings;
-    await route.fulfill({
-      ...response,
-      json: Array.isArray(response.json)
-        ? (response.json.find((row) => row.device_name === name) ?? null)
-        : response.json,
-    });
+    await route.fulfill(responses.readings);
   });
   await page.route('**/get-chart-history?*', async (route) => {
     scenario.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));

@@ -30,16 +30,16 @@ type MockDashboardInput = {
 
 const mockDashboard = async ({ page, fixture }: MockDashboardInput) => {
   await page.route('**/get-latest-measure?*', async (route) => {
-    const requestedName = new URL(route.request().url()).searchParams.get('device_name');
+    const latest = Object.fromEntries(
+      devices.map(({ deviceName }, index) => [
+        deviceName,
+        fixture.latest[index] === undefined
+          ? null
+          : { ...fixture.latest[index], device_name: deviceName },
+      ]),
+    );
 
-    const deviceIndex = devices.findIndex(({ deviceName }) => deviceName === requestedName);
-
-    const row = fixture.latest[deviceIndex];
-
-    await route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify(row === undefined ? null : { ...row, device_name: requestedName }),
-    });
+    await route.fulfill({ json: latest });
   });
   await page.route('**/get-chart-history?*', async (route) => {
     await route.fulfill({

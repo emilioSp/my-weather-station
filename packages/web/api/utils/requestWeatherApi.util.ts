@@ -7,7 +7,7 @@ const errorResponseSchema = z.object({ error: z.object({ message: z.string() }) 
 
 type MeasurementRequest = {
   endpoint: string;
-  query: Record<string, string>;
+  query: Record<string, string> | [string, string][];
 };
 
 export const requestWeatherApi = async <T>({ endpoint, query }: MeasurementRequest): Promise<T> => {
