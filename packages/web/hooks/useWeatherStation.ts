@@ -15,7 +15,6 @@ import {
   chartRangeKeys,
   chartRanges,
 } from '#utils/chart-ranges.ts';
-import { filterMeasurementsForRange } from '#utils/filterMeasurementsForRange.util.ts';
 import { getLatestTimestamp } from '#utils/getLatestTimestamp.util.ts';
 
 type CurrentMeasurements = {
@@ -158,31 +157,6 @@ export const useWeatherStation = () => {
     setIsRefreshing(false);
   };
 
-  const measurementsByDeviceName = React.useMemo(() => {
-    if (measurementHistory === null || measurementHistory instanceof Error) {
-      return {};
-    }
-
-    const configuredHistory = Object.entries(measurementHistory).filter(([deviceName]) =>
-      environment.DEVICES.some((device) => device.deviceName === deviceName),
-    );
-
-    const chartEnd = getLatestTimestamp(
-      configuredHistory.flatMap(([, measurements]) => measurements),
-    );
-
-    return Object.fromEntries(
-      configuredHistory.map(([deviceName, measurements]) => [
-        deviceName,
-        filterMeasurementsForRange({
-          measurements,
-          range: currentRange,
-          end: chartEnd ?? Number.POSITIVE_INFINITY,
-        }),
-      ]),
-    );
-  }, [measurementHistory, currentRange]);
-
   return {
     currentMeasurements,
     currentRange,
@@ -190,7 +164,7 @@ export const useWeatherStation = () => {
     latestMeasuredAt,
     historyError: measurementHistory instanceof Error ? measurementHistory.message : null,
     isHistoryLoading: measurementHistory === null,
-    measurementsByDeviceName,
+    measurementsByDeviceName: measurementHistory instanceof Error ? {} : (measurementHistory ?? {}),
     rangeIndex,
     refreshMeasurements,
     changeRange,

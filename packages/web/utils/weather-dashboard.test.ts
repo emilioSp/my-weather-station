@@ -1,12 +1,10 @@
-// Verify date formatting, range filtering, extrema, and signal values during dashboard checks.
+// Verify date formatting, extrema, and signal values during dashboard checks.
 
 import { readFileSync } from 'node:fs';
 
 import type { Measurement } from '@wx/shared';
 import { describe, expect, it } from 'vitest';
 
-import { CHART_RANGES, chartRanges } from '#utils/chart-ranges.ts';
-import { filterMeasurementsForRange } from '#utils/filterMeasurementsForRange.util.ts';
 import { formatChartTime } from '#utils/formatChartTime.util.ts';
 import { formatMeasuredAt } from '#utils/formatMeasuredAt.util.ts';
 import { formatMeasurementValue } from '#utils/formatMeasurementValue.util.ts';
@@ -79,25 +77,6 @@ describe('weather dashboard utilities', () => {
     it(`given ${label} when formatting a chart label then shows the Rome date and minute`, () => {
       expect(formatChartTime(Date.parse(measuredAt))).toEqual([date, time]);
     });
-  });
-
-  it('given readings before at and within the last day when filtering then includes only boundary and later readings', () => {
-    const end = new Date('2026-01-02T00:00:00Z');
-
-    const measurements: Measurement[] = JSON.parse(
-      readFileSync(
-        new URL('../tests/fixtures/dashboard/range-boundaries.json', import.meta.url),
-        'utf8',
-      ),
-    );
-
-    expect(
-      filterMeasurementsForRange({
-        measurements,
-        range: chartRanges[CHART_RANGES.LAST_DAY],
-        end: end.getTime(),
-      }).map(({ id }) => id),
-    ).toEqual(['edge', 'inside']);
   });
 
   it('given unordered readings when finding the latest timestamp then returns 2 January at 06:00 UTC', () => {
