@@ -1,7 +1,7 @@
 // Validate query parameters for the weather measurement endpoints.
 import { z } from 'zod';
 
-export const latestMeasureQuerySchema = z.object({
+export const latestMeasurementQuerySchema = z.object({
   device_name: z.string().refine((name) => name.trim().length > 0, 'Device name must not be blank'),
 });
 

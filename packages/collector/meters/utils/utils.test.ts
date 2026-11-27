@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { calculateDewPoint } from '#meters/utils/calculateDewPoint.util.ts';
 import { calculateHeatIndex } from '#meters/utils/calculateHeatIndex.util.ts';
-import { formatMeasure } from '#meters/utils/formatMeasure.util.ts';
+import { formatMeasurement } from '#meters/utils/formatMeasurement.util.ts';
 
 describe('meter calculations', () => {
   it('given 20 percent humidity and 12 degrees Celsius when calculating dew point then returns minus 10.3 degrees', () => {
@@ -23,9 +23,9 @@ describe('meter calculations', () => {
     },
   );
 
-  it('given a timestamp with milliseconds when formatting a measure then returns UTC time at second precision', () => {
+  it('given a timestamp with milliseconds when formatting a measurement then returns UTC time at second precision', () => {
     expect(
-      formatMeasure({
+      formatMeasurement({
         id: '123e4567-e89b-12d3-a456-426614174000',
         device_id: 'device',
         device_name: 'test meter',

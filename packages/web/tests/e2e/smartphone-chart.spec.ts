@@ -1,4 +1,4 @@
-// Verify smartphone chart interactions through real local Supabase, cleaning up only scenario rows.
+// Verify smartphone chart interactions through the local Node.js API, cleaning up only scenario rows.
 
 import { expect } from '@playwright/test';
 
@@ -21,12 +21,12 @@ test('given a smartphone chart with an 11:30 Rome reading when touching and drag
 
   const earlier = {
     ...readings[0],
-    measuredAt: now.subtract({ minutes: readings[0].minutesAgo }).toString(),
+    measured_at: now.subtract({ minutes: readings[0].minutesAgo }).toString(),
   };
 
   const latest = {
     ...readings[1],
-    measuredAt: now.subtract({ minutes: readings[1].minutesAgo }).toString(),
+    measured_at: now.subtract({ minutes: readings[1].minutesAgo }).toString(),
   };
 
   await measurementStore.insertReading(earlier);
@@ -34,11 +34,11 @@ test('given a smartphone chart with an 11:30 Rome reading when touching and drag
   await page.clock.setFixedTime(Number(now.epochMilliseconds));
 
   const latestResponse = page.waitForResponse((response) =>
-    response.url().includes('/rest/v1/measures?'),
+    response.url().includes('/get-latest-measure?'),
   );
 
   const historyResponse = page.waitForResponse((response) =>
-    response.url().endsWith('/rest/v1/rpc/get_chart_history'),
+    response.url().includes('/get-chart-history?'),
   );
 
   await page.goto('/');

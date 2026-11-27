@@ -1,5 +1,5 @@
 // Render measurement charts and pointer readouts in the weather dashboard.
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import * as React from 'react';
 import {
   CartesianGrid,
@@ -16,7 +16,7 @@ import {
 import { type ChartRange } from '#utils/chart-ranges.ts';
 import { formatChartTime } from '#utils/formatChartTime.util.ts';
 import { formatMeasuredAt } from '#utils/formatMeasuredAt.util.ts';
-import { formatMeasureValue } from '#utils/formatMeasureValue.util.ts';
+import { formatMeasurementValue } from '#utils/formatMeasurementValue.util.ts';
 import { formatTemperature } from '#utils/formatTemperature.util.ts';
 import type { MeterTheme } from '#utils/getMeterTheme.util.ts';
 import { getRangeExtrema, type RangeExtrema } from '#utils/getRangeExtrema.util.ts';
@@ -24,7 +24,7 @@ import { WEATHER_METRICS, chartMetricDetails, type WeatherMetric } from '#utils/
 
 type Sensor = string;
 
-type ChartDatum = Measure & {
+type ChartDatum = Measurement & {
   timestamp: number;
 };
 
@@ -46,24 +46,33 @@ type LinearChartProps = {
   metric: WeatherMetric;
   range: ChartRange;
   sensor: Sensor;
-  measures: Measure[];
+  measurements: Measurement[];
 };
 
-export const LinearChart = ({ meterTheme, metric, range, sensor, measures }: LinearChartProps) => {
+export const LinearChart = ({
+  meterTheme,
+  metric,
+  range,
+  sensor,
+  measurements,
+}: LinearChartProps) => {
   const [touchTooltipActive, setTouchTooltipActive] = React.useState<boolean | null>(null);
 
-  const [touchMeasure, setTouchMeasure] = React.useState<ChartDatum | null>(null);
+  const [touchMeasurement, setTouchMeasurement] = React.useState<ChartDatum | null>(null);
 
   const chartData = React.useMemo<ChartDatum[]>(
     () =>
-      measures.map((measure) => ({
-        ...measure,
-        timestamp: Date.parse(measure.measured_at),
+      measurements.map((measurement) => ({
+        ...measurement,
+        timestamp: Date.parse(measurement.measured_at),
       })),
-    [measures],
+    [measurements],
   );
 
-  const extrema = React.useMemo(() => getRangeExtrema({ measures, metric }), [measures, metric]);
+  const extrema = React.useMemo(
+    () => getRangeExtrema({ measurements, metric }),
+    [measurements, metric],
+  );
 
   if (extrema === null) {
     return (
@@ -81,10 +90,10 @@ export const LinearChart = ({ meterTheme, metric, range, sensor, measures }: Lin
         className="mt-4 grid min-h-19 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs sm:hidden"
         data-testid={`${sensor}-${metric}-touch-readout`}
       >
-        {touchMeasure === null ? (
+        {touchMeasurement === null ? (
           <span className="self-center text-[#9bad9e]">Touch and drag.</span>
         ) : (
-          <ChartReadout metric={metric} measure={touchMeasure} />
+          <ChartReadout metric={metric} measurement={touchMeasurement} />
         )}
       </div>
       <div className="mt-4 h-[380px] sm:mt-[18px]">
@@ -94,20 +103,20 @@ export const LinearChart = ({ meterTheme, metric, range, sensor, measures }: Lin
             data={chartData}
             margin={{ top: 20, right: 20, bottom: 50, left: 20 }}
             onTouchEnd={() => {
-              setTouchMeasure(null);
+              setTouchMeasurement(null);
               setTouchTooltipActive(false);
             }}
             onTouchMove={({ activeIndex }: MouseHandlerDataParam) => {
               if (activeIndex === null || activeIndex === undefined) {
-                setTouchMeasure(null);
+                setTouchMeasurement(null);
 
                 return;
               }
 
-              setTouchMeasure(chartData[Number(activeIndex)] ?? null);
+              setTouchMeasurement(chartData[Number(activeIndex)] ?? null);
             }}
             onTouchStart={() => {
-              setTouchMeasure(null);
+              setTouchMeasurement(null);
               setTouchTooltipActive(true);
             }}
           >
@@ -127,7 +136,7 @@ export const LinearChart = ({ meterTheme, metric, range, sensor, measures }: Lin
               domain={getYAxisDomain({ metric, extrema })}
               stroke="#82948a"
               tickCount={5}
-              tickFormatter={(value: number) => formatMeasureValue({ value, metric })}
+              tickFormatter={(value: number) => formatMeasurementValue({ value, metric })}
               tickLine={false}
               width={70}
             />
@@ -209,7 +218,7 @@ const Extrema = ({ label, metric, value, measuredAt }: ExtremaProps) => (
         {label}
       </span>
       <b className="text-[15px] tracking-[-0.05em]" data-testid={`${label.toLowerCase()}-value`}>
-        {value === null ? '—' : formatMeasureValue({ value, metric })}
+        {value === null ? '—' : formatMeasurementValue({ value, metric })}
       </b>
     </div>
     {measuredAt !== null && (
@@ -229,9 +238,9 @@ type ChartTooltipProps = TooltipContentProps & {
 
 const ChartTooltip = ({ active, label, metric, payload, sensor }: ChartTooltipProps) => {
   // JUSTIFICATION: Recharts returns an entry from this chart's ChartDatum data array in the tooltip payload.
-  const measure = payload[0]?.payload as ChartDatum | undefined;
+  const measurement = payload[0]?.payload as ChartDatum | undefined;
 
-  if (!active || measure === undefined || !isNumericLabel(label)) {
+  if (!active || measurement === undefined || !isNumericLabel(label)) {
     return null;
   }
 
@@ -240,28 +249,28 @@ const ChartTooltip = ({ active, label, metric, payload, sensor }: ChartTooltipPr
       className="min-w-44 rounded-md border border-[#53675e] bg-[#10191b] px-3 py-2.5 text-xs shadow-[0_10px_28px_rgb(0_0_0_/_0.3)]"
       data-testid={`${sensor}-${metric}-chart-tooltip`}
     >
-      <ChartReadout metric={metric} measure={measure} />
+      <ChartReadout metric={metric} measurement={measurement} />
     </div>
   );
 };
 
 type ChartReadoutProps = {
   metric: WeatherMetric;
-  measure: ChartDatum;
+  measurement: ChartDatum;
 };
 
-const ChartReadout = ({ metric, measure }: ChartReadoutProps) => (
+const ChartReadout = ({ metric, measurement }: ChartReadoutProps) => (
   <>
-    <div className="mb-2 text-xs text-[#9bad9e]">{formatMeasuredAt(measure.measured_at)}</div>
+    <div className="mb-2 text-xs text-[#9bad9e]">{formatMeasuredAt(measurement.measured_at)}</div>
     <TooltipRow
       label={chartMetricDetails[metric].label}
-      value={formatMeasureValue({
-        value: measure[metric],
+      value={formatMeasurementValue({
+        value: measurement[metric],
         metric,
       })}
     />
     {metric === WEATHER_METRICS.TEMPERATURE && (
-      <TooltipRow label="Heat index" value={formatTemperature(measure.heat_index)} />
+      <TooltipRow label="Heat index" value={formatTemperature(measurement.heat_index)} />
     )}
   </>
 );

@@ -26,6 +26,6 @@ The web app depends on Supabase's API and the database's exposed schema and func
 must distinguish browser reads from collector writes; authorization is not delegated to a custom application server.
 
 Owner confirmation during the initialization interview. See the [collector connection](../../packages/shared/db.ts),
-[measurement repository](../../packages/collector/repository/measure.repository.ts), [web API boundary](../../packages/web/supabase.api.ts), and
+[measurement repository](../../packages/collector/repository/measurement.repository.ts), [web API boundary](../../packages/web/supabase.api.ts), and
 [browser privilege migration](../../packages/shared/migrations/20260828090836_restrict_anon_privileges.ts). These are repository implementation records, not verification
 of a live deployment's database grants.

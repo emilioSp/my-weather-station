@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 
 import { expect, type Page } from '@playwright/test';
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import { loadEnv } from 'vite';
 
 // JUSTIFICATION: environment.ts validates development device names as strings.
@@ -12,11 +12,11 @@ export const devices = JSON.parse(
   deviceName: string;
 }[];
 
-type Fixture = { initial: Measure[]; changed: Measure[] };
+type Fixture = { initial: Measurement[]; changed: Measurement[] };
 
 export type DashboardResponses = {
-  readings: { status: number; json: Measure[] | { error: { message: string } } };
-  history: { status: number; json: Record<string, Measure[]> | { error: { message: string } } };
+  readings: { status: number; json: Measurement[] | { error: { message: string } } };
+  history: { status: number; json: Record<string, Measurement[]> | { error: { message: string } } };
 };
 
 const fixture: Fixture = JSON.parse(

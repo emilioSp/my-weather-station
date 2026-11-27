@@ -9,7 +9,7 @@
   "scripts": {
     "store-measure": "node --env-file=.env --env-file=../shared/.env index.ts",
     "ble-raw": "node ble-raw.ts",
-    "seed:local": "NODE_ENV=development node --env-file=.env --env-file=../shared/.env ../../node_modules/knex/bin/cli.js --knexfile ../shared/knexfile.js seed:run --specific local-measure.ts",
+    "seed:local": "NODE_ENV=development node --env-file=.env --env-file=../shared/.env ../../node_modules/knex/bin/cli.js --knexfile ../shared/knexfile.js seed:run --specific local-measurement.ts",
     "build": "tsc",
     "dev": "npm run seed:local",
     "test:unit": "vitest run --config vitest.config.ts",

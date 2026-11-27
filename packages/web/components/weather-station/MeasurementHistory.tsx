@@ -1,6 +1,6 @@
 // Render MeasurementHistory when displaying the weather dashboard.
 
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 
 import { HistoryChart } from '#components/weather-station/HistoryChart.tsx';
 import { RangeControls } from '#components/weather-station/RangeControls.tsx';
@@ -10,7 +10,7 @@ import { getMeterTheme } from '#utils/getMeterTheme.util.ts';
 
 type MeasurementHistoryProps = {
   error: string | null;
-  measuresByDeviceName: Record<string, Measure[]>;
+  measurementsByDeviceName: Record<string, Measurement[]>;
   isLoading: boolean;
   isRefreshing: boolean;
   range: ChartRange;
@@ -20,7 +20,7 @@ type MeasurementHistoryProps = {
 
 export const MeasurementHistory = ({
   error,
-  measuresByDeviceName,
+  measurementsByDeviceName,
   isLoading,
   isRefreshing,
   range,
@@ -31,12 +31,12 @@ export const MeasurementHistory = ({
     device,
     index,
   }))
-    .filter(({ device }) => isLoading || Object.hasOwn(measuresByDeviceName, device.deviceName))
+    .filter(({ device }) => isLoading || Object.hasOwn(measurementsByDeviceName, device.deviceName))
     .map(({ device, index }) => ({
       device,
       icon: deviceIconMap[device.icon],
       meterTheme: getMeterTheme(index),
-      measures: measuresByDeviceName[device.deviceName] ?? [],
+      measurements: measurementsByDeviceName[device.deviceName] ?? [],
     }));
 
   return (
@@ -50,12 +50,12 @@ export const MeasurementHistory = ({
       {error !== null ? (
         <HistoryError message={error} />
       ) : (
-        historyDevices.map(({ device, icon, meterTheme, measures }) => (
+        historyDevices.map(({ device, icon, meterTheme, measurements }) => (
           <HistoryChart
             key={device.deviceName}
             icon={icon}
             isLoading={isLoading}
-            measures={measures}
+            measurements={measurements}
             meterTheme={meterTheme}
             range={range}
             sensor={device.deviceName}

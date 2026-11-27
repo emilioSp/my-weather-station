@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 
 import { expect } from '@playwright/test';
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import { loadEnv } from 'vite';
 
 import { test } from '#tests/utils/test.ts';
@@ -12,8 +12,8 @@ type ConfiguredDevice = {
 };
 
 type DashboardFixture = {
-  initial: Measure[];
-  changed: Measure[];
+  initial: Measurement[];
+  changed: Measurement[];
 };
 
 const fixture: DashboardFixture = JSON.parse(

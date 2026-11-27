@@ -1,6 +1,6 @@
 // Render WeatherCard when displaying the weather dashboard.
 
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import type { IconType } from 'react-icons';
 
 import { ProgressBar } from '#components/primitives/ProgressBar.tsx';
@@ -45,7 +45,7 @@ type WeatherCardProps = {
   label: string;
   icon: IconType;
   colorIndex: number;
-  measure: Measure | null;
+  measurement: Measurement | null;
 };
 
 export const WeatherCard = ({
@@ -53,7 +53,7 @@ export const WeatherCard = ({
   label,
   icon: Icon,
   colorIndex,
-  measure,
+  measurement,
 }: WeatherCardProps) => {
   const meterTheme = getMeterTheme(colorIndex);
   const cardClassName = `meter-card ${meterTheme.themeClassName} rounded-2xl border p-5`;
@@ -68,7 +68,7 @@ export const WeatherCard = ({
     window.scrollTo({ top, behavior: 'smooth' });
   };
 
-  if (measure === null) {
+  if (measurement === null) {
     return (
       <article className={cardClassName}>
         <WeatherCardHeading
@@ -91,23 +91,27 @@ export const WeatherCard = ({
         meterTheme={meterTheme}
       />
       <div className="meter-temperature mt-7 leading-[0.85] font-semibold tracking-[-0.09em]">
-        {measure.temperature.toFixed(1)}
+        {measurement.temperature.toFixed(1)}
         <small className="ml-2 text-[20px] tracking-[-0.04em]">°C</small>
       </div>
       <div className="mt-7 grid grid-cols-2 gap-x-3 gap-y-[18px]">
-        <WeatherCardMetric label="Humidity" value={`${measure.humidity}%`} />
-        <WeatherCardMetric label="Dew point" value={formatTemperature(measure.dew_point)} />
-        <WeatherCardMetric label="Heat index" value={formatTemperature(measure.heat_index)} />
+        <WeatherCardMetric label="Humidity" value={`${measurement.humidity}%`} />
+        <WeatherCardMetric label="Dew point" value={formatTemperature(measurement.dew_point)} />
+        <WeatherCardMetric label="Heat index" value={formatTemperature(measurement.heat_index)} />
       </div>
       <div className="mt-[19px] border-t border-[#2b3a38] pt-[13px]">
         <div className="text-[14px] font-semibold tracking-[-0.01em] text-[#9bad9e] capitalize">
           Sensor health
         </div>
-        <HealthRow label="Battery" value={`${measure.battery}%`} barValue={measure.battery} />
+        <HealthRow
+          label="Battery"
+          value={`${measurement.battery}%`}
+          barValue={measurement.battery}
+        />
         <HealthRow
           label="Signal"
-          value={`${measure.signal_power_dbm} dBm`}
-          barValue={getSignalPercentage(measure.signal_power_dbm)}
+          value={`${measurement.signal_power_dbm} dBm`}
+          barValue={getSignalPercentage(measurement.signal_power_dbm)}
         />
       </div>
     </article>

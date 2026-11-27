@@ -1,15 +1,13 @@
 // Load current readings and chart history and manage weather dashboard actions.
 
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import * as React from 'react';
 
+import { getChartHistory } from '#api/getChartHistory.ts';
+import { getLatestMeasurement } from '#api/getLatestMeasurement.ts';
+import { toWeatherApiError } from '#api/utils/toWeatherApiError.util.ts';
 import { type DeviceConfiguration, environment } from '#environment.ts';
-import supabaseApi from '#supabase.api.ts';
-import {
-  type MeasureHistory,
-  type MeasureHistoryQueryResult,
-  type MeasureQueryResult,
-} from '#types.ts';
+import type { LatestMeasurementQueryResult, MeasurementHistory } from '#types.ts';
 import {
   CHART_RANGES,
   type ChartRange,
@@ -17,16 +15,11 @@ import {
   chartRangeKeys,
   chartRanges,
 } from '#utils/chart-ranges.ts';
-import { filterMeasuresForRange } from '#utils/filterMeasuresForRange.util.ts';
+import { filterMeasurementsForRange } from '#utils/filterMeasurementsForRange.util.ts';
 import { getLatestTimestamp } from '#utils/getLatestTimestamp.util.ts';
 
-type CurrentMeasures = {
-  byDeviceName: Record<string, Measure | null>;
-  error: string | null;
-};
-
-type ChartHistory = {
-  history: MeasureHistory;
+type CurrentMeasurements = {
+  byDeviceName: Record<string, Measurement | null>;
   error: string | null;
 };
 
@@ -37,49 +30,40 @@ const waitUntil = (deadline: number): Promise<void> =>
   });
 
 type GetLatestRowsInput = {
-  results: MeasureQueryResult[];
+  results: LatestMeasurementQueryResult[];
   devices: DeviceConfiguration[];
 };
 
-const getLatestRows = ({ results, devices }: GetLatestRowsInput): CurrentMeasures => ({
+const getLatestRows = ({ results, devices }: GetLatestRowsInput): CurrentMeasurements => ({
   byDeviceName: Object.fromEntries(
-    devices.map(({ deviceName }, index) => [deviceName, results[index].rows[0] ?? null]),
+    devices.map(({ deviceName }, index) => [deviceName, results[index].measurement]),
   ),
   error: results.find(({ error }) => error !== null)?.error?.message ?? null,
 });
 
-const loadLatestMeasures = async (): Promise<CurrentMeasures> => {
+const loadLatestMeasurements = async (): Promise<CurrentMeasurements> => {
   const results = await Promise.all(
-    environment.DEVICES.map(({ deviceName }) => supabaseApi.getLatestMeasure({ deviceName })),
+    environment.DEVICES.map(({ deviceName }) => getLatestMeasurement(deviceName)),
   );
 
   return getLatestRows({ results, devices: environment.DEVICES });
 };
 
-type GetHistoryRowsInput = MeasureHistoryQueryResult & {
-  devices: DeviceConfiguration[];
-};
-
-const getHistoryRows = ({ history, error, devices }: GetHistoryRowsInput): ChartHistory => ({
-  history: Object.fromEntries(
-    Object.entries(history).filter(([deviceName]) =>
-      devices.some((device) => device.deviceName === deviceName),
-    ),
-  ),
-  error: error?.message ?? null,
-});
-
-const getMeasures = (currentMeasures: CurrentMeasures | null): Measure[] =>
-  currentMeasures === null
+const getMeasurements = (currentMeasurements: CurrentMeasurements | null): Measurement[] =>
+  currentMeasurements === null
     ? []
-    : Object.values(currentMeasures.byDeviceName).filter(
-        (measure): measure is Measure => measure !== null,
+    : Object.values(currentMeasurements.byDeviceName).filter(
+        (measurement): measurement is Measurement => measurement !== null,
       );
 
 export const useWeatherStation = () => {
-  const [currentMeasures, setCurrentMeasures] = React.useState<CurrentMeasures | null>(null);
+  const [currentMeasurements, setCurrentMeasurements] = React.useState<CurrentMeasurements | null>(
+    null,
+  );
 
-  const [measureHistory, setMeasureHistory] = React.useState<ChartHistory | null>(null);
+  const [measurementHistory, setMeasurementHistory] = React.useState<
+    MeasurementHistory | Error | null
+  >(null);
 
   const [rangeKey, setRangeKey] = React.useState<ChartRangeKey>(CHART_RANGES.LAST_THREE_DAYS);
 
@@ -87,60 +71,61 @@ export const useWeatherStation = () => {
   const busy = React.useRef(false);
   const currentRange: ChartRange = chartRanges[rangeKey];
   const rangeIndex = chartRangeKeys.indexOf(rangeKey);
-  const latestMeasuredAt = getLatestTimestamp(getMeasures(currentMeasures));
+  const latestMeasuredAt = getLatestTimestamp(getMeasurements(currentMeasurements));
 
   type LoadHistoryInput = {
-    measures: CurrentMeasures;
+    measurements: CurrentMeasurements;
     range: ChartRange;
   };
 
-  const loadHistory = async ({ measures, range }: LoadHistoryInput) => {
-    const latestTimestamp = getLatestTimestamp(getMeasures(measures));
+  const loadHistory = async ({ measurements, range }: LoadHistoryInput) => {
+    const latestTimestamp = getLatestTimestamp(getMeasurements(measurements));
 
     if (latestTimestamp === null) {
-      setMeasureHistory({ history: {}, error: null });
+      setMeasurementHistory({});
 
       return;
     }
 
-    setMeasureHistory(null);
+    setMeasurementHistory(null);
     const placeholderDeadline = Date.now() + 100;
 
-    const history = await supabaseApi.getChartHistory({
+    const history = await getChartHistory({
       measuredAfter: new Date(latestTimestamp - range.hours * 60 * 60 * 1_000),
       measuredBefore: new Date(latestTimestamp),
-    });
+    }).catch(toWeatherApiError);
 
     await waitUntil(placeholderDeadline);
-    setMeasureHistory(getHistoryRows({ ...history, devices: environment.DEVICES }));
+    setMeasurementHistory(history);
   };
 
-  const refreshMeasures = async () => {
+  const refreshMeasurements = async () => {
     if (busy.current) {
       return;
     }
 
     busy.current = true;
     setIsRefreshing(true);
-    const spinnerDeadline = Date.now() + (currentMeasures === null ? 0 : 1_000);
-    const latestRows = await loadLatestMeasures();
+    const spinnerDeadline = Date.now() + (currentMeasurements === null ? 0 : 1_000);
+    const latestRows = await loadLatestMeasurements();
 
     const isUnchanged =
       latestRows.error === null &&
-      currentMeasures?.error === null &&
+      currentMeasurements?.error === null &&
       environment.DEVICES.every(
         ({ deviceName }) =>
-          latestRows.byDeviceName[deviceName]?.id === currentMeasures.byDeviceName[deviceName]?.id,
+          latestRows.byDeviceName[deviceName]?.id ===
+          currentMeasurements.byDeviceName[deviceName]?.id,
       );
 
     if (!isUnchanged) {
-      setCurrentMeasures(latestRows);
+      setCurrentMeasurements(latestRows);
     }
 
     if (latestRows.error !== null) {
-      setMeasureHistory(null);
-    } else if (!isUnchanged || measureHistory === null || measureHistory.error !== null) {
-      await loadHistory({ measures: latestRows, range: currentRange });
+      setMeasurementHistory(null);
+    } else if (!isUnchanged || measurementHistory === null || measurementHistory instanceof Error) {
+      await loadHistory({ measurements: latestRows, range: currentRange });
     }
 
     await waitUntil(spinnerDeadline);
@@ -149,7 +134,7 @@ export const useWeatherStation = () => {
   };
 
   // Read the current data and range without restarting the dashboard's fixed schedule.
-  const refreshOnSchedule = React.useEffectEvent(refreshMeasures);
+  const refreshOnSchedule = React.useEffectEvent(refreshMeasurements);
 
   React.useEffect(() => {
     void refreshOnSchedule();
@@ -161,49 +146,53 @@ export const useWeatherStation = () => {
   const changeRange = async (nextRangeIndex: number): Promise<void> => {
     const nextRangeKey = chartRangeKeys[nextRangeIndex];
 
-    if (busy.current || currentMeasures === null || nextRangeKey === undefined) {
+    if (busy.current || currentMeasurements === null || nextRangeKey === undefined) {
       return;
     }
 
     busy.current = true;
     setIsRefreshing(true);
     setRangeKey(nextRangeKey);
-    await loadHistory({ measures: currentMeasures, range: chartRanges[nextRangeKey] });
+    await loadHistory({ measurements: currentMeasurements, range: chartRanges[nextRangeKey] });
     busy.current = false;
     setIsRefreshing(false);
   };
 
-  const chartEnd =
-    measureHistory === null
-      ? null
-      : getLatestTimestamp(Object.values(measureHistory.history).flat());
+  const measurementsByDeviceName = React.useMemo(() => {
+    if (measurementHistory === null || measurementHistory instanceof Error) {
+      return {};
+    }
 
-  const measuresByDeviceName = React.useMemo(
-    () =>
-      measureHistory === null
-        ? {}
-        : Object.fromEntries(
-            Object.entries(measureHistory.history).map(([deviceName, measures]) => [
-              deviceName,
-              filterMeasuresForRange({
-                measures,
-                range: currentRange,
-                end: chartEnd ?? Number.POSITIVE_INFINITY,
-              }),
-            ]),
-          ),
-    [measureHistory, currentRange, chartEnd],
-  );
+    const configuredHistory = Object.entries(measurementHistory).filter(([deviceName]) =>
+      environment.DEVICES.some((device) => device.deviceName === deviceName),
+    );
+
+    const chartEnd = getLatestTimestamp(
+      configuredHistory.flatMap(([, measurements]) => measurements),
+    );
+
+    return Object.fromEntries(
+      configuredHistory.map(([deviceName, measurements]) => [
+        deviceName,
+        filterMeasurementsForRange({
+          measurements,
+          range: currentRange,
+          end: chartEnd ?? Number.POSITIVE_INFINITY,
+        }),
+      ]),
+    );
+  }, [measurementHistory, currentRange]);
 
   return {
-    currentMeasures,
+    currentMeasurements,
     currentRange,
     isRefreshing,
     latestMeasuredAt,
-    measureHistory,
-    measuresByDeviceName,
+    historyError: measurementHistory instanceof Error ? measurementHistory.message : null,
+    isHistoryLoading: measurementHistory === null,
+    measurementsByDeviceName,
     rangeIndex,
-    refreshMeasures,
+    refreshMeasurements,
     changeRange,
   };
 };

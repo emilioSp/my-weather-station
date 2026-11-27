@@ -9,15 +9,15 @@ This workspace reads BLE advertisements from SwitchBot indoor and outdoor meters
 This workspace owns:
 
 - `Dockerfile` and `Dockerfile.dockerignore`
-- `seeds/local-measure.ts` for development data
+- `seeds/local-measurement.ts` for development data
 - BLE, meter, database, and collector configuration code
 
 `packages/shared` owns stored-row types and shared utilities. Do not duplicate them here.
 
 ## Architecture
 
-`index.ts` is the startup and presentation layer. It reads validated configuration, creates each meter strategy, calls `read()`, and prints stored measures. Do not put
-meter protocol or BLE logic in `index.ts`.
+`index.ts` is the startup and presentation layer. It reads validated configuration, creates each meter strategy, calls `read()`, and prints stored measurements. Do not
+put meter protocol or BLE logic in `index.ts`.
 
 ```text
 index.ts
@@ -26,7 +26,7 @@ index.ts
      -> IndoorMeter.ts or OutdoorMeter.ts
         -> api/sensor.api.ts
            -> @stoprocent/noble
-        -> repository/measure.repository.ts
+        -> repository/measurement.repository.ts
            -> @wx/shared/db.ts -> PostgreSQL
 ```
 
@@ -36,14 +36,14 @@ index.ts
 - `MeterInterface` exposes `getMeter()` and `read()`.
 - `meter.factory.ts` selects a strategy from `meter.type`.
 - Each strategy owns its protocol decoding.
-- `Meter.ts` reads advertisements, creates derived values, stores complete measures, and returns the stored row.
+- `Meter.ts` reads advertisements, creates derived values, stores complete measurements, and returns the stored row.
 - Keep meter-specific state and decoding methods non-public.
 
 ## Boundaries
 
 - `api/sensor.api.ts` is the BLE boundary. It manages Noble scanning, finds peripherals, and converts BLE data into `Advertisement` values. It does not decode meter data.
 - `@wx/shared/db.ts` owns the PostgreSQL pool and type parsers.
-- `repository/measure.repository.ts` stores complete readings and returns the shared `Measure` with its database field names.
+- `repository/measurement.repository.ts` stores complete readings and returns the shared `Measurement` with its database field names.
 - `errors/` contains domain errors. `NoCompleteReadingError` represents an incomplete reading after all scan attempts.
 
 ## Types, configuration, and utilities
@@ -73,7 +73,7 @@ production pool is unchanged.
 
 ## Database migrations
 
-`@wx/shared` owns the database migrations. Apply them with `npm run migrate:local -w @wx/shared`. Keep `seeds/local-measure.ts` in sync with the `measures` schema.
+`@wx/shared` owns the database migrations. Apply them with `npm run migrate:local -w @wx/shared`. Keep `seeds/local-measurement.ts` in sync with the `measures` schema.
 
 ## Docker and Supabase local
 

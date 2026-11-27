@@ -2,27 +2,15 @@
 import { readFileSync } from 'node:fs';
 
 import { expect, type Page } from '@playwright/test';
+import type { Measurement } from '@wx/shared';
 import { loadEnv } from 'vite';
 
 import { test } from '#tests/utils/test.ts';
 import { WEATHER_METRICS, chartMetricDetails, type WeatherMetric } from '#utils/weather-metrics.ts';
 
-type MeasureRow = {
-  id: string;
-  device_name: string;
-  device_type: string;
-  measured_at: string;
-  temperature: number;
-  humidity: number;
-  dew_point: number;
-  heat_index: number;
-  battery: number;
-  signal_power_dbm: number;
-};
-
 type Fixture = {
-  history: MeasureRow[][];
-  latest: MeasureRow[];
+  history: Measurement[][];
+  latest: Measurement[];
 };
 
 // JUSTIFICATION: Development devices have string deviceName fields, as required by environment.ts.
@@ -41,10 +29,8 @@ type MockDashboardInput = {
 };
 
 const mockDashboard = async ({ page, fixture }: MockDashboardInput) => {
-  await page.route('**/rest/v1/measures**', async (route) => {
-    const requestedName = new URL(route.request().url()).searchParams
-      .get('device_name')
-      ?.replace(/^eq\./, '');
+  await page.route('**/get-latest-measure?*', async (route) => {
+    const requestedName = new URL(route.request().url()).searchParams.get('device_name');
 
     const deviceIndex = devices.findIndex(({ deviceName }) => deviceName === requestedName);
 
@@ -52,10 +38,10 @@ const mockDashboard = async ({ page, fixture }: MockDashboardInput) => {
 
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify(row === undefined ? [] : [{ ...row, device_name: requestedName }]),
+      body: JSON.stringify(row === undefined ? null : { ...row, device_name: requestedName }),
     });
   });
-  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+  await page.route('**/get-chart-history?*', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(

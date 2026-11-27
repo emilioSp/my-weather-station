@@ -3,13 +3,11 @@
 import {
   METER_TYPES,
   deviceIdentifiersSchema,
-  measureSchema,
+  measurementSchema,
   meterTypeSchema,
   weatherReadingSchema,
 } from '@wx/shared';
 import { normalizeUuid } from '@wx/shared/utils/normalizeUuid.util.ts';
-import { toCamelCaseKeys } from '@wx/shared/utils/toCamelCaseKeys.util.ts';
-import { toSnakeCaseKeys } from '@wx/shared/utils/toSnakeCaseKeys.util.ts';
 import { describe, expect, it } from 'vitest';
 
 const reading = {
@@ -21,43 +19,20 @@ const reading = {
   signalPowerDBM: -55,
 };
 
-describe('case mapping', () => {
-  it('given nested camel-case objects and arrays when mapping to snake case then converts keys and preserves values', () => {
-    expect(
-      toSnakeCaseKeys({
-        deviceId: 'DEVICE',
-        signalPowerDBM: -55,
-        nestedValue: [{ measuredAt: 'now' }],
-      }),
-    ).toEqual({
-      device_id: 'DEVICE',
-      signal_power_dbm: -55,
-      nested_value: [{ measured_at: 'now' }],
-    });
-  });
-
-  it('given nested snake-case objects and arrays when mapping to camel case then converts keys and preserves values', () => {
-    expect(
-      toCamelCaseKeys({
-        device_id: 'DEVICE',
-        signal_power_dbm: -55,
-        nested_value: [{ measured_at: 'now' }],
-      }),
-    ).toEqual({
-      deviceId: 'DEVICE',
-      signalPowerDBM: -55,
-      nestedValue: [{ measuredAt: 'now' }],
-    });
-  });
-
-  it.each([
-    { label: 'camel-case null', map: toCamelCaseKeys, input: null },
-    { label: 'camel-case string', map: toCamelCaseKeys, input: 'value' },
-    { label: 'snake-case string', map: toSnakeCaseKeys, input: 'value' },
-  ])('given a $label input when mapping keys then preserves the input', ({ map, input }) => {
-    expect(map(input)).toBe(input);
-  });
-});
+const storedMeasurement = {
+  id: '123e4567-e89b-12d3-a456-426614174000',
+  device_id: 'abc',
+  device_name: 'garden',
+  device_type: METER_TYPES.OUTDOOR,
+  measured_at: '2026-01-01T00:00:00Z',
+  address: null,
+  temperature: 20,
+  humidity: 50,
+  dew_point: 10,
+  heat_index: 21,
+  battery: 80,
+  signal_power_dbm: -55,
+};
 
 describe('normalizeUuid', () => {
   it.each([
@@ -102,27 +77,14 @@ describe('shared schemas', () => {
     ]);
   });
 
-  it('given a complete named measure when validating it then accepts the garden device name', () => {
-    const result = measureSchema.safeParse({
-      ...reading,
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      deviceName: 'garden',
-      deviceType: METER_TYPES.OUTDOOR,
-      measuredAt: '2026-01-01T00:00:00Z',
-      address: 'AA:BB',
-    });
-
-    expect(result).toMatchObject({ success: true, data: { deviceName: 'garden' } });
+  it('given a stored measurement when validating it then preserves the snake-case fields', () => {
+    expect(measurementSchema.parse(storedMeasurement)).toEqual(storedMeasurement);
   });
 
-  it('given an otherwise valid measure with an invalid UUID when validating it then reports only the ID format error', () => {
-    const result = measureSchema.safeParse({
-      ...reading,
+  it('given an otherwise valid measurement with an invalid UUID when validating it then reports only the ID format error', () => {
+    const result = measurementSchema.safeParse({
+      ...storedMeasurement,
       id: 'not-a-uuid',
-      deviceName: 'garden',
-      deviceType: METER_TYPES.OUTDOOR,
-      measuredAt: '2026-01-01T00:00:00Z',
-      address: 'AA:BB',
     });
 
     expect(result.success).toBe(false);

@@ -213,8 +213,8 @@ test('given changed readings when an automatic tick runs in the six-hour range t
   await expect(page.locator('header strong')).toHaveText('06 Oct · 14:00:00');
   await expect(page.getByText('Last 6 hours', { exact: true })).toBeVisible();
   expect(scenario.historyQueries.at(-1)).toEqual({
-    p_start: '2026-10-06T06:00:00.000Z',
-    p_end: '2026-10-06T12:00:00.000Z',
+    start_date: '2026-10-06T06:00:00.000Z',
+    end_date: '2026-10-06T12:00:00.000Z',
   });
   const summaries = page.locator(`[id="history-${primaryDevice}"] section`);
   await expect(summaries.getByTestId('low-value')).toHaveText(['25.0°C', '70%', '12.0°C']);

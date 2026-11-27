@@ -2,12 +2,12 @@
 import { readFileSync } from 'node:fs';
 
 import { expect, type Route } from '@playwright/test';
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 
 import { devices } from '#tests/utils/dashboard-scenario.ts';
 import { test } from '#tests/utils/test.ts';
 
-const fixture: { initial: Measure[] } = JSON.parse(
+const fixture: { initial: Measurement[] } = JSON.parse(
   readFileSync(
     new URL('../fixtures/weather-station/current-and-refreshed-readings.json', import.meta.url),
     'utf8',

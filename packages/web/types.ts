@@ -1,14 +1,9 @@
-// Describe browser measurement query results used by the Supabase API and dashboard.
-import type { Measure } from '@wx/shared';
+// Describe browser measurement query results used by the weather API client and dashboard.
+import type { Measurement } from '@wx/shared';
 
-export type MeasureQueryResult = {
-  rows: Measure[];
+export type LatestMeasurementQueryResult = {
+  measurement: Measurement | null;
   error: Error | null;
 };
 
-export type MeasureHistory = Record<string, Measure[]>;
-
-export type MeasureHistoryQueryResult = {
-  history: MeasureHistory;
-  error: Error | null;
-};
+export type MeasurementHistory = Record<string, Measurement[]>;

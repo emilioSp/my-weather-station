@@ -17,7 +17,7 @@ for (const { section, errorResponses, errorMessage, currentReadingCount } of [
   {
     section: 'readings',
     errorResponses: {
-      readings: { status: 500, json: { message: 'Latest readings unavailable' } },
+      readings: { status: 500, json: { error: { message: 'Latest readings unavailable' } } },
       history: { status: 200, json: changedHistory },
     } satisfies DashboardResponses,
     errorMessage: 'Latest readings unavailable',
@@ -27,7 +27,7 @@ for (const { section, errorResponses, errorMessage, currentReadingCount } of [
     section: 'history',
     errorResponses: {
       readings: { status: 200, json: changedReadings },
-      history: { status: 500, json: { message: 'Chart history unavailable' } },
+      history: { status: 500, json: { error: { message: 'Chart history unavailable' } } },
     } satisfies DashboardResponses,
     errorMessage: 'Unable to load chart history: Chart history unavailable',
     currentReadingCount: 1,

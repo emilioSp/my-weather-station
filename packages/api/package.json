@@ -13,7 +13,7 @@
     "#service/*": "./src/service/*"
   },
   "scripts": {
-    "start": "node --env-file=../shared/.env src/index.ts",
+    "dev": "node --env-file=../shared/.env src/index.ts",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
     "docker-build-and-push": "docker buildx build --platform linux/amd64 --file Dockerfile --tag espatola/my-weather-station-api:latest --push ../.."
