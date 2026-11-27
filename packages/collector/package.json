@@ -14,7 +14,7 @@
     "dev": "npm run seed:local",
     "test:unit": "vitest run --config vitest.config.ts",
     "test:coverage": "vitest run --coverage --config vitest.config.ts",
-    "docker-build-and-push": "docker buildx build --platform linux/arm64 --file Dockerfile --tag espatola/my-weather-station:latest --push ../.."
+    "docker-build-and-push": "docker buildx build --platform linux/arm64 --file Dockerfile --tag espatola/my-weather-station-collector:latest --push ../.."
   },
   "dependencies": {
     "@stoprocent/noble": "2.8.0",

@@ -1,44 +1,49 @@
 # Deployment
 
-This guide deploys the collector to a Raspberry Pi 3 with 64-bit Raspberry Pi OS.
+This guide shows how to publish both Docker images and run the collector on a Raspberry Pi 3 with 64-bit Raspberry Pi OS. Only the collector runs on the Pi; the API host
+has not been selected yet.
 
 ## Requirements
 
 - A Mac with Docker Desktop and Docker Buildx.
-- A private Docker Hub repository named `espatola/my-weather-station`.
-- A Raspberry Pi 3 with a powered-on Bluetooth adapter.
+- Two private Docker Hub repositories: `espatola/my-weather-station-collector` and `espatola/my-weather-station-api`.
+- A Raspberry Pi 3 with a powered-on Bluetooth adapter for the collector.
 
-## Create the Docker Hub repository
+## Build and push the images
 
-1. Sign in to Docker Hub.
-2. Create the `my-weather-station` repository.
-3. Set repository visibility to **Private**.
-
-## MAC
-
-### Build and push the image
-
-Sign in to Docker Hub:
+Create both repositories on Docker Hub and set their visibility to **Private**. Sign in from your Mac:
 
 ```sh
 docker login
 ```
 
-Build the ARM64 image and push it:
+Run these npm commands from the repository root. Both scripts use `../..` as the Docker build context so the Dockerfiles can access the shared workspace and root
+lockfile.
+
+### Collector
+
+Build and push the ARM64 image for the Raspberry Pi:
 
 ```sh
 npm run docker-build-and-push -w @wx/collector
 ```
 
-The build context is the repository root, not `packages/collector`, because the lockfile and `packages/shared` live there. The script passes `../..` for that reason.
-
-Check the published image:
+Check that the published image includes `linux/arm64`:
 
 ```sh
-docker buildx imagetools inspect espatola/my-weather-station:latest
+docker buildx imagetools inspect espatola/my-weather-station-collector:latest
 ```
 
-The output must include `linux/arm64`.
+### API
+
+Build and push the AMD64 image for a hosted service such as Render:
+
+```sh
+npm run docker-build-and-push -w @wx/api
+```
+
+Both builds exclude `.env` and `.env.*` files. Supply configuration at runtime: set `POSTGRES_*` in the API hosting service, and pass the collector's `.env` with
+`--env-file` as shown below.
 
 ## Raspberry Pi
 
@@ -148,7 +153,7 @@ Sign in and pull the private image:
 
 ```sh
 docker login
-docker pull espatola/my-weather-station:latest
+docker pull espatola/my-weather-station-collector:latest
 docker logout
 ```
 
@@ -157,16 +162,23 @@ available for container starts and restarts.
 
 ## Run the collector
 
+If you are replacing the old `my-weather-station` container, stop and remove it before starting the new one so that only one collector runs:
+
+```sh
+docker stop my-weather-station
+docker rm my-weather-station
+```
+
 Start the collector:
 
 ```sh
 docker run --detach \
-  --name my-weather-station \
+  --name my-weather-station-collector \
   --restart unless-stopped \
   --network host \
   --cap-add NET_RAW \
   --env-file .env \
-  espatola/my-weather-station:latest
+  espatola/my-weather-station-collector:latest
 ```
 
 `--network host` and `NET_RAW` give Noble access to the Raspberry Pi Bluetooth adapter.
@@ -174,7 +186,7 @@ docker run --detach \
 Check collector output:
 
 ```sh
-docker logs --follow my-weather-station
+docker logs --follow my-weather-station-collector
 ```
 
 ## Troubleshooting
@@ -186,7 +198,7 @@ docker run --rm \
   --network host \
   --cap-add NET_RAW \
   --name ble \
-  espatola/my-weather-station:latest \
+  espatola/my-weather-station-collector:latest \
   node packages/collector/ble-raw.ts
 ```
 

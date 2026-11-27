@@ -8,4 +8,6 @@
 !packages/shared/shared-environment.ts
 !packages/api/src/
 !packages/api/src/**
+**/.env
+**/.env.*
 **/*.test.ts
