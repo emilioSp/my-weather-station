@@ -5,8 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { environmentSchema } from '#environment.ts';
 
 const environmentInput = (devices: unknown[]) => ({
-  VITE_SUPABASE_URL: 'http://127.0.0.1:54321',
-  VITE_SUPABASE_PUBLISHABLE_KEY: 'test-key',
+  VITE_API_BASE_URL: 'http://localhost:3000',
   VITE_DEVICES: JSON.stringify(devices),
 });
 

@@ -3,6 +3,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000016",
       "device_name": "device-1",
+      "device_id": null,
+      "address": null,
       "device_type": "outdoor",
       "measured_at": "2026-10-06T10:00:00Z",
       "temperature": 25,
@@ -15,6 +17,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000026",
       "device_name": "device-2",
+      "device_id": null,
+      "address": null,
       "device_type": "indoor",
       "measured_at": "2026-10-06T10:00:00Z",
       "temperature": 20,
@@ -27,6 +31,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000036",
       "device_name": "device-3",
+      "device_id": null,
+      "address": null,
       "device_type": "indoor",
       "measured_at": "2026-10-06T10:00:00Z",
       "temperature": 15,
@@ -39,6 +45,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000046",
       "device_name": "device-4",
+      "device_id": null,
+      "address": null,
       "device_type": "indoor",
       "measured_at": "2026-10-06T10:00:00Z",
       "temperature": 10,
@@ -53,6 +61,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000017",
       "device_name": "device-1",
+      "device_id": null,
+      "address": null,
       "device_type": "outdoor",
       "measured_at": "2026-10-06T12:00:00Z",
       "temperature": 26,
@@ -65,6 +75,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000027",
       "device_name": "device-2",
+      "device_id": null,
+      "address": null,
       "device_type": "indoor",
       "measured_at": "2026-10-06T12:00:00Z",
       "temperature": 21,
@@ -77,6 +89,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000037",
       "device_name": "device-3",
+      "device_id": null,
+      "address": null,
       "device_type": "indoor",
       "measured_at": "2026-10-06T12:00:00Z",
       "temperature": 16,
@@ -89,6 +103,8 @@
     {
       "id": "00000000-0000-0000-0000-000000000047",
       "device_name": "device-4",
+      "device_id": null,
+      "address": null,
       "device_type": "indoor",
       "measured_at": "2026-10-06T12:00:00Z",
       "temperature": 11,
