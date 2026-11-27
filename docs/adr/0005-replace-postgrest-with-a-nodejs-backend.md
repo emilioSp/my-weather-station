@@ -18,6 +18,24 @@ Replace PostgREST in the dashboard's read path with a small Node.js service. Use
 
 This supersedes [ADR-002](0002-postgresql-storage-with-separate-write-and-read-clients.md) for dashboard reads when the web app switches to the Node.js service.
 
+### Public API and naive rate limiting
+
+The API is publicly accessible without login. The owner accepted a simple in-memory rate limiter in Hono because the dashboard is a small personal project. This is a
+deliberate trade-off: it limits abuse from individual clients without adding infrastructure, but it does not stop distributed floods or protect the network or Node.js
+process from being overwhelmed.
+
+The rate limiter must be the first Hono middleware to run, before request validation, route handlers, or database access. It checks whether the request is within its
+client IP's quota; it does not authenticate the caller. If the API runs behind a proxy, use client IP information only from a trusted proxy.
+
+- `/get-latest-measure`: 15 requests per IP per minute.
+- `/get-chart-history`: 5 requests per IP per minute.
+- Requests over either quota receive HTTP 429 (Too Many Requests).
+
+Enable the limiter only in production. These are starting limits for a single API instance, and the counters are local to that instance.
+
+There is no concurrency cap across clients for chart-history queries. The owner chose to keep the API simple because this is a small personal dashboard and the risk of a
+coordinated attack is considered low. Requests from multiple IPs can still run history queries concurrently.
+
 ## Consequences
 
 - The web app will remove its Supabase client layer and read current measurements and chart history from the Node.js API.

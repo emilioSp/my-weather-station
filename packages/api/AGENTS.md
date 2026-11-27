@@ -2,8 +2,7 @@
 
 ## Purpose
 
-`@wx/api` is the Node.js and Hono backend. The current `GET /hello-world` endpoint is a temporary scaffold. The dashboard still uses Supabase; do not change that data
-path as part of scaffold work.
+`@wx/api` is the Node.js and Hono backend for reading weather measurements. The dashboard still uses Supabase.
 
 ## Architecture
 
@@ -32,8 +31,8 @@ startup. Do not commit credentials or use a `VITE_` prefix for database settings
 
 ## Tests
 
-Use Vitest and `app.request()` to exercise routes without starting an HTTP server. The scaffold test uses local Supabase PostgreSQL and does not require migrations. Use
-transaction isolation for tests that write data, and close the pool with a Vitest teardown hook when testing against PostgreSQL.
+Use Vitest and `app.request()` to exercise routes without starting an HTTP server. The measurement tests use local Supabase PostgreSQL and require the shared database
+migrations. Use transaction isolation for tests that write data, and close the pool with a Vitest teardown hook when testing against PostgreSQL.
 
 ```sh
 npm run test:unit -w @wx/api

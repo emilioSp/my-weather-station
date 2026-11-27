@@ -94,7 +94,6 @@ Start local Supabase and apply the shared database migrations before using the m
 npm start -w @wx/api
 curl 'http://localhost:3000/get-latest-measure?device_name=kitchen'
 curl 'http://localhost:3000/get-chart-history?start_date=2026-01-02T09:00:00Z&end_date=2026-01-02T10:00:00Z'
-curl 'http://localhost:3000/hello-world?name=Emilio'
 npm run test:unit -w @wx/api
 ```
 
