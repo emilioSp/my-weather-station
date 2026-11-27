@@ -1,0 +1,59 @@
+{
+  "version": "1.0.0",
+  "specId": "20261127-115934-add-weather-measurement-read-endpoints",
+  "summary": "Independently verified all nine acceptance criteria against the live candidate. API integration scenarios and the required root check completed successfully; no technical findings.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "Ran npm run test:unit -w @wx/api -- --reporter=verbose --silent after inspecting measurement.router.test.ts and the router/service/repository. Real PostgreSQL fixture: kitchen Jan 2 2026 at 09:00 (18°C), 10:00 (20°C), garden 11:00 (12°C). Request for kitchen returned 200 and exactly one snake_case object for kitchen at 10:00 with temperature 20. Repository uses bound exact-name equality and descending measured_at.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "Same API integration command: kitchen-only fixture, office request returned 200 and JSON null. Different-case Kitchen and trailing-space kitchen requests also returned null, confirming exact name matching.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "Same API integration command: both /get-latest-measure without device_name and device_name=%20 returned 400. Inspected measurement.schema.ts: nonblank validation does not trim the value used for matching.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "Same API integration command with real get_chart_history: kitchen at Jan 2 08:59, 09:00, 10:00; back_yard 09:30 and 10:01. Query 09:00–10:00 returned 200, kitchen [09:00,10:00], back_yard [09:30], exact device keys and snake_case timestamps. Equivalent offset bounds also passed. Inspected repository and unchanged SQL migration: direct function call, inclusive filtering, ordered aggregation and existing downsampling preserved.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC5",
+      "probe": "Same API integration command: lone kitchen reading Jan 3 09:00, query Jan 2 09:00–10:00 returned 200 and exactly {}. Inspected SQL empty-result COALESCE.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC6",
+      "probe": "Same API integration command: all four approved rows returned 400: end-only Jan 2 10:00Z; start Jan 2 09:00 without zone; start 09:00Z with empty end; start 10:00Z after end 09:00Z. Inspected Zod timestamp and chronological validation in measurement.schema.ts.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC7",
+      "probe": "Same API integration command: Temporal.Now.instant fixed at Jan 2 2026 10:00Z, kitchen readings 09:00,10:00,10:01, query start 09:00Z with no end returned 200 with only [09:00,10:00]. Clock called exactly once. Inspected service effective-end resolution before SQL.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC8",
+      "probe": "Same API integration command: now Jan 2 2026 10:00Z, kitchen readings 09:00,10:00,10:01, query 09:00–11:00 returned 200 with only [09:00,10:00]. Clock called exactly once; inspected service cap at now.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC9",
+      "probe": "Same API integration command: now July 1 2026, readings Apr 30 23:59, May 1 00:00, June 1 00:00; query Jan 1–June 1 returned 200 with only May 1 and June 1. Inspected measurement.service.ts: effective end minus 31*24 hours and forward-only start clamp resolved in Node before repository call.",
+      "probeStatus": "passed"
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Confirmed matching workflow specId and verifier-running phase; read approved proposal/spec/design and B1. No prototype files or earlier handoffs were present.",
+    "Reviewed integration test coverage against every approved example. Tests use real Hono and PostgreSQL, transaction-local temporary tables, rollback cleanup, and no spec parsing. All 19 API tests passed, including hello-world regressions and fractional-bound coverage.",
+    "npm run check exited 0: formatting, lint, TypeScript, 98 unit/integration tests across four workspaces, and 68 Playwright tests passed. No UI changes required visual snapshots.",
+    "Saved pre-check file contents outside the project. Check changed no original file contents; removed 168 generated report/coverage files and new empty directories. Verified original bytes unchanged, removed backup and temporary log, and preserved pre-existing candidate changes."
+  ]
+}

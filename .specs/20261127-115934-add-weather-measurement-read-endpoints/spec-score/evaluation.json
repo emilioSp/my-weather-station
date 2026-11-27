@@ -1,0 +1,17 @@
+{
+  "specId": "20261127-115934-add-weather-measurement-read-endpoints",
+  "provider": "openrouter",
+  "model": "typesafe/jev-1.14",
+  "scoringCriteriaVersion": "1.0.0",
+  "status": "success",
+  "scores": {
+    "correctness": {
+      "score": 88.25,
+      "confidence": 0.58
+    },
+    "verificationQuality": {
+      "score": 94.5,
+      "confidence": 0.81
+    }
+  }
+}

@@ -11,7 +11,7 @@ An npm workspaces monorepo.
 packages/collector  @wx/collector  BLE daemon. Reads the meters and writes to PostgreSQL.
                                     Owns .env, Dockerfile, and the development seed.
 packages/web        @wx/web        React + Vite app. Reads the measures from Supabase.
-packages/api        @wx/api        Hono backend scaffold. Not used by the web app yet.
+packages/api        @wx/api        Hono backend for reading weather measurements. Not used by the web app yet.
 packages/shared     @wx/shared     Shared domain schemas, key mapping, UUID normalization,
                                   and the Node-only PostgreSQL client and migrations.
 ```
@@ -86,16 +86,20 @@ npm run seed:local -w @wx/collector
 The web app reads the `measures` table through the local Supabase API. `packages/web/.env` contains the local endpoint and public key. `packages/web/.env.prod` contains
 the production values. Vite loads `.env` during development. Its build command uses the `prod` mode, which gives `.env.prod` priority.
 
-### API scaffold
+### API
 
-Start local Supabase with `npm run supabase:start`. The placeholder endpoint queries PostgreSQL without using any tables, so no migrations are needed for this workspace.
-The `name` query parameter is optional and defaults to `World`.
+Start local Supabase and apply the shared database migrations before using the measurement endpoints or running the API tests.
 
 ```sh
 npm start -w @wx/api
+curl 'http://localhost:3000/get-latest-measure?device_name=kitchen'
+curl 'http://localhost:3000/get-chart-history?start_date=2026-01-02T09:00:00Z&end_date=2026-01-02T10:00:00Z'
 curl 'http://localhost:3000/hello-world?name=Emilio'
 npm run test:unit -w @wx/api
 ```
+
+The latest endpoint matches the exact stored device name and returns `null` if none matches. Chart history is grouped by device name and includes both bounds. Supply ISO
+8601 timestamps with a time zone. If `end_date` is omitted or in the future, the end is now. History covers at most 31 days ending at that effective end.
 
 Build the image from the repository root. Pass the `POSTGRES_*` variables at runtime, with a `POSTGRES_HOST` reachable from inside the container. The API's HTTP `PORT`
 defaults to `3000`.

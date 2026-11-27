@@ -7,7 +7,8 @@ status: active
 
 ## Context
 
-Accepted by the owner during the constitution initialization interview. Implemented.
+Accepted by the owner during the constitution initialization interview. Implemented. [ADR-005](0005-replace-postgrest-with-a-nodejs-backend.md) will supersede this
+decision for dashboard reads once the web app switches to the Node.js API.
 
 The BLE collector must persist measurements, and the web app must query current readings and chart history. The owner confirmed using PostgreSQL with separate clients
 rather than maintaining a custom API server.
