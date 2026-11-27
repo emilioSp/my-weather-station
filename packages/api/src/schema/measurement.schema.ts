@@ -2,7 +2,10 @@
 import { z } from 'zod';
 
 export const latestMeasurementQuerySchema = z.object({
-  device_name: z.string().refine((name) => name.trim().length > 0, 'Device name must not be blank'),
+  device_names: z
+    .array(z.string().refine((name) => name.trim().length > 0, 'Device name must not be blank'))
+    .min(1)
+    .max(3),
 });
 
 const timestampSchema = z.iso

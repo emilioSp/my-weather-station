@@ -42,53 +42,79 @@ afterAll(async () => {
   await database.close();
 });
 
-it('given two kitchen readings and a newer garden reading when kitchen is requested then its newest reading is returned as one object', async () => {
+it('given readings for four devices when three are requested then only their latest readings are returned by name', async () => {
   await insertIsolatedReadings([
     { device_name: 'kitchen', measured_at: '2026-01-02T09:00:00Z', temperature: 18 },
     { device_name: 'kitchen', measured_at: '2026-01-02T10:00:00Z', temperature: 20 },
     { device_name: 'garden', measured_at: '2026-01-02T11:00:00Z', temperature: 12 },
+    { device_name: 'office', measured_at: '2026-01-02T12:00:00Z', temperature: 21 },
+    { device_name: 'garage', measured_at: '2026-01-02T13:00:00Z', temperature: 14 },
   ]);
 
-  const response = await app.request('/get-latest-measure?device_name=kitchen');
+  const response = await app.request(
+    '/get-latest-measure?device_names=kitchen&device_names=garden&device_names=office',
+  );
 
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual({
-    id: expect.any(String),
-    device_id: 'test-meter',
-    device_type: METER_TYPES.INDOOR,
-    device_name: 'kitchen',
-    address: null,
-    measured_at: '2026-01-02T10:00:00+00:00',
-    temperature: 20,
-    humidity: 45,
-    dew_point: 8,
-    heat_index: 20,
-    battery: 90,
-    signal_power_dbm: -65,
+    kitchen: {
+      id: expect.any(String),
+      device_id: 'test-meter',
+      device_type: METER_TYPES.INDOOR,
+      device_name: 'kitchen',
+      address: null,
+      measured_at: '2026-01-02T10:00:00+00:00',
+      temperature: 20,
+      humidity: 45,
+      dew_point: 8,
+      heat_index: 20,
+      battery: 90,
+      signal_power_dbm: -65,
+    },
+    garden: expect.objectContaining({
+      device_name: 'garden',
+      measured_at: '2026-01-02T11:00:00+00:00',
+      temperature: 12,
+    }),
+    office: expect.objectContaining({
+      device_name: 'office',
+      measured_at: '2026-01-02T12:00:00+00:00',
+      temperature: 21,
+    }),
   });
 });
 
 it.each([
   { scenario: 'an absent office device', name: 'office' },
   { scenario: 'a different case', name: 'Kitchen' },
-  { scenario: 'a trailing space', name: 'kitchen%20' },
+  { scenario: 'a trailing space', name: 'kitchen ' },
 ])(
-  'given a kitchen reading when latest is requested with $scenario then the response is 200 with JSON null',
+  'given a kitchen reading when requesting kitchen alongside $scenario then the unmatched key is null',
   async ({ name }) => {
     await insertIsolatedReadings([
       { device_name: 'kitchen', measured_at: '2026-01-02T09:00:00Z', temperature: 18 },
     ]);
 
-    const response = await app.request(`/get-latest-measure?device_name=${name}`);
+    const response = await app.request(
+      `/get-latest-measure?device_names=kitchen&device_names=${encodeURIComponent(name)}`,
+    );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toBeNull();
+    expect(await response.json()).toEqual({
+      kitchen: expect.objectContaining({ temperature: 18 }),
+      [name]: null,
+    });
   },
 );
 
 it.each([
-  { scenario: 'a missing device name', query: '' },
-  { scenario: 'a blank device name', query: '?device_name=%20' },
+  { scenario: 'no device names', query: '' },
+  { scenario: 'a blank name in the list', query: '?device_names=kitchen&device_names=%20' },
+  { scenario: 'the old singular parameter', query: '?device_name=kitchen' },
+  {
+    scenario: 'four device names',
+    query: '?device_names=kitchen&device_names=garden&device_names=office&device_names=garage',
+  },
 ])('given $scenario when latest is requested then the response is 400', async ({ query }) => {
   const response = await app.request(`/get-latest-measure${query}`);
 

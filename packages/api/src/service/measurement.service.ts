@@ -2,7 +2,8 @@
 import { readChartHistory, readLatestMeasurement } from '#repository/measurement.repository.ts';
 import type { ChartHistoryQuery } from '#schema/measurement.schema.ts';
 
-export const getLatestMeasurement = async (deviceName: string) => readLatestMeasurement(deviceName);
+export const getLatestMeasurements = async (deviceNames: string[]) =>
+  Promise.all(deviceNames.map(readLatestMeasurement));
 
 export const getChartHistory = async ({ start_date, end_date }: ChartHistoryQuery) => {
   const now = Temporal.Now.instant();
