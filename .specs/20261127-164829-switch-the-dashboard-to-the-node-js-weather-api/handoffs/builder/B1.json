@@ -1,0 +1,49 @@
+{
+  "status": "done",
+  "summary": "Moved dashboard measurement reads from PostgREST to the Node.js API, adopted the shared snake_case Measure in all three consumers, and switched the real browser suite to Hono and PostgreSQL. Added public CORS without changing rate limits or their middleware order. The full repository check and all six existing visual comparisons passed.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probe": "Ran `POSTGRES_DB=<migrated disposable database> WX_E2E_DEVICE_NAME=kitchen npm run test:e2e -w @wx/web -- --project=chromium --project=webkit --no-deps --workers=1 -g 'API supplies'`. Both browsers observed a successful `GET /get-latest-measure?device_name=kitchen` with a seeded latest reading of 20°C. Inspected `packages/web/api/weather.api.ts`, web environment files, and workspace dependencies to confirm no PostgREST client or Supabase key remains.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC2",
+      "probe": "The same isolated Chromium and WebKit Playwright scenario seeded the latest reading at `2026-11-20T12:00:00Z`. Both observed `GET /get-chart-history` with `start_date=2026-11-17T12:00:00.000Z` and `end_date=2026-11-20T12:00:00.000Z` when opening the default three-day chart.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC3",
+      "probe": "Ran `npm run build -w @wx/web -- --outDir <temporary directory>/dist`, started Vite dev and Vite preview for that `prod` build, and used Chromium to intercept the actual outbound GET with `kitchen` configured. Did not override `VITE_API_BASE_URL`. Verified `http://localhost:3000/get-latest-measure?device_name=kitchen` in dev and `https://my-weather-station-api.onrender.com/get-latest-measure?device_name=kitchen` in the production build, with neither an API key nor authorization header.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC4",
+      "probe": "Inspected `packages/shared/types.ts` (exact snake_case schema and inferred `Measure`), the collector repository (`device_name` on the typed PostgreSQL row returned as stored), the API repository and router (`measured_at` on the unmodified typed JSON response), and `packages/web/api/weather.api.ts` and `WeatherCard.tsx` (`signal_power_dbm` rendered directly from shared `Measure`). Ran `npm run check`, including type checks, API response assertions and browser signal display assertions. No competing measurement declaration was found.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC5",
+      "probe": "Created a disposable database on local PostgreSQL, ran `POSTGRES_DB=<disposable database> npm run migrate:local -w @wx/shared`, and ran the real Playwright scenario described in AC1 with `WX_E2E_DEVICE_NAME=kitchen`. Both Chromium and WebKit used Playwright's local Hono server with no HTTP or DB mocks. With 18°C at 11:00 UTC and 20°C at 12:00 UTC on Nov 20, the card displayed 20.0°C and the default chart displayed an 18.0°C low. Verified fixture cleanup left zero rows and dropped the scratch database.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC6",
+      "probe": "Ran `npm run test:unit -w @wx/collector -- repository/measure.repository.test.ts` and reran it via `npm run check`. The test stored a complete kitchen reading, verified `device_name: 'kitchen'`, `temperature: 20`, and `signal_power_dbm: -55`, checked that `deviceName` and `signalPowerDBM` were absent, and compared the returned object to the PostgreSQL row.",
+      "probeStatus": "passed"
+    },
+    {
+      "id": "AC7",
+      "probe": "Manually inspected `ls packages/shared/utils`, which listed only `normalizeUuid.util.ts`. `toSnakeCaseKeys.util.ts`, `toCamelCaseKeys.util.ts`, and `mapKeys.util.ts` were absent; a source search found no remaining use. No automated file-absence test was added.",
+      "probeStatus": "passed"
+    }
+  ],
+  "notes": [
+    "`npm run check` passed, including 70 Playwright checks. The production rate-limiter regression tests verified that both routes preserve their quotas and return `Access-Control-Allow-Origin: *` on 429 responses.",
+    "`CI=1 npm run test:visual -w @wx/web` passed all six comparisons against the existing snapshots; no snapshots were updated.",
+    "Deploy the CORS-enabled API to Render before switching GitHub Pages. The production-origin check verified the browser request locally; it did not test or change the live Render deployment."
+  ],
+  "escalations": [],
+  "version": "1.0.0",
+  "specId": "20261127-164829-switch-the-dashboard-to-the-node-js-weather-api"
+}

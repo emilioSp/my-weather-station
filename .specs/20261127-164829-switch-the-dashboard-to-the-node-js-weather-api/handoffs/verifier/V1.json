@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "specId": "20261127-164829-switch-the-dashboard-to-the-node-js-weather-api",
+  "summary": "Verified all seven criteria against the live candidate. Chromium and WebKit displayed the seeded PostgreSQL readings through local Hono. Both configured request origins, the shared measurement shape, and removal of the converters were confirmed. No findings.",
+  "acceptanceCriteria": [
+    {
+      "id": "AC1",
+      "probeStatus": "passed",
+      "probe": "Ran WX_E2E_DEVICE_NAME=kitchen npm run test:e2e -w @wx/web -- --project=chromium --project=webkit --no-deps --workers=1 -g 'API supplies' with POSTGRES_DB pointing to a freshly migrated local database. Both browsers received a successful GET /get-latest-measure?device_name=kitchen and displayed the stored 20.0°C. Inspected weather.api.ts, the web dependency list, and searched web sources for PostgREST/Supabase; no legacy measurement request or key remained."
+    },
+    {
+      "id": "AC2",
+      "probeStatus": "passed",
+      "probe": "The same two real-browser runs asserted the GET /get-chart-history request parameters: start_date=2026-11-17T12:00:00.000Z and end_date=2026-11-20T12:00:00.000Z for the default range anchored at the seeded noon reading. Inspected the assertions in packages/web/tests/e2e/dashboard.spec.ts and URL serialization in api/weather.api.ts."
+    },
+    {
+      "id": "AC3",
+      "probeStatus": "passed",
+      "probe": "Set only VITE_DEVICES to configure kitchen, ran npm run build -w @wx/web -- --outDir <temporary build>, and opened Vite development and production preview servers in Chromium. Intercepted the outbound GET before transmission: http://localhost:3000/get-latest-measure?device_name=kitchen in development and https://my-weather-station-api.onrender.com/get-latest-measure?device_name=kitchen in prod. Neither request carried an apikey or authorization header."
+    },
+    {
+      "id": "AC4",
+      "probeStatus": "passed",
+      "probe": "Compared packages/shared/types.ts with design.md: Measure is inferred from the twelve specified snake_case fields. Traced device_name on the collector repository's unmodified returning('*') row, measured_at on the API's to_jsonb(measures) response sent directly by measurement.router.ts, and signal_power_dbm from web/api/weather.api.ts to WeatherCard.tsx. Inspected history SQL: groups full rows by device_name; latest query returns null if absent. Searched measurement declarations across packages and found no competing stored shape. Workspace typechecks and API/browser tests passed."
+    },
+    {
+      "id": "AC5",
+      "probeStatus": "passed",
+      "probe": "Created a disposable local PostgreSQL database and ran npm run migrate:local -w @wx/shared (12 migrations). Inspected Playwright config and measurement-store.ts: real Hono server on 4175 and committed SQL inserts, no measurement mocks for these projects. Ran the AC1 Playwright command for kitchen in both engines. With 18°C at 11:00 UTC and 20°C at noon, both showed a 20.0°C card via the latest GET and an 18.0°C low via the default history GET. Checked zero rows remained, then dropped the database."
+    },
+    {
+      "id": "AC6",
+      "probeStatus": "passed",
+      "probe": "Ran npm run test:unit -w @wx/collector -- repository/measure.repository.test.ts against local PostgreSQL. Inspected the assertions: the returned object equals the persisted row, has device_name='kitchen', temperature=20 and signal_power_dbm=-55, and lacks deviceName and signalPowerDBM. The integration test passed."
+    },
+    {
+      "id": "AC7",
+      "probeStatus": "passed",
+      "probe": "Manually listed packages/shared/utils: only normalizeUuid.util.ts remains. toSnakeCaseKeys.util.ts, toCamelCaseKeys.util.ts and mapKeys.util.ts are absent. Searched the workspace sources for their names; no converter usage or file-absence test found."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "npm run check completed successfully, including 70 browser tests. Non-fixing formatting and lint checks were clean before running it.",
+    "Inspected limiter registration and the production regression checks: quotas remain 15 latest and 5 history requests per minute; 429 responses carry Access-Control-Allow-Origin: *.",
+    "CI=1 npm run test:visual -w @wx/web matched all six existing snapshots. Restored generated reports and caches; compared project file contents with the pre-probe backup before handoff."
+  ]
+}

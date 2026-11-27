@@ -1,0 +1,17 @@
+{
+  "specId": "20261127-164829-switch-the-dashboard-to-the-node-js-weather-api",
+  "provider": "openrouter",
+  "model": "typesafe/jev-1.14",
+  "scoringCriteriaVersion": "1.0.0",
+  "status": "success",
+  "scores": {
+    "correctness": {
+      "score": 87,
+      "confidence": 0.58
+    },
+    "verificationQuality": {
+      "score": 82.75,
+      "confidence": 0.57
+    }
+  }
+}
