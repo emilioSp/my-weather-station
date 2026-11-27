@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 
 import { expect } from '@playwright/test';
+import type { Measure } from '@wx/shared';
 import { loadEnv } from 'vite';
 
 import { test } from '#tests/utils/test.ts';
@@ -10,22 +11,9 @@ type ConfiguredDevice = {
   deviceName: string;
 };
 
-type MeasureRow = {
-  id: string;
-  device_name: string;
-  device_type: string;
-  measured_at: string;
-  temperature: number;
-  humidity: number;
-  dew_point: number;
-  heat_index: number;
-  battery: number;
-  signal_power_dbm: number;
-};
-
 type DashboardFixture = {
-  initial: MeasureRow[];
-  changed: MeasureRow[];
+  initial: Measure[];
+  changed: Measure[];
 };
 
 const fixture: DashboardFixture = JSON.parse(
@@ -77,19 +65,17 @@ for (const viewport of [
       await page.route('https://fonts.googleapis.com/**', async (route) => {
         await route.abort();
       });
-      await page.route('**/rest/v1/measures**', async (route) => {
-        const deviceName = new URL(route.request().url()).searchParams
-          .get('device_name')
-          ?.replace(/^eq\./, '');
+      await page.route('**/get-latest-measure?*', async (route) => {
+        const deviceName = new URL(route.request().url()).searchParams.get('device_name');
 
         const index = devices.findIndex((device) => device.deviceName === deviceName);
 
         await route.fulfill({
           contentType: 'application/json',
-          body: JSON.stringify([{ ...fixture.changed[index], device_name: deviceName }]),
+          body: JSON.stringify({ ...fixture.changed[index], device_name: deviceName }),
         });
       });
-      await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+      await page.route('**/get-chart-history?*', async (route) => {
         await route.fulfill({
           contentType: 'application/json',
           body: JSON.stringify(history),

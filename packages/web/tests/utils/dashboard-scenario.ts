@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 
 import { expect, type Page } from '@playwright/test';
+import type { Measure } from '@wx/shared';
 import { loadEnv } from 'vite';
 
 // JUSTIFICATION: environment.ts validates development device names as strings.
@@ -11,24 +12,11 @@ export const devices = JSON.parse(
   deviceName: string;
 }[];
 
-type Row = {
-  id: string;
-  device_name: string;
-  device_type: string;
-  measured_at: string;
-  temperature: number;
-  humidity: number;
-  dew_point: number;
-  heat_index: number;
-  battery: number;
-  signal_power_dbm: number;
-};
-
-type Fixture = { initial: Row[]; changed: Row[] };
+type Fixture = { initial: Measure[]; changed: Measure[] };
 
 export type DashboardResponses = {
-  readings: { status: number; json: Row[] | { message: string } };
-  history: { status: number; json: Record<string, Row[]> | { message: string } };
+  readings: { status: number; json: Measure[] | { error: { message: string } } };
+  history: { status: number; json: Record<string, Measure[]> | { error: { message: string } } };
 };
 
 const fixture: Fixture = JSON.parse(
@@ -63,7 +51,7 @@ export const changedHistory = Object.fromEntries(
 // Control browser time and count requests. Each test defines its own responses and delays.
 export class DashboardScenario {
   public requestedDevices: string[] = [];
-  public historyQueries: { p_start: string; p_end: string }[] = [];
+  public historyQueries: Record<string, string>[] = [];
   public readonly page: Page;
 
   public constructor(page: Page) {
@@ -71,19 +59,19 @@ export class DashboardScenario {
   }
 
   public async mockDashboardResponses(responses: DashboardResponses) {
-    await this.page.route('**/rest/v1/measures**', async (route) => {
-      const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
+    await this.page.route('**/get-latest-measure?*', async (route) => {
+      const name = new URL(route.request().url()).searchParams.get('device_name') ?? '';
       this.requestedDevices.push(name);
       const response = responses.readings;
       await route.fulfill({
         ...response,
         json: Array.isArray(response.json)
-          ? response.json.filter((row) => row.device_name === name)
+          ? (response.json.find((row) => row.device_name === name) ?? null)
           : response.json,
       });
     });
-    await this.page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-      this.historyQueries.push(route.request().postDataJSON());
+    await this.page.route('**/get-chart-history?*', async (route) => {
+      this.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));
       await route.fulfill(responses.history);
     });
   }

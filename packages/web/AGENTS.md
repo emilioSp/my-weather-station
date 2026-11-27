@@ -43,18 +43,19 @@ main.tsx
 ### UI
 
 - Live in `tests/ui/` and exercise the application in a real browser with mocked HTTP responses.
-- Use mocks when the scenario needs controlled failures, pending requests, or response timing. These tests verify UI behavior, not the Supabase integration.
+- Use mocks when the scenario needs controlled failures, pending requests, or response timing. These tests verify UI behavior, not the Node.js API integration.
 - Use real E2E tests for normal data loading, refresh, and interactions that do not need HTTP mocks.
 - Run in the `mocked-http-chromium` and `mocked-http-webkit` projects against the Vite server on port `4173`, which also serves visual tests.
 
 ### E2E
 
-- Live in `tests/e2e/` and exercise the full browser → local Supabase HTTP API → PostgreSQL flow. Do not mock HTTP responses, the API module, or the database.
+- Live in `tests/e2e/` and exercise the full browser → local Node.js API → PostgreSQL flow. Do not mock HTTP responses, the API module, or the database.
 - Require local Supabase to be running with the shared database migrations applied.
-- Run in the `chromium` and `webkit` projects sequentially against a separate Vite server on port `4174`, configured with a unique device name per run.
+- Run in the `chromium` and `webkit` projects sequentially against a separate Vite server on port `4174`, configured with a unique device name per run. Playwright starts
+  the local API on port `4175`.
 - Seed committed measurements with unique IDs and recent timestamps. Insert newer measurements before testing refresh behavior.
 - Use fixture teardown with `try/finally` to delete only the inserted IDs, including on failures. Never truncate tables or assume the local database is empty.
-- Do not use transaction rollback for isolation: Supabase reads through separate connections and cannot see uncommitted test data.
+- Do not use transaction rollback for isolation: The API reads through separate connections and cannot see uncommitted test data.
 - Browser clock control is allowed, but it does not change PostgreSQL's clock. Keep measurement timestamps inside the requested range and out of the database's future.
 - `npm run test:e2e -w @wx/web` currently runs both UI and E2E tests, excluding visual tests. Select `--project=chromium --project=webkit` to run only real E2E tests.
 

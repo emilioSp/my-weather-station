@@ -37,7 +37,7 @@ npm run <script> -w <workspace-name>
 
 1. Import code from another workspace by package name. Declare the dependency in the consumer workspace.
 2. Inside a workspace, use its `imports` field. Do not use relative paths that leave the workspace.
-3. `packages/shared` owns stored-row domain schemas, case mapping, and UUID normalization.
+3. `packages/shared` owns stored-row domain schemas and UUID normalization.
 4. Shared domain code must stay platform-neutral. `@wx/shared/db.ts` and `@wx/shared/shared-environment.ts` are Node-only exports for the API and collector. Do not import
    them from the web app.
 5. Types that describe stored rows belong in `packages/shared/types.ts`. Types used by one workspace stay in that workspace.
