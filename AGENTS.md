@@ -22,7 +22,7 @@ This repository is an npm workspaces monorepo:
 1. `packages/collector` (`@wx/collector`) reads meters and stores measurements. See [collector AGENTS.md](./packages/collector/AGENTS.md).
 2. `packages/web` (`@wx/web`) is the React and Vite web app. See [web AGENTS.md](./packages/web/AGENTS.md).
 3. `packages/shared` (`@wx/shared`) contains shared domain code, the Node-only database client, and database migrations.
-4. `packages/api` (`@wx/api`) is the Hono backend scaffold.
+4. `packages/api` (`@wx/api`) is the Hono backend for weather measurements.
 
 The root `package.json` contains workspace globs, root scripts, development tools, and the install-script policy. Add runtime dependencies to the workspace that uses
 them. Keep `allowScripts` in the root `package.json`.
