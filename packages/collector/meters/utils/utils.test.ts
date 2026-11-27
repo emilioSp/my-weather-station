@@ -27,18 +27,18 @@ describe('meter calculations', () => {
     expect(
       formatMeasure({
         id: '123e4567-e89b-12d3-a456-426614174000',
-        deviceId: 'device',
-        deviceName: 'test meter',
+        device_id: 'device',
+        device_name: 'test meter',
         address: 'address',
-        deviceType: METER_TYPES.INDOOR,
+        device_type: METER_TYPES.INDOOR,
         temperature: 20,
-        dewPoint: 10,
-        heatIndex: 21,
+        dew_point: 10,
+        heat_index: 21,
         humidity: 50,
         battery: 80,
-        signalPowerDBM: -50,
-        measuredAt: '2026-01-01T12:34:56.789Z',
-      }).measuredAt,
+        signal_power_dbm: -50,
+        measured_at: '2026-01-01T12:34:56.789Z',
+      }).measured_at,
     ).toBe('2026-01-01T12:34:56+00:00[UTC]');
   });
 });
