@@ -104,13 +104,14 @@ Start local Supabase and apply the shared database migrations before using the m
 
 ```sh
 npm run dev -w @wx/api
-curl 'http://localhost:3000/get-latest-measure?device_name=kitchen'
+curl 'http://localhost:3000/get-latest-measure?device_names=kitchen&device_names=garden'
 curl 'http://localhost:3000/get-chart-history?start_date=2026-01-02T09:00:00Z&end_date=2026-01-02T10:00:00Z'
 npm run test:unit -w @wx/api
 ```
 
-The latest endpoint matches the exact stored device name and returns `null` if none matches. Chart history is grouped by device name and includes both bounds. Supply ISO
-8601 timestamps with a time zone. If `end_date` is omitted or in the future, the end is now. History covers at most 31 days ending at that effective end.
+Supply `device_names` once per requested device, up to three devices per request. The response is keyed by the exact device name, with its latest reading or `null` if
+none exists. Chart history is grouped by device name and includes both bounds. Supply ISO 8601 timestamps with a time zone. If `end_date` is omitted or in the future, the
+end is now. History covers at most 31 days ending at that effective end.
 
 Build the image from the repository root. Pass the `POSTGRES_*` variables at runtime, with a `POSTGRES_HOST` reachable from inside the container. The API's HTTP `PORT`
 defaults to `3000`.
