@@ -6,23 +6,11 @@
   "plugins": ["typescript", "import", "vitest"],
   "jsPlugins": [
     {
-      "name": "test-titles",
-      "specifier": "./.oxlint/test-titles.js"
-    },
-    {
       "name": "anti-slop",
       "specifier": "oxlint-anti-slop"
     }
   ],
   "ignorePatterns": [".agents/**", ".pi/**", "coverage/**"],
-  "overrides": [
-    {
-      "files": ["packages/web/tests/**/*.spec.ts"],
-      "rules": {
-        "test-titles/valid-title": ["error", "^given .+ when .+ then .+$"]
-      }
-    }
-  ],
   "rules": {
     "prefer-const": "error",
     "no-else-return": ["error", { "allowElseIf": false }],

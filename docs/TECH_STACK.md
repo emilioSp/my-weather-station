@@ -46,13 +46,11 @@ collector; the web app does not need it or a polyfill. See [ADR-004](adr/0004-us
 | TypeScript compiler           | Checks types across all four workspaces without emitting application JavaScript. |
 | Vitest and V8 coverage        | Run unit and integration tests and collect coverage.                             |
 | Playwright                    | Tests Chromium and WebKit; Chromium coverage is merged with unit coverage.       |
-| Oxlint and `oxlint-anti-slop` | Enforce lint rules and project conventions.                                      |
-| Local Oxlint plugin           | Validates static and interpolated Playwright test titles.                        |
+| Oxlint and `oxlint-anti-slop` | Enforce lint rules and project conventions, including test title format.         |
 | Oxfmt                         | Formats source, configuration, and documentation.                                |
 | GitHub Actions                | Runs pull request checks and deploys the web build.                              |
 
-`npm run check` applies formatting and lint fixes, then checks types, tests, and coverage. See the [root scripts](../package.json) and
-[local lint rule](../.oxlint/test-titles.js).
+`npm run check` applies formatting and lint fixes, then checks types, tests, and coverage. See the [root scripts](../package.json).
 
 ## Deployment
 
