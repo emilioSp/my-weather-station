@@ -1,14 +1,14 @@
 // Share retries, derived values, and storage across meter reading strategies.
 
-import { type Measure, type WeatherReading, weatherReadingSchema } from '@wx/shared';
+import { type Measurement, type WeatherReading, weatherReadingSchema } from '@wx/shared';
 
 import { getAdvertisement } from '#api/sensor.api.ts';
 import { environment } from '#environment.ts';
 import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
 import { calculateDewPoint } from '#meters/utils/calculateDewPoint.util.ts';
 import { calculateHeatIndex } from '#meters/utils/calculateHeatIndex.util.ts';
-import { formatMeasure } from '#meters/utils/formatMeasure.util.ts';
-import { storeMeasure } from '#repository/measure.repository.ts';
+import { formatMeasurement } from '#meters/utils/formatMeasurement.util.ts';
+import { storeMeasurement } from '#repository/measurement.repository.ts';
 import {
   type Advertisement,
   type Meter as MeterConfiguration,
@@ -38,7 +38,7 @@ export abstract class Meter implements MeterInterface {
     return { ...this.meter };
   }
 
-  public async read(): Promise<Measure> {
+  public async read(): Promise<Measurement> {
     const reading: Partial<WeatherReading> = {};
 
     for (let scanAttempt = 0; scanAttempt < environment.SCAN_RETRIES; scanAttempt += 1) {
@@ -57,7 +57,7 @@ export abstract class Meter implements MeterInterface {
 
       if (!completeReading) continue;
 
-      const measure = await storeMeasure({
+      const measurement = await storeMeasurement({
         type: this.meter.type,
         deviceName: this.meter.deviceName,
         deviceId: advertisement.deviceId,
@@ -65,7 +65,7 @@ export abstract class Meter implements MeterInterface {
         ...completeReading,
       });
 
-      return formatMeasure(measure);
+      return formatMeasurement(measurement);
     }
 
     throw new NoCompleteReadingError(

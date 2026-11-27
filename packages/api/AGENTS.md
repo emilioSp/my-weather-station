@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`@wx/api` is the Node.js and Hono backend for reading weather measurements. The dashboard still uses Supabase.
+`@wx/api` is the Node.js and Hono backend for reading weather measurements. The dashboard reads measurements through it.
 
 ## Architecture
 

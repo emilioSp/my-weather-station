@@ -1,30 +1,28 @@
-// Verify date formatting, range filtering, extrema, and signal values during dashboard checks.
+// Verify date formatting, extrema, and signal values during dashboard checks.
 
 import { readFileSync } from 'node:fs';
 
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import { describe, expect, it } from 'vitest';
 
-import { CHART_RANGES, chartRanges } from '#utils/chart-ranges.ts';
-import { filterMeasuresForRange } from '#utils/filterMeasuresForRange.util.ts';
 import { formatChartTime } from '#utils/formatChartTime.util.ts';
 import { formatMeasuredAt } from '#utils/formatMeasuredAt.util.ts';
-import { formatMeasureValue } from '#utils/formatMeasureValue.util.ts';
+import { formatMeasurementValue } from '#utils/formatMeasurementValue.util.ts';
 import { getLatestTimestamp } from '#utils/getLatestTimestamp.util.ts';
 import { getRangeExtrema } from '#utils/getRangeExtrema.util.ts';
 import { getSignalPercentage } from '#utils/getSignalPercentage.util.ts';
 import { WEATHER_METRICS } from '#utils/weather-metrics.ts';
 
 type ExtremaFixture = {
-  oldest: Measure;
-  older: Measure;
-  newer: Measure;
-  newest: Measure;
+  oldest: Measurement;
+  older: Measurement;
+  newer: Measurement;
+  newest: Measurement;
 };
 
 type TemperaturePair = {
-  earlier: Measure;
-  later: Measure;
+  earlier: Measurement;
+  later: Measurement;
 };
 
 describe('weather dashboard utilities', () => {
@@ -42,7 +40,7 @@ describe('weather dashboard utilities', () => {
   ])(
     'given a $label value when formatting it then returns $expected',
     ({ value, metric, expected }) => {
-      expect(formatMeasureValue({ value, metric })).toBe(expected);
+      expect(formatMeasurementValue({ value, metric })).toBe(expected);
     },
   );
 
@@ -81,25 +79,6 @@ describe('weather dashboard utilities', () => {
     });
   });
 
-  it('given readings before at and within the last day when filtering then includes only boundary and later readings', () => {
-    const end = new Date('2026-01-02T00:00:00Z');
-
-    const measures: Measure[] = JSON.parse(
-      readFileSync(
-        new URL('../tests/fixtures/dashboard/range-boundaries.json', import.meta.url),
-        'utf8',
-      ),
-    );
-
-    expect(
-      filterMeasuresForRange({
-        measures,
-        range: chartRanges[CHART_RANGES.LAST_DAY],
-        end: end.getTime(),
-      }).map(({ id }) => id),
-    ).toEqual(['edge', 'inside']);
-  });
-
   it('given unordered readings when finding the latest timestamp then returns 2 January at 06:00 UTC', () => {
     const { oldest, older, newer, newest }: ExtremaFixture = JSON.parse(
       readFileSync(
@@ -118,7 +97,7 @@ describe('weather dashboard utilities', () => {
   });
 
   it('given no readings when finding temperature extrema then returns null', () => {
-    expect(getRangeExtrema({ measures: [], metric: WEATHER_METRICS.TEMPERATURE })).toBeNull();
+    expect(getRangeExtrema({ measurements: [], metric: WEATHER_METRICS.TEMPERATURE })).toBeNull();
   });
 
   it('given unordered temperature readings with tied extremes when finding extrema then returns the earliest low and high dates', () => {
@@ -131,7 +110,7 @@ describe('weather dashboard utilities', () => {
 
     expect(
       getRangeExtrema({
-        measures: [older, newest, oldest, newer],
+        measurements: [older, newest, oldest, newer],
         metric: WEATHER_METRICS.TEMPERATURE,
       }),
     ).toEqual({
@@ -151,12 +130,12 @@ describe('weather dashboard utilities', () => {
     );
 
     expect(
-      getRangeExtrema({ measures: [earlier, later], metric: WEATHER_METRICS.TEMPERATURE }),
+      getRangeExtrema({ measurements: [earlier, later], metric: WEATHER_METRICS.TEMPERATURE }),
     ).toEqual({
       low: 18.01,
       high: 18.04,
-      lowMeasuredAt: later.measuredAt,
-      highMeasuredAt: earlier.measuredAt,
+      lowMeasuredAt: later.measured_at,
+      highMeasuredAt: earlier.measured_at,
     });
   });
 
@@ -167,14 +146,14 @@ describe('weather dashboard utilities', () => {
   ])(
     'given unordered tied $label readings when finding extrema then selects the earliest low and high dates',
     ({ metric, low, high }) => {
-      const measures: Measure[] = JSON.parse(
+      const measurements: Measurement[] = JSON.parse(
         readFileSync(
           new URL('../tests/fixtures/dashboard/unordered-metric-ties.json', import.meta.url),
           'utf8',
         ),
       );
 
-      expect(getRangeExtrema({ measures, metric })).toEqual({
+      expect(getRangeExtrema({ measurements, metric })).toEqual({
         low,
         high,
         lowMeasuredAt: '2026-10-06T06:00:00Z',

@@ -1,17 +1,13 @@
 // Verify partial readings and delayed history using controlled HTTP responses in a real browser.
 import { readFileSync } from 'node:fs';
 
-import { expect, type Route } from '@playwright/test';
+import { expect } from '@playwright/test';
+import type { Measurement } from '@wx/shared';
 
 import { devices } from '#tests/utils/dashboard-scenario.ts';
 import { test } from '#tests/utils/test.ts';
 
-type Row = {
-  device_name: string;
-  temperature: number;
-};
-
-const fixture: { initial: Row[] } = JSON.parse(
+const fixture: { initial: Measurement[] } = JSON.parse(
   readFileSync(
     new URL('../fixtures/weather-station/current-and-refreshed-readings.json', import.meta.url),
     'utf8',
@@ -27,23 +23,22 @@ const primaryDevice = devices[0].deviceName;
 
 const history = Object.fromEntries(initialReadings.map((row) => [row.device_name, [row]]));
 
-const getRequestedReading = (route: Route) => {
-  const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3);
-  const reading = initialReadings.find((row) => row.device_name === name);
-
-  if (reading === undefined) throw new Error(`No fixture for requested device ${name}`);
-
-  return reading;
-};
+const latest = Object.fromEntries(initialReadings.map((row) => [row.device_name, row]));
 
 test('given one reporting meter and other empty meters when opening the dashboard then shows its reading and empty cards for the others', async ({
   page,
 }) => {
-  await page.route('**/rest/v1/measures**', async (route) => {
-    const reading = getRequestedReading(route);
-    await route.fulfill({ json: reading.device_name === primaryDevice ? [reading] : [] });
+  await page.route('**/get-latest-measure?*', async (route) => {
+    const onlyPrimaryReports = Object.fromEntries(
+      initialReadings.map((row) => [
+        row.device_name,
+        row.device_name === primaryDevice ? row : null,
+      ]),
+    );
+
+    await route.fulfill({ json: onlyPrimaryReports });
   });
-  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+  await page.route('**/get-chart-history?*', async (route) => {
     await route.fulfill({
       json: { [primaryDevice]: [initialReadings[0]] },
     });
@@ -66,10 +61,10 @@ test('given one reporting meter and other empty meters when opening the dashboar
 test('given history for an unconfigured meter when opening the dashboard then renders history only for configured meters', async ({
   page,
 }) => {
-  await page.route('**/rest/v1/measures**', async (route) => {
-    await route.fulfill({ json: [getRequestedReading(route)] });
+  await page.route('**/get-latest-measure?*', async (route) => {
+    await route.fulfill({ json: latest });
   });
-  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+  await page.route('**/get-chart-history?*', async (route) => {
     await route.fulfill({ json: { ...history, 'unconfigured-device': [initialReadings[0]] } });
   });
 
@@ -89,10 +84,10 @@ test('given a delayed history response when opening the dashboard then shows pla
   page,
 }) => {
   const { promise: historyReady, resolve: releaseHistory } = Promise.withResolvers<void>();
-  await page.route('**/rest/v1/measures**', async (route) => {
-    await route.fulfill({ json: [getRequestedReading(route)] });
+  await page.route('**/get-latest-measure?*', async (route) => {
+    await route.fulfill({ json: latest });
   });
-  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
+  await page.route('**/get-chart-history?*', async (route) => {
     await historyReady;
     await route.fulfill({ json: history });
   });

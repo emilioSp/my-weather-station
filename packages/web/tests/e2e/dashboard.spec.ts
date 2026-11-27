@@ -1,9 +1,53 @@
-// Verify normal loading, refresh, and history ranges through the browser, Supabase, and PostgreSQL.
+// Verify normal loading, refresh, and history ranges through the browser, Node.js API, and PostgreSQL.
 import { expect } from '@playwright/test';
 
 import readings from '#tests/fixtures/weather-station/two-recent-readings.json' with { type: 'json' };
 import { test } from '#tests/utils/test.ts';
 import { WEATHER_METRICS } from '#utils/weather-metrics.ts';
+
+test('given 18 and 20 degree readings when opening the dashboard then the API supplies the 20 degree card and 18 degree chart low', async ({
+  page,
+  measurementStore,
+}) => {
+  await measurementStore.insertReading({
+    ...readings[0],
+    temperature: 18,
+    measured_at: '2026-11-20T11:00:00Z',
+  });
+  await measurementStore.insertReading({
+    ...readings[1],
+    temperature: 20,
+    measured_at: '2026-11-20T12:00:00Z',
+  });
+
+  const latestResponse = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/get-latest-measure',
+  );
+
+  const historyResponse = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/get-chart-history',
+  );
+
+  await page.goto('/');
+
+  const latest = await latestResponse;
+  expect(latest.ok()).toBe(true);
+  expect(latest.request().method()).toBe('GET');
+  expect(new URL(latest.url()).searchParams.getAll('device_names')).toEqual([
+    measurementStore.deviceName,
+  ]);
+  await expect(page.getByLabel('Current readings')).toContainText('20.0°C');
+
+  const history = await historyResponse;
+  expect(history.ok()).toBe(true);
+  expect(history.request().method()).toBe('GET');
+  expect(Object.fromEntries(new URL(history.url()).searchParams)).toEqual({
+    start_date: '2026-11-17T12:00:00.000Z',
+    end_date: '2026-11-20T12:00:00.000Z',
+  });
+  const summary = page.locator(`[id="history-${measurementStore.deviceName}"] section`).first();
+  await expect(summary.getByTestId('low-value')).toHaveText('18.0°C');
+});
 
 for (const { metric, label, expectedReadout } of [
   { metric: WEATHER_METRICS.TEMPERATURE, label: 'temperature', expectedReadout: '25.0°C' },
@@ -17,11 +61,11 @@ for (const { metric, label, expectedReadout } of [
     const now = Temporal.Now.instant().round({ smallestUnit: 'second', roundingMode: 'floor' });
     await measurementStore.insertReading({
       ...readings[0],
-      measuredAt: now.subtract({ minutes: 60 }).toString(),
+      measured_at: now.subtract({ minutes: 60 }).toString(),
     });
     await measurementStore.insertReading({
       ...readings[1],
-      measuredAt: now.subtract({ minutes: 30 }).toString(),
+      measured_at: now.subtract({ minutes: 30 }).toString(),
     });
     await page.clock.setFixedTime(Number(now.epochMilliseconds));
     await page.goto('/');
@@ -60,7 +104,7 @@ test('given a loaded reading when a newer stored reading is manually refreshed t
   const now = Temporal.Now.instant().round({ smallestUnit: 'second', roundingMode: 'floor' });
   const earlierTime = now.subtract({ minutes: 60 }).toString();
   const newerTime = now.subtract({ minutes: 30 }).toString();
-  await measurementStore.insertReading({ ...readings[0], measuredAt: earlierTime });
+  await measurementStore.insertReading({ ...readings[0], measured_at: earlierTime });
   await page.clock.setFixedTime(Number(now.epochMilliseconds));
   await page.goto('/');
   const summary = page.locator(`[id="history-${measurementStore.deviceName}"] section`).first();
@@ -72,8 +116,8 @@ test('given a loaded reading when a newer stored reading is manually refreshed t
 
   await measurementStore.insertReading({
     ...readings[1],
-    measuredAt: newerTime,
-    signalPowerDBM: -42,
+    measured_at: newerTime,
+    signal_power_dbm: -42,
   });
   await page.getByRole('button', { name: 'Refresh readings' }).click();
 
@@ -92,7 +136,7 @@ test('given unchanged stored readings when manually refreshing then retains the 
 }) => {
   const now = Temporal.Now.instant().round({ smallestUnit: 'second', roundingMode: 'floor' });
   const measuredAt = now.subtract({ minutes: 30 }).toString();
-  await measurementStore.insertReading({ ...readings[1], measuredAt });
+  await measurementStore.insertReading({ ...readings[1], measured_at: measuredAt });
   await page.clock.setFixedTime(Number(now.epochMilliseconds));
   await page.goto('/');
   const summary = page.locator(`[id="history-${measurementStore.deviceName}"] section`).first();
@@ -134,8 +178,8 @@ for (const { direction, firstRange, secondRange, lastRange, lowValue, lowAgeHour
     const now = Temporal.Now.instant().round({ smallestUnit: 'second', roundingMode: 'floor' });
     const olderTime = now.subtract({ hours: 14 }).toString();
     const newerTime = now.subtract({ hours: 1 }).toString();
-    await measurementStore.insertReading({ ...readings[0], measuredAt: olderTime });
-    await measurementStore.insertReading({ ...readings[1], measuredAt: newerTime });
+    await measurementStore.insertReading({ ...readings[0], measured_at: olderTime });
+    await measurementStore.insertReading({ ...readings[1], measured_at: newerTime });
     await page.clock.setFixedTime(Number(now.epochMilliseconds));
     await page.goto('/');
     const summary = page.locator(`[id="history-${measurementStore.deviceName}"] section`).first();
@@ -169,8 +213,7 @@ test('given a meter without readings when opening the dashboard then shows an em
 }) => {
   const historyRequests: string[] = [];
   page.on('request', (request) => {
-    if (request.url().endsWith('/rest/v1/rpc/get_chart_history'))
-      historyRequests.push(request.url());
+    if (request.url().includes('/get-chart-history?')) historyRequests.push(request.url());
   });
 
   await page.goto('/');
@@ -188,7 +231,7 @@ test('given an empty meter when its first reading is stored and manually refresh
   await page.goto('/');
   await expect(page.getByText('No readings available.')).toBeVisible();
   const measuredAt = Temporal.Now.instant().subtract({ minutes: 1 }).toString();
-  await measurementStore.insertReading({ ...readings[1], measuredAt });
+  await measurementStore.insertReading({ ...readings[1], measured_at: measuredAt });
 
   await page.getByRole('button', { name: 'Refresh readings' }).click();
 

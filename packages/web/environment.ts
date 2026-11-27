@@ -45,8 +45,7 @@ const devicesSchema = z
   );
 
 export const environmentSchema = z.object({
-  VITE_SUPABASE_URL: z.url(),
-  VITE_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+  VITE_API_BASE_URL: z.url({ protocol: /^https?$/ }),
   VITE_DEVICES: devicesSchema,
 });
 
@@ -55,7 +54,6 @@ export type DeviceConfiguration = z.infer<typeof deviceSchema>;
 const viteEnvironment = environmentSchema.parse(import.meta.env);
 
 export const environment = {
-  SUPABASE_URL: viteEnvironment.VITE_SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY: viteEnvironment.VITE_SUPABASE_PUBLISHABLE_KEY,
+  API_BASE_URL: viteEnvironment.VITE_API_BASE_URL,
   DEVICES: viteEnvironment.VITE_DEVICES,
 };

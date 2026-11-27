@@ -1,5 +1,5 @@
 // Select metric extrema and earliest tied dates for dashboard history charts.
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 
 import type { WeatherMetric } from '#utils/weather-metrics.ts';
 
@@ -11,44 +11,46 @@ export type RangeExtrema = {
 };
 
 type GetRangeExtremaInput = {
-  measures: Measure[];
+  measurements: Measurement[];
   metric: WeatherMetric;
 };
 
 export const getRangeExtrema = ({
-  measures,
+  measurements,
   metric,
 }: GetRangeExtremaInput): RangeExtrema | null => {
-  if (measures.length === 0) {
+  if (measurements.length === 0) {
     return null;
   }
 
-  const { low, high } = measures.reduce(
-    (result, measure) => {
-      const isEarlierThanLow = Date.parse(measure.measuredAt) < Date.parse(result.low.measuredAt);
+  const { low, high } = measurements.reduce(
+    (result, measurement) => {
+      const isEarlierThanLow =
+        Date.parse(measurement.measured_at) < Date.parse(result.low.measured_at);
 
-      const isEarlierThanHigh = Date.parse(measure.measuredAt) < Date.parse(result.high.measuredAt);
+      const isEarlierThanHigh =
+        Date.parse(measurement.measured_at) < Date.parse(result.high.measured_at);
 
       return {
         low:
-          measure[metric] < result.low[metric] ||
-          (measure[metric] === result.low[metric] && isEarlierThanLow)
-            ? measure
+          measurement[metric] < result.low[metric] ||
+          (measurement[metric] === result.low[metric] && isEarlierThanLow)
+            ? measurement
             : result.low,
         high:
-          measure[metric] > result.high[metric] ||
-          (measure[metric] === result.high[metric] && isEarlierThanHigh)
-            ? measure
+          measurement[metric] > result.high[metric] ||
+          (measurement[metric] === result.high[metric] && isEarlierThanHigh)
+            ? measurement
             : result.high,
       };
     },
-    { low: measures[0], high: measures[0] },
+    { low: measurements[0], high: measurements[0] },
   );
 
   return {
     low: low[metric],
     high: high[metric],
-    lowMeasuredAt: low.measuredAt,
-    highMeasuredAt: high.measuredAt,
+    lowMeasuredAt: low.measured_at,
+    highMeasuredAt: high.measured_at,
   };
 };

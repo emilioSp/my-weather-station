@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { calculateDewPoint } from '#meters/utils/calculateDewPoint.util.ts';
 import { calculateHeatIndex } from '#meters/utils/calculateHeatIndex.util.ts';
-import { formatMeasure } from '#meters/utils/formatMeasure.util.ts';
+import { formatMeasurement } from '#meters/utils/formatMeasurement.util.ts';
 
 describe('meter calculations', () => {
   it('given 20 percent humidity and 12 degrees Celsius when calculating dew point then returns minus 10.3 degrees', () => {
@@ -23,22 +23,22 @@ describe('meter calculations', () => {
     },
   );
 
-  it('given a timestamp with milliseconds when formatting a measure then returns UTC time at second precision', () => {
+  it('given a timestamp with milliseconds when formatting a measurement then returns UTC time at second precision', () => {
     expect(
-      formatMeasure({
+      formatMeasurement({
         id: '123e4567-e89b-12d3-a456-426614174000',
-        deviceId: 'device',
-        deviceName: 'test meter',
+        device_id: 'device',
+        device_name: 'test meter',
         address: 'address',
-        deviceType: METER_TYPES.INDOOR,
+        device_type: METER_TYPES.INDOOR,
         temperature: 20,
-        dewPoint: 10,
-        heatIndex: 21,
+        dew_point: 10,
+        heat_index: 21,
         humidity: 50,
         battery: 80,
-        signalPowerDBM: -50,
-        measuredAt: '2026-01-01T12:34:56.789Z',
-      }).measuredAt,
+        signal_power_dbm: -50,
+        measured_at: '2026-01-01T12:34:56.789Z',
+      }).measured_at,
     ).toBe('2026-01-01T12:34:56+00:00[UTC]');
   });
 });

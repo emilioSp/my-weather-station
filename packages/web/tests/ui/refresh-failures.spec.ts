@@ -13,11 +13,36 @@ import {
 } from '#tests/utils/dashboard-scenario.ts';
 import { test } from '#tests/utils/test.ts';
 
+test('given a history error when manually refreshing with the same latest timestamp then keeps the error without fetching history again', async ({
+  page,
+}) => {
+  const scenario = new DashboardScenario(page);
+
+  const responses: DashboardResponses = {
+    readings: { status: 200, json: initialReadings },
+    history: { status: 500, json: { error: { message: 'Chart history unavailable' } } },
+  };
+
+  await scenario.mockDashboardResponses(responses);
+  await page.goto('/');
+
+  const historyError = page.getByText('Unable to load chart history: Chart history unavailable');
+  await expect(historyError).toBeVisible();
+  responses.history = { status: 200, json: initialHistory };
+
+  await scenario.button().click();
+  await scenario.assertRefreshCount(2);
+  await expect(scenario.button()).toBeEnabled();
+
+  expect(scenario.historyQueries).toHaveLength(1);
+  await expect(historyError).toBeVisible();
+});
+
 for (const { section, errorResponses, errorMessage, currentReadingCount } of [
   {
     section: 'readings',
     errorResponses: {
-      readings: { status: 500, json: { message: 'Latest readings unavailable' } },
+      readings: { status: 500, json: { error: { message: 'Latest readings unavailable' } } },
       history: { status: 200, json: changedHistory },
     } satisfies DashboardResponses,
     errorMessage: 'Latest readings unavailable',
@@ -26,8 +51,18 @@ for (const { section, errorResponses, errorMessage, currentReadingCount } of [
   {
     section: 'history',
     errorResponses: {
-      readings: { status: 200, json: changedReadings },
-      history: { status: 500, json: { message: 'Chart history unavailable' } },
+      readings: {
+        status: 200,
+        json: {
+          ...initialReadings,
+          [primaryDevice]: {
+            ...changedReadings[primaryDevice],
+            id: '00000000-0000-0000-0000-000000000100',
+            measured_at: '2026-10-06T11:00:00Z',
+          },
+        },
+      },
+      history: { status: 500, json: { error: { message: 'Chart history unavailable' } } },
     } satisfies DashboardResponses,
     errorMessage: 'Unable to load chart history: Chart history unavailable',
     currentReadingCount: 1,

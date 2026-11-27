@@ -1,6 +1,6 @@
 // Render HistoryChart when displaying the weather dashboard.
 
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import type { IconType } from 'react-icons';
 import { FaArrowUp } from 'react-icons/fa6';
 
@@ -20,7 +20,7 @@ const chartMetrics: WeatherMetric[] = [
 type HistoryChartProps = {
   icon: IconType;
   isLoading: boolean;
-  measures: Measure[];
+  measurements: Measurement[];
   meterTheme: MeterTheme;
   range: ChartRange;
   sensor: string;
@@ -33,7 +33,7 @@ const scrollToTop = () => {
 export const HistoryChart = ({
   icon: Icon,
   isLoading,
-  measures,
+  measurements,
   meterTheme,
   range,
   sensor,
@@ -75,7 +75,7 @@ export const HistoryChart = ({
               metric={metric}
               range={range}
               sensor={sensor}
-              measures={measures}
+              measurements={measurements}
             />
           ))}
     </div>

@@ -1,8 +1,8 @@
 // Find the most recent measurement timestamp when loading dashboard history.
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 
-export const getLatestTimestamp = (measures: Measure[]): number | null => {
-  const timestamps = measures.map((measure) => Date.parse(measure.measuredAt));
+export const getLatestTimestamp = (measurements: Measurement[]): number | null => {
+  const timestamps = measurements.map((measurement) => Date.parse(measurement.measured_at));
 
   return timestamps.length === 0 ? null : Math.max(...timestamps);
 };

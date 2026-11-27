@@ -9,14 +9,16 @@ import { useWeatherStation } from '#hooks/useWeatherStation.ts';
 
 export const WeatherStation = () => {
   const {
-    currentMeasures,
+    currentMeasurements,
     currentRange,
     isRefreshing,
     latestMeasuredAt,
-    measureHistory,
-    measuresByDeviceName,
+    latestError,
+    historyError,
+    isHistoryLoading,
+    measurementsByDeviceName,
     rangeIndex,
-    refreshMeasures,
+    refreshMeasurements,
     changeRange,
   } = useWeatherStation();
 
@@ -24,20 +26,20 @@ export const WeatherStation = () => {
     <main className="mx-auto max-w-[1440px] px-3 pt-[22px] pb-12 sm:px-[clamp(20px,4vw,64px)]">
       <WeatherStationHeader
         isRefreshing={isRefreshing}
-        latestMeasuredAt={currentMeasures?.error === null ? latestMeasuredAt : null}
-        onRefresh={refreshMeasures}
+        latestMeasuredAt={latestMeasuredAt}
+        onRefresh={refreshMeasurements}
       />
       <div className="pt-4">
-        {currentMeasures === null && <WeatherStationLoading />}
-        {currentMeasures?.error && <WeatherStationError message={currentMeasures.error} />}
-        {currentMeasures?.error === null && (
+        {currentMeasurements === null && latestError === null && <WeatherStationLoading />}
+        {latestError !== null && <WeatherStationError message={latestError} />}
+        {currentMeasurements !== null && (
           <>
-            <CurrentReadings measuresByDeviceName={currentMeasures.byDeviceName} />
+            <CurrentReadings measurementsByDeviceName={currentMeasurements} />
             <MeasurementHistory
               isRefreshing={isRefreshing}
-              error={measureHistory?.error ?? null}
-              measuresByDeviceName={measuresByDeviceName}
-              isLoading={measureHistory === null}
+              error={historyError}
+              measurementsByDeviceName={measurementsByDeviceName}
+              isLoading={isHistoryLoading}
               range={currentRange}
               rangeIndex={rangeIndex}
               onRangeIndexChange={changeRange}

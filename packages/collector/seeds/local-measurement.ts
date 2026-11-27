@@ -8,7 +8,7 @@ function assertDevelopment(): void {
   }
 }
 
-const seedMeasures = async (knex: Knex): Promise<number | string> => {
+const seedMeasurements = async (knex: Knex): Promise<number | string> => {
   assertDevelopment();
 
   const { environment } = await import('#environment.ts');
@@ -238,6 +238,6 @@ const seedMeasures = async (knex: Knex): Promise<number | string> => {
 };
 
 export const seed = async (knex: Knex): Promise<void> => {
-  const count = await seedMeasures(knex);
+  const count = await seedMeasurements(knex);
   console.log(`Inserted ${count} measures.`);
 };

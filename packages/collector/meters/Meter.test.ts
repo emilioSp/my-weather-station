@@ -39,18 +39,20 @@ describe('meters', () => {
     await setupDatabaseTest();
 
     sensor.getAdvertisement.mockResolvedValue(indoorReading.advertisement);
-    const measure = await new IndoorMeter(indoorReading.meter).read();
+    const measurement = await new IndoorMeter(indoorReading.meter).read();
 
-    expect(measure).toMatchObject({
-      deviceId: 'indoor-device',
-      deviceName: 'indoor meter',
-      deviceType: METER_TYPES.INDOOR,
+    expect(measurement).toMatchObject({
+      device_id: 'indoor-device',
+      device_name: 'indoor meter',
+      device_type: METER_TYPES.INDOOR,
       temperature: 20.5,
       humidity: 60,
       battery: 80,
-      signalPowerDBM: -50,
+      signal_power_dbm: -50,
     });
-    expect(await database.getClient()('measures').where({ id: measure.id }).first()).toMatchObject({
+    expect(
+      await database.getClient()('measures').where({ id: measurement.id }).first(),
+    ).toMatchObject({
       device_name: 'indoor meter',
     });
   });
@@ -62,18 +64,18 @@ describe('meters', () => {
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(indoorReading.advertisement);
 
-    const measure = await new IndoorMeter(indoorReading.meter).read();
+    const measurement = await new IndoorMeter(indoorReading.meter).read();
 
     expect(sensor.getAdvertisement).toHaveBeenCalledTimes(2);
-    expect(measure).toMatchObject({
-      deviceName: 'indoor meter',
+    expect(measurement).toMatchObject({
+      device_name: 'indoor meter',
       temperature: 20.5,
       humidity: 60,
       battery: 80,
     });
-    expect(await database.getClient()('measures').where({ id: measure.id }).select('id')).toEqual([
-      { id: measure.id },
-    ]);
+    expect(
+      await database.getClient()('measures').where({ id: measurement.id }).select('id'),
+    ).toEqual([{ id: measurement.id }]);
   });
 
   it('given separate outdoor advertisements when reading the meter then combines temperature humidity and battery values', async () => {
@@ -82,11 +84,11 @@ describe('meters', () => {
     sensor.getAdvertisement
       .mockResolvedValueOnce(outdoorReading.advertisements[0])
       .mockResolvedValueOnce(outdoorReading.advertisements[1]);
-    const measure = await new OutdoorMeter(outdoorReading.meter).read();
+    const measurement = await new OutdoorMeter(outdoorReading.meter).read();
 
-    expect(measure).toMatchObject({
-      deviceName: 'outdoor meter',
-      deviceType: METER_TYPES.OUTDOOR,
+    expect(measurement).toMatchObject({
+      device_name: 'outdoor meter',
+      device_type: METER_TYPES.OUTDOOR,
       temperature: 25.3,
       humidity: 70,
       battery: 90,

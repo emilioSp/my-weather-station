@@ -16,7 +16,6 @@
     "test:coverage": "rm -rf coverage && vitest run --coverage --config vitest.config.ts && npm run test:e2e && node tests/utils/merge-coverage.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.112.4",
     "@wx/shared": "*",
     "react": "19.2.0",
     "react-dom": "19.2.0",

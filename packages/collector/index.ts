@@ -2,7 +2,7 @@
 
 import { setTimeout } from 'node:timers/promises';
 
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 import database from '@wx/shared/db.ts';
 
 import { environment } from '#environment.ts';
@@ -10,7 +10,7 @@ import { NoCompleteReadingError } from '#errors/NoCompleteReadingError.ts';
 import { createMeter } from '#meters/meter.factory.ts';
 
 const run = async (): Promise<void> => {
-  const measures: Measure[] = [];
+  const measurements: Measurement[] = [];
 
   console.log(
     Temporal.Now.instant().toZonedDateTimeISO('Europe/Rome').toString({ smallestUnit: 'seconds' }),
@@ -18,7 +18,7 @@ const run = async (): Promise<void> => {
 
   for (const meter of environment.DEVICES) {
     try {
-      measures.push(await createMeter(meter).read());
+      measurements.push(await createMeter(meter).read());
     } catch (error) {
       if (error instanceof NoCompleteReadingError) {
         console.error(error);
@@ -29,7 +29,7 @@ const run = async (): Promise<void> => {
     }
   }
 
-  console.log(JSON.stringify(measures, null, 2));
+  console.log(JSON.stringify(measurements, null, 2));
 };
 
 const FIVE_MINUTES = 300_000;

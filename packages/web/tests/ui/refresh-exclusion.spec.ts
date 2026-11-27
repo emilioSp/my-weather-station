@@ -31,20 +31,13 @@ test(`given pending initial requests when ticks pass before history succeeds the
     history: history.promise,
   };
 
-  await page.route('**/rest/v1/measures**', async (route) => {
-    const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
-    scenario.requestedDevices.push(name);
+  await page.route('**/get-latest-measure?*', async (route) => {
+    scenario.latestQueries.push(new URL(route.request().url()).searchParams.getAll('device_names'));
     await gates.readings;
-    const response = responses.readings;
-    await route.fulfill({
-      ...response,
-      json: Array.isArray(response.json)
-        ? response.json.filter((row) => row.device_name === name)
-        : response.json,
-    });
+    await route.fulfill(responses.readings);
   });
-  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-    scenario.historyQueries.push(route.request().postDataJSON());
+  await page.route('**/get-chart-history?*', async (route) => {
+    scenario.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));
     await gates.history;
     await route.fulfill(responses.history);
   });
@@ -115,20 +108,13 @@ test(`given pending manual requests when ticks pass before history succeeds then
     history: Promise.resolve(),
   };
 
-  await page.route('**/rest/v1/measures**', async (route) => {
-    const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
-    scenario.requestedDevices.push(name);
+  await page.route('**/get-latest-measure?*', async (route) => {
+    scenario.latestQueries.push(new URL(route.request().url()).searchParams.getAll('device_names'));
     await gates.readings;
-    const response = responses.readings;
-    await route.fulfill({
-      ...response,
-      json: Array.isArray(response.json)
-        ? response.json.filter((row) => row.device_name === name)
-        : response.json,
-    });
+    await route.fulfill(responses.readings);
   });
-  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-    scenario.historyQueries.push(route.request().postDataJSON());
+  await page.route('**/get-chart-history?*', async (route) => {
+    scenario.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));
     await gates.history;
     await route.fulfill(responses.history);
   });
@@ -215,20 +201,13 @@ test(`given pending automatic requests when ticks pass before history fails then
     history: Promise.resolve(),
   };
 
-  await page.route('**/rest/v1/measures**', async (route) => {
-    const name = new URL(route.request().url()).searchParams.get('device_name')?.slice(3) ?? '';
-    scenario.requestedDevices.push(name);
+  await page.route('**/get-latest-measure?*', async (route) => {
+    scenario.latestQueries.push(new URL(route.request().url()).searchParams.getAll('device_names'));
     await gates.readings;
-    const response = responses.readings;
-    await route.fulfill({
-      ...response,
-      json: Array.isArray(response.json)
-        ? response.json.filter((row) => row.device_name === name)
-        : response.json,
-    });
+    await route.fulfill(responses.readings);
   });
-  await page.route('**/rest/v1/rpc/get_chart_history', async (route) => {
-    scenario.historyQueries.push(route.request().postDataJSON());
+  await page.route('**/get-chart-history?*', async (route) => {
+    scenario.historyQueries.push(Object.fromEntries(new URL(route.request().url()).searchParams));
     await gates.history;
     await route.fulfill(responses.history);
   });
@@ -266,7 +245,7 @@ test(`given pending automatic requests when ticks pass before history fails then
   await scenario.assertRefreshCount(refreshCount);
   await scenario.advanceClockToSecond(firstBusyTick + 75);
 
-  responses.history = { status: 500, json: { message: 'Chart history unavailable' } };
+  responses.history = { status: 500, json: { error: { message: 'Chart history unavailable' } } };
 
   history.resolve();
   // Advance browser deadlines explicitly until this refresh completes.

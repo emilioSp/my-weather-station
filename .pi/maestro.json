@@ -8,7 +8,7 @@
   },
   "verifier": {
     "required": true,
-    "model": "openai-codex/gpt-6-astra",
+    "model": "openai-codex/gpt-6.2-astra",
     "thinking": "medium"
   },
   "simplifier": {

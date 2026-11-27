@@ -1,15 +1,15 @@
 // Render CurrentReadings when displaying the weather dashboard.
 
-import type { Measure } from '@wx/shared';
+import type { Measurement } from '@wx/shared';
 
 import { WeatherCard } from '#components/weather-station/WeatherCard.tsx';
 import { deviceIconMap, environment } from '#environment.ts';
 
 type CurrentReadingsProps = {
-  measuresByDeviceName: Record<string, Measure | null>;
+  measurementsByDeviceName: Record<string, Measurement | null>;
 };
 
-export const CurrentReadings = ({ measuresByDeviceName }: CurrentReadingsProps) => (
+export const CurrentReadings = ({ measurementsByDeviceName }: CurrentReadingsProps) => (
   <section className="grid gap-3.5 md:grid-cols-2" aria-label="Current readings">
     {environment.DEVICES.map((device, index) => (
       <WeatherCard
@@ -18,7 +18,7 @@ export const CurrentReadings = ({ measuresByDeviceName }: CurrentReadingsProps) 
         label={device.deviceName}
         icon={deviceIconMap[device.icon]}
         colorIndex={index}
-        measure={measuresByDeviceName[device.deviceName]}
+        measurement={measurementsByDeviceName[device.deviceName]}
       />
     ))}
   </section>

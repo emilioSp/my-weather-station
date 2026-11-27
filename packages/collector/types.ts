@@ -1,6 +1,6 @@
 // Define validated domain schemas and types used by this workspace.
 
-import { deviceIdentifiersSchema, type Measure, meterTypeSchema } from '@wx/shared';
+import { deviceIdentifiersSchema, type Measurement, meterTypeSchema } from '@wx/shared';
 import { z } from 'zod';
 
 export const SWITCHBOT_UUIDS = {
@@ -37,5 +37,5 @@ export type Meter = Omit<ParsedMeter, 'deviceName'> & {
 
 export type MeterInterface = {
   getMeter: () => Meter;
-  read: () => Promise<Measure>;
+  read: () => Promise<Measurement>;
 };

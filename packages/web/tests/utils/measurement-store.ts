@@ -1,17 +1,14 @@
 // Store committed E2E readings in local PostgreSQL and remove only this test's rows during teardown.
 import { randomUUID } from 'node:crypto';
 
-import { METER_TYPES } from '@wx/shared';
+import { METER_TYPES, type Measurement } from '@wx/shared';
 import { Client } from 'pg';
 
-export type StoredReadingInput = {
-  measuredAt: string;
-  temperature: number;
-  humidity: number;
-  dewPoint: number;
-  heatIndex: number;
-  signalPowerDBM?: number;
-};
+type StoredReadingInput = Pick<
+  Measurement,
+  'measured_at' | 'temperature' | 'humidity' | 'dew_point' | 'heat_index'
+> &
+  Partial<Pick<Measurement, 'signal_power_dbm'>>;
 
 export class MeasurementStore {
   public readonly deviceName: string;
@@ -19,7 +16,7 @@ export class MeasurementStore {
   private readonly database = new Client({
     host: '127.0.0.1',
     port: 54322,
-    database: 'postgres',
+    database: process.env.POSTGRES_DB ?? 'postgres',
     user: 'postgres',
     password: 'postgres',
   });
@@ -45,11 +42,11 @@ export class MeasurementStore {
         this.deviceName,
         METER_TYPES.OUTDOOR,
         reading.temperature,
-        reading.dewPoint,
-        reading.heatIndex,
+        reading.dew_point,
+        reading.heat_index,
         reading.humidity,
-        reading.signalPowerDBM ?? -50,
-        reading.measuredAt,
+        reading.signal_power_dbm ?? -50,
+        reading.measured_at,
       ],
     );
   }

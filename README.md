@@ -10,9 +10,9 @@ An npm workspaces monorepo.
 ```text
 packages/collector  @wx/collector  BLE daemon. Reads the meters and writes to PostgreSQL.
                                     Owns .env, Dockerfile, and the development seed.
-packages/web        @wx/web        React + Vite app. Reads the measures from Supabase.
-packages/api        @wx/api        Hono backend for reading weather measurements. Not used by the web app yet.
-packages/shared     @wx/shared     Shared domain schemas, key mapping, UUID normalization,
+packages/web        @wx/web        React + Vite app. Reads measurements through the Node.js API.
+packages/api        @wx/api        Hono backend for current measurements and chart history.
+packages/shared     @wx/shared     Shared domain schemas, UUID normalization,
                                   and the Node-only PostgreSQL client and migrations.
 ```
 
@@ -71,34 +71,47 @@ attempt and defaults to 15 seconds. `SCAN_RETRIES` is the maximum number of atte
 `packages/shared/.env` contains the local Supabase PostgreSQL settings for the collector, API, and Knex. `POSTGRES_TIMEOUT_MS` sets the connection, query, and pool
 timeout and defaults to 15 seconds.
 
-Start Supabase local, then apply the Knex schema and create the dataset:
-
-```sh
-npm run supabase:start
-npm run migrate:local -w @wx/shared
-npm run seed:local -w @wx/collector
-```
-
 `npm run supabase:status` shows the local API and PostgreSQL URLs.
 
 ### Web app
 
-The web app reads the `measures` table through the local Supabase API. `packages/web/.env` contains the local endpoint and public key. `packages/web/.env.prod` contains
-the production values. Vite loads `.env` during development. Its build command uses the `prod` mode, which gives `.env.prod` priority.
+With Docker running, start local PostgreSQL through Supabase and apply the shared migrations from the repository root:
+
+```sh
+npm run supabase:start
+npm run migrate:local -w @wx/shared
+```
+
+Then start the API in one terminal and the web app in another:
+
+```sh
+npm run dev -w @wx/api
+```
+
+```sh
+npm run dev -w @wx/web
+```
+
+Open <http://localhost:5173/my-weather-station/>.
+
+If you need sample data, run `npm run dev -w @wx/collector` separately. **This replaces all local measurements with sample data.**
+
+The web app uses `VITE_API_BASE_URL` from `packages/web/.env` in development and `packages/web/.env.prod` for the production build.
 
 ### API
 
 Start local Supabase and apply the shared database migrations before using the measurement endpoints or running the API tests.
 
 ```sh
-npm start -w @wx/api
-curl 'http://localhost:3000/get-latest-measure?device_name=kitchen'
+npm run dev -w @wx/api
+curl 'http://localhost:3000/get-latest-measure?device_names=kitchen&device_names=garden'
 curl 'http://localhost:3000/get-chart-history?start_date=2026-01-02T09:00:00Z&end_date=2026-01-02T10:00:00Z'
 npm run test:unit -w @wx/api
 ```
 
-The latest endpoint matches the exact stored device name and returns `null` if none matches. Chart history is grouped by device name and includes both bounds. Supply ISO
-8601 timestamps with a time zone. If `end_date` is omitted or in the future, the end is now. History covers at most 31 days ending at that effective end.
+Supply `device_names` once per requested device, up to three devices per request. The response is keyed by the exact device name, with its latest reading or `null` if
+none exists. Chart history is grouped by device name and includes both bounds. Supply ISO 8601 timestamps with a time zone. If `end_date` is omitted or in the future, the
+end is now. History covers at most 31 days ending at that effective end.
 
 Build the image from the repository root. Pass the `POSTGRES_*` variables at runtime, with a `POSTGRES_HOST` reachable from inside the container. The API's HTTP `PORT`
 defaults to `3000`.
@@ -132,12 +145,10 @@ A script that concerns one workspace lives in that workspace, so run it with `-w
 
 ```sh
 npm run store-measure -w @wx/collector              # run the collector continuously
-npm run dev -w @wx/web                              # web app in development mode
 npm run new:migration -w @wx/shared -- <name>       # create a migration
 npm run migrate:local -w @wx/shared                 # apply migrations to local Supabase
 npm run migrate -w @wx/shared                       # apply migrations to production
 npm run rollback:local -w @wx/shared                # undo the last local batch
-npm run seed:local -w @wx/collector                 # replace local measures with one year of test data
 ```
 
 The collector reads and stores measurements for each configured meter, then waits five minutes before starting the next cycle.
@@ -145,10 +156,7 @@ The collector reads and stores measurements for each configured meter, then wait
 Migrations live in `packages/shared/migrations/`. Local commands load `packages/shared/.env`. To apply migrations in production, put the production `POSTGRES_*` settings
 in the untracked `packages/shared/.env.prod`.
 
-`seed:local` uses the collector’s device settings and the shared local database settings. It deletes every row from the local `measures` table before creating the test
-dataset.
-
-The root keeps only the scripts that act on every workspace:
+Run these commands from the repository root:
 
 ```sh
 npm run supabase:start   # start the local Supabase stack
@@ -162,7 +170,6 @@ npm run build            # type check, plus the production build of the web app
 npm run test:unit        # run Vitest tests in every workspace
 npm run test:e2e         # run Playwright end-to-end tests
 npm run test:coverage    # run tests and coverage in every workspace
-npm run dev              # every workspace that defines dev
 ```
 
 Browser tests run in Chromium and WebKit, Safari's browser engine. Coverage is collected from Chromium only. Install the browser binaries before running the tests:
@@ -179,15 +186,13 @@ npm run test:e2e -w @wx/web -- --project=mocked-http-webkit --project=webkit --n
 
 ### Real-data browser tests
 
-`npm run test:e2e -w @wx/web` includes real local Supabase scenarios in `packages/web/tests/e2e/`. Start Supabase and apply the shared database migrations first, as
-described in the local development setup. The other browser scenarios still use controlled HTTP responses.
+`npm run test:e2e -w @wx/web` includes real Node.js API scenarios in `packages/web/tests/e2e/`. Start local Supabase PostgreSQL and apply the shared migrations first.
+Playwright starts the API on port `4175` and a separate Vite server on port `4174` for these scenarios. The `mocked-http-chromium` and `mocked-http-webkit` projects run
+`tests/ui/` with simulated HTTP responses.
 
-The `chromium` and `webkit` projects run `tests/e2e/` against real Supabase; `mocked-http-chromium` and `mocked-http-webkit` run `tests/ui/` with simulated HTTP
-responses.
-
-The real-data projects run sequentially in Chromium and WebKit, using a separate Vite server on port `4174` and a unique device name per run. Tests insert committed
-measurements with recent timestamps and delete only their own row IDs during fixture cleanup, including after failures. Existing development data is not deleted. A
-forcibly terminated test process can leave its inserted rows behind.
+The real-data projects run sequentially in Chromium and WebKit with a unique device name per run. Tests insert committed measurements with recent timestamps and delete
+only their own row IDs during fixture cleanup, including after failures. Existing development data is not deleted. A forcibly terminated test process can leave its
+inserted rows behind.
 
 To run only the real-data scenarios in both browsers:
 
@@ -239,8 +244,8 @@ The web UI deploys automatically after each push to `main`:
 
 <https://emiliosp.github.io/my-weather-station/>
 
-In GitHub, open **Settings** → **Pages** and set **Source** to **GitHub Actions**. The Supabase URL and publishable key are deliberately committed in
-`packages/web/.env.prod`. They are public browser credentials; Supabase row level security protects the data.
+In GitHub, open **Settings** → **Pages** and set **Source** to **GitHub Actions**. The public Render URL is set in `packages/web/.env.prod`. Deploy the API with CORS
+support before switching GitHub Pages to it; see the [deployment guide](docs/deployment.md).
 
 ### Collector
 
@@ -258,7 +263,7 @@ packages/collector/index.ts
       └── meters/Meter strategy
           ├── api/sensor.api.ts
           │   └── @stoprocent/noble
-          ├── repository/measure.repository.ts
+          ├── repository/measurement.repository.ts
           │   └── @wx/shared/db.ts → PostgreSQL
           └── errors/NoCompleteReadingError.ts
 ```
@@ -275,7 +280,7 @@ The folders have clear responsibilities:
 
 `OutdoorMeter` and `IndoorMeter` extend the abstract `Meter` class and implement `MeterInterface`, which exposes `getMeter()` for the device ID and type, and `read()` for
 the stored measure. Each strategy owns its meter-specific decoding. The shared `Meter` class reads advertisements through `api/sensor.api.ts`, calculates dew point and
-heat index with `meters/utils/`, stores the reading through `repository/measure.repository.ts`, and returns the inserted row.
+heat index with `meters/utils/`, stores the reading through `repository/measurement.repository.ts`, and returns the inserted row.
 
 ### Web app
 
@@ -283,23 +288,15 @@ heat index with `meters/utils/`, stores the reading through `repository/measure.
 packages/web/main.tsx
   └── views/WeatherStation.tsx
       └── hooks/useWeatherStation.ts
-          └── supabase.api.ts
-              └── @supabase/supabase-js -> PostgREST -> PostgreSQL
+          └── api/ (latest measurement and chart history)
+              └── Node.js API -> PostgreSQL
 ```
 
-`supabase.api.ts` is the only boundary to Supabase. `environment.ts` validates `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_DEVICES` with Zod at
-startup.
+`environment.ts` validates `VITE_API_BASE_URL` and `VITE_DEVICES` with Zod at startup.
 
 ### Shared
 
-Both apps write to and read from the same table, through two different clients. What they have in common lives in `packages/shared`:
-
-- the domain schemas, `measureSchema` and the schemas it is built from;
-- `toCamelCaseKeys` and `toSnakeCaseKeys`, applied at every database boundary;
-- `normalizeUuid`.
-
-The mapping matters because the database columns are snake_case while the domain types are camelCase. Knex can do this on its own, but only for Knex: the Supabase client
-returns raw columns. Keeping one rule in `packages/shared` means both clients produce the same shape.
+The collector, API, and web app use `Measurement` from `packages/shared`. Stored measurements keep their PostgreSQL snake_case field names across all three workspaces.
 
 The API and collector import their PostgreSQL client from the Node-only `@wx/shared/db.ts` export. Each process has its own pool. The web app imports only the
 platform-neutral schemas and utilities.
@@ -312,23 +309,25 @@ The collector prints an array, so that more devices can be added later:
 [
   {
     "id": "4f7edb49-14fa-426f-bd3a-bfcf5872ce65",
-    "deviceId": "ae67de586d5f7a96cce7f6179f1c740f",
+    "device_id": "ae67de586d5f7a96cce7f6179f1c740f",
     "address": null,
-    "deviceType": "outdoor",
+    "device_type": "outdoor",
+    "device_name": "garden",
     "temperature": 32.2,
-    "dewPoint": 16.5,
-    "heatIndex": 32.4,
+    "dew_point": 16.5,
+    "heat_index": 32.4,
     "humidity": 39,
     "battery": 96,
-    "signalPowerDBM": -89,
-    "measuredAt": "2026-08-25T16:12:03+00:00[UTC]"
+    "signal_power_dbm": -89,
+    "measured_at": "2026-08-25T16:12:03+00:00[UTC]"
   }
 ]
 ```
 
 ## BLE signal power
 
-`signalPowerDBM` is the Bluetooth signal strength received by the computer. It is also called RSSI and is measured in dBm. A value closer to `0` means a stronger signal.
+`signal_power_dbm` is the Bluetooth signal strength received by the computer. It is also called RSSI and is measured in dBm. A value closer to `0` means a stronger
+signal.
 
 |      Value | Quality         |
 | ---------: | --------------- |
