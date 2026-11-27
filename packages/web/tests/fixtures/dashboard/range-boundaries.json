@@ -1,44 +1,44 @@
 [
   {
     "id": "outside",
-    "measuredAt": "2025-12-31T23:59:59Z",
-    "deviceId": "device",
-    "deviceName": "test meter",
+    "measured_at": "2025-12-31T23:59:59Z",
+    "device_id": "device",
+    "device_name": "test meter",
     "address": "address",
-    "deviceType": "indoor",
+    "device_type": "indoor",
     "temperature": 20,
-    "dewPoint": 15,
-    "heatIndex": 21,
+    "dew_point": 15,
+    "heat_index": 21,
     "humidity": 50,
     "battery": 80,
-    "signalPowerDBM": -60
+    "signal_power_dbm": -60
   },
   {
     "id": "edge",
-    "measuredAt": "2026-01-01T00:00:00Z",
-    "deviceId": "device",
-    "deviceName": "test meter",
+    "measured_at": "2026-01-01T00:00:00Z",
+    "device_id": "device",
+    "device_name": "test meter",
     "address": "address",
-    "deviceType": "indoor",
+    "device_type": "indoor",
     "temperature": 20,
-    "dewPoint": 15,
-    "heatIndex": 21,
+    "dew_point": 15,
+    "heat_index": 21,
     "humidity": 50,
     "battery": 80,
-    "signalPowerDBM": -60
+    "signal_power_dbm": -60
   },
   {
     "id": "inside",
-    "measuredAt": "2026-01-01T12:00:00Z",
-    "deviceId": "device",
-    "deviceName": "test meter",
+    "measured_at": "2026-01-01T12:00:00Z",
+    "device_id": "device",
+    "device_name": "test meter",
     "address": "address",
-    "deviceType": "indoor",
+    "device_type": "indoor",
     "temperature": 20,
-    "dewPoint": 15,
-    "heatIndex": 21,
+    "dew_point": 15,
+    "heat_index": 21,
     "humidity": 50,
     "battery": 80,
-    "signalPowerDBM": -60
+    "signal_power_dbm": -60
   }
 ]
