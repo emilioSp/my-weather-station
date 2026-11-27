@@ -155,8 +155,8 @@ describe('weather dashboard utilities', () => {
     ).toEqual({
       low: 18.01,
       high: 18.04,
-      lowMeasuredAt: later.measuredAt,
-      highMeasuredAt: earlier.measuredAt,
+      lowMeasuredAt: later.measured_at,
+      highMeasuredAt: earlier.measured_at,
     });
   });
 
